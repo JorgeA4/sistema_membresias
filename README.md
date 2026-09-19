@@ -6,29 +6,29 @@ sistema_membresias/
 │
 ├── main.py
 │
-├── models/
+├── clases/
 │   ├── miembro.py
-│   ├── plan_membresia.py
+│   ├── plan.py
 │   ├── membresia.py
 │   ├── compra.py
 │   ├── recompensa.py
 │   ├── renovación.py
 │   └── canje.py
 │
-├── services/
+├── servicios/
     └── ...
 │
-├── database/
+├── base_de_datos/
     └── ...
 │
-├── cli/
+├── interfaz/
 │   ├── menu.py
 │
-└── utils/
+└── utilidades/
     └── ...
 
 # Explicación desglosada
-models/
+clases/
 Guarda las clases centrales del sistema. Cada módulo es una clase.
 
 miembro.py
