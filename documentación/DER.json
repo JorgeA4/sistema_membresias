@@ -1,0 +1,1341 @@
+{
+  "version": "31.5.3",
+  "pages": [
+    {
+      "id": "vxQw3GbYWfdAGllX5hxw",
+      "name": "Página-1",
+      "cells": [
+        {
+          "id": "1",
+          "type": "layer"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-1",
+          "type": "node",
+          "parent": "1",
+          "label": "MIEMBRO"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-2",
+          "type": "node",
+          "parent": "1",
+          "label": "CANJE"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-3",
+          "type": "node",
+          "parent": "1",
+          "label": "COMPRA"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-4",
+          "type": "node",
+          "parent": "1",
+          "label": "PLAN"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-5",
+          "type": "node",
+          "parent": "1",
+          "label": "MEMBRESIA"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-6",
+          "type": "node",
+          "parent": "1",
+          "label": "RECOMPENSA"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-7",
+          "type": "node",
+          "parent": "1",
+          "label": "RENOVACION"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-8",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-2",
+          "target": "gYEa_1t4NqlCFyddrXND-73"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-9",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-11",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha vencimiento"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-12",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-93",
+          "target": "gYEa_1t4NqlCFyddrXND-3"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-14",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-95",
+          "target": "gYEa_1t4NqlCFyddrXND-3"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-17",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-19",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-7",
+          "target": "gYEa_1t4NqlCFyddrXND-17"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-23",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-24",
+          "type": "node",
+          "parent": "1",
+          "label": "nombre"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-25",
+          "type": "node",
+          "parent": "1",
+          "label": "está activa"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-26",
+          "type": "node",
+          "parent": "1",
+          "label": "costo puntos"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-27",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-23",
+          "target": "gYEa_1t4NqlCFyddrXND-6"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-28",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-26",
+          "target": "gYEa_1t4NqlCFyddrXND-6"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-29",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-25",
+          "target": "gYEa_1t4NqlCFyddrXND-6"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-30",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-24",
+          "target": "gYEa_1t4NqlCFyddrXND-6"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-31",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-32",
+          "type": "node",
+          "parent": "1",
+          "label": "es gratuita"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-33",
+          "type": "node",
+          "parent": "1",
+          "label": "porcentaje\ndescuento",
+          "html": "porcentaje<div>descuento</div>"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-34",
+          "type": "node",
+          "parent": "1",
+          "label": "puntos \npor peso",
+          "html": "puntos&nbsp;<div>por peso</div>"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-35",
+          "type": "node",
+          "parent": "1",
+          "label": "plazo meses"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-36",
+          "type": "node",
+          "parent": "1",
+          "label": "precio"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-37",
+          "type": "node",
+          "parent": "1",
+          "label": "descripcion"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-38",
+          "type": "node",
+          "parent": "1",
+          "label": "nombre"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-39",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-38",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-40",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-37",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-41",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-32",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-42",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-36",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-43",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-31",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-44",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-11",
+          "target": "gYEa_1t4NqlCFyddrXND-5"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-46",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-48",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-9",
+          "target": "gYEa_1t4NqlCFyddrXND-5"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-49",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha activación"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-52",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-46",
+          "target": "gYEa_1t4NqlCFyddrXND-1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-53",
+          "type": "node",
+          "parent": "1",
+          "label": "nombre"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-54",
+          "type": "node",
+          "parent": "1",
+          "label": "primer apellido"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-55",
+          "type": "node",
+          "parent": "1",
+          "label": "nombre pila",
+          "html": "nombre&nbsp;<span style=\"background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));\">pila</span>"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-56",
+          "type": "node",
+          "parent": "1",
+          "label": "segundo apellido"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-57",
+          "type": "node",
+          "parent": "1",
+          "label": "telefono"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-58",
+          "type": "node",
+          "parent": "1",
+          "label": "correo"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-59",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha registro"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-60",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-57",
+          "target": "gYEa_1t4NqlCFyddrXND-1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-61",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-58",
+          "target": "gYEa_1t4NqlCFyddrXND-1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-63",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-59",
+          "target": "gYEa_1t4NqlCFyddrXND-1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-66",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-58",
+          "target": "gYEa_1t4NqlCFyddrXND-58"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-68",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-3",
+          "target": "gYEa_1t4NqlCFyddrXND-71"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-71",
+          "type": "node",
+          "parent": "1",
+          "label": "es \nasociada \ncon",
+          "html": "es&nbsp;<div>asociada&nbsp;</div><div>con</div>"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-72",
+          "type": "node",
+          "parent": "1",
+          "label": "registra"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-73",
+          "type": "node",
+          "parent": "1",
+          "label": "se asocia con"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-74",
+          "type": "node",
+          "parent": "1",
+          "label": "le\ncorresponde",
+          "html": "le<div>corresponde</div><div><br></div>"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-75",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-2",
+          "target": "gYEa_1t4NqlCFyddrXND-74"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-76",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-74",
+          "target": "gYEa_1t4NqlCFyddrXND-6"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-77",
+          "type": "node",
+          "parent": "1",
+          "label": "pertenece a"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-78",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-77",
+          "target": "gYEa_1t4NqlCFyddrXND-1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-79",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-1",
+          "target": "gYEa_1t4NqlCFyddrXND-53"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-80",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-53",
+          "target": "gYEa_1t4NqlCFyddrXND-54"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-81",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-53",
+          "target": "gYEa_1t4NqlCFyddrXND-55"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-82",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-53",
+          "target": "gYEa_1t4NqlCFyddrXND-56"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-83",
+          "type": "node",
+          "parent": "1",
+          "label": "establece\nreglas para",
+          "html": "establece<div>reglas para</div>"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-84",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-83",
+          "target": "gYEa_1t4NqlCFyddrXND-5"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-85",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-4",
+          "target": "gYEa_1t4NqlCFyddrXND-83"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-87",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-5",
+          "target": "gYEa_1t4NqlCFyddrXND-49"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-88",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-5",
+          "target": "gYEa_1t4NqlCFyddrXND-77"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-89",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-35",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-90",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-34",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-91",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-33",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-93",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-95",
+          "type": "node",
+          "parent": "1",
+          "label": "monto"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-98",
+          "type": "node",
+          "parent": "1",
+          "label": "monto pagado"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-99",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-98",
+          "target": "gYEa_1t4NqlCFyddrXND-7"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-100",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-101",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-100",
+          "target": "gYEa_1t4NqlCFyddrXND-7"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-102",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-103",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-102",
+          "target": "gYEa_1t4NqlCFyddrXND-2"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-107",
+          "type": "node",
+          "parent": "1",
+          "label": "descripción"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-108",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-107",
+          "target": "gYEa_1t4NqlCFyddrXND-6"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-110",
+          "type": "node",
+          "parent": "1",
+          "label": "contraseña"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-111",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-1",
+          "target": "gYEa_1t4NqlCFyddrXND-110"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-112",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-113",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-114",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-115",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-116",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-117",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-118",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-119",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-120",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-121",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-122",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-123",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-124",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-126",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-127",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-130",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-131",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-132",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-133",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-136",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-7",
+          "target": "gYEa_1t4NqlCFyddrXND-72"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-137",
+          "type": "node",
+          "parent": "1",
+          "label": "M:1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-138",
+          "type": "node",
+          "parent": "1",
+          "label": "1:M"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-139",
+          "type": "node",
+          "parent": "1",
+          "label": "1:1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-140",
+          "type": "node",
+          "parent": "1",
+          "label": "1:M"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-141",
+          "type": "node",
+          "parent": "1",
+          "label": "1:1"
+        },
+        {
+          "id": "gYEa_1t4NqlCFyddrXND-142",
+          "type": "node",
+          "parent": "1",
+          "label": "M:1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-2",
+          "type": "node",
+          "parent": "1",
+          "label": "TRANSACCIÓN PUNTOS"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-3",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-5",
+          "target": "6K6Pn38wNRxhrYrAY6UI-2"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-5",
+          "type": "node",
+          "parent": "1",
+          "label": "es \nacumulada\npor",
+          "html": "es&nbsp;<div>acumulada<div>por</div></div>"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-6",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-5",
+          "target": "gYEa_1t4NqlCFyddrXND-1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-7",
+          "type": "node",
+          "parent": "1",
+          "label": "registra"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-8",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-7",
+          "target": "gYEa_1t4NqlCFyddrXND-5"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-9",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-2",
+          "target": "6K6Pn38wNRxhrYrAY6UI-7"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-10",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-72",
+          "target": "gYEa_1t4NqlCFyddrXND-5"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-12",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-14",
+          "type": "node",
+          "parent": "1",
+          "label": "cantidad"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-20",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-21",
+          "type": "node",
+          "parent": "1",
+          "label": "descripción"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-25",
+          "type": "node",
+          "parent": "1",
+          "label": "TIPO\nTRANSACCIÓN",
+          "html": "TIPO<div>TRANSACCIÓN</div>"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-26",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-27",
+          "target": "6K6Pn38wNRxhrYrAY6UI-2"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-27",
+          "type": "node",
+          "parent": "1",
+          "label": "tiene"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-28",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-25",
+          "target": "6K6Pn38wNRxhrYrAY6UI-27"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-31",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-71",
+          "target": "6K6Pn38wNRxhrYrAY6UI-2"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-32",
+          "type": "edge",
+          "parent": "1",
+          "source": "gYEa_1t4NqlCFyddrXND-73",
+          "target": "6K6Pn38wNRxhrYrAY6UI-2"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-34",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-35",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-36",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-38",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-39",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-40",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-41",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-42",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-43",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-44",
+          "type": "node",
+          "parent": "1",
+          "label": "1:M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-45",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-46",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-47",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-48",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-49",
+          "type": "node",
+          "parent": "1",
+          "label": "M:1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-50",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-51",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-52",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-53",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-54",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-34",
+          "target": "6K6Pn38wNRxhrYrAY6UI-12"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-55",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-2",
+          "target": "6K6Pn38wNRxhrYrAY6UI-14"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-56",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-25",
+          "target": "6K6Pn38wNRxhrYrAY6UI-20"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-57",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-25",
+          "target": "6K6Pn38wNRxhrYrAY6UI-21"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-58",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-59",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-58",
+          "target": "6K6Pn38wNRxhrYrAY6UI-36"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-62",
+          "type": "node",
+          "parent": "1",
+          "label": "ESTADO MEMBRESIA"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-63",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-64",
+          "type": "node",
+          "parent": "1",
+          "label": "descripción"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-67",
+          "type": "node",
+          "parent": "1",
+          "label": "se aplica a"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-68",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-67",
+          "target": "gYEa_1t4NqlCFyddrXND-5"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-69",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-62",
+          "target": "6K6Pn38wNRxhrYrAY6UI-67"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-72",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-63",
+          "target": "6K6Pn38wNRxhrYrAY6UI-62"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-73",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-62",
+          "target": "6K6Pn38wNRxhrYrAY6UI-64"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-74",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-75",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-76",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-78",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-79",
+          "type": "node",
+          "parent": "1",
+          "label": "1:M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-82",
+          "type": "node",
+          "parent": "1",
+          "label": "ROL"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-83",
+          "type": "node",
+          "parent": "1",
+          "label": "USUARIO ADMIN"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-85",
+          "type": "node",
+          "parent": "1",
+          "label": "asocia"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-86",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-85",
+          "target": "gYEa_1t4NqlCFyddrXND-3"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-87",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-83",
+          "target": "6K6Pn38wNRxhrYrAY6UI-85"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-88",
+          "type": "node",
+          "parent": "1",
+          "label": "se asigna a"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-89",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-82",
+          "target": "6K6Pn38wNRxhrYrAY6UI-88"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-90",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-88",
+          "target": "6K6Pn38wNRxhrYrAY6UI-83"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-92",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-93",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-94",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-95",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-96",
+          "type": "node",
+          "parent": "1",
+          "label": "1:M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-97",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-99",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-101",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-102",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-103",
+          "type": "node",
+          "parent": "1",
+          "label": "1:M"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-104",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-105",
+          "type": "node",
+          "parent": "1",
+          "label": "nombre"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-106",
+          "type": "node",
+          "parent": "1",
+          "label": "primer apellido"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-107",
+          "type": "node",
+          "parent": "1",
+          "label": "nombre pila",
+          "html": "nombre&nbsp;<span style=\"background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));\">pila</span>"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-108",
+          "type": "node",
+          "parent": "1",
+          "label": "segundo apellido"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-109",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-105",
+          "target": "6K6Pn38wNRxhrYrAY6UI-106"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-110",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-105",
+          "target": "6K6Pn38wNRxhrYrAY6UI-107"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-111",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-105",
+          "target": "6K6Pn38wNRxhrYrAY6UI-108"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-112",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-83",
+          "target": "6K6Pn38wNRxhrYrAY6UI-105"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-113",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-83",
+          "target": "6K6Pn38wNRxhrYrAY6UI-104"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-114",
+          "type": "node",
+          "parent": "1",
+          "label": "telefono"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-115",
+          "type": "node",
+          "parent": "1",
+          "label": "correo"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-116",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-115",
+          "target": "6K6Pn38wNRxhrYrAY6UI-115"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-118",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-83",
+          "target": "6K6Pn38wNRxhrYrAY6UI-115"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-119",
+          "type": "node",
+          "parent": "1",
+          "label": "contraseña"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-120",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-83",
+          "target": "6K6Pn38wNRxhrYrAY6UI-119"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-121",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-83",
+          "target": "6K6Pn38wNRxhrYrAY6UI-114"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-122",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-123",
+          "type": "node",
+          "parent": "1",
+          "label": "nombre"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-124",
+          "type": "node",
+          "parent": "1",
+          "label": "descripción"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-125",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-82",
+          "target": "6K6Pn38wNRxhrYrAY6UI-122"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-126",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-82",
+          "target": "6K6Pn38wNRxhrYrAY6UI-124"
+        },
+        {
+          "id": "6K6Pn38wNRxhrYrAY6UI-127",
+          "type": "edge",
+          "parent": "1",
+          "source": "6K6Pn38wNRxhrYrAY6UI-123",
+          "target": "6K6Pn38wNRxhrYrAY6UI-82"
+        }
+      ]
+    }
+  ]
+}
