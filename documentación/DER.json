@@ -1,5 +1,5 @@
 {
-  "version": "31.5.3",
+  "version": "31.7.0",
   "pages": [
     {
       "id": "vxQw3GbYWfdAGllX5hxw",
@@ -113,7 +113,7 @@
           "id": "gYEa_1t4NqlCFyddrXND-25",
           "type": "node",
           "parent": "1",
-          "label": "está activa"
+          "label": "fecha inicio"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-26",
@@ -133,14 +133,14 @@
           "type": "edge",
           "parent": "1",
           "source": "gYEa_1t4NqlCFyddrXND-26",
-          "target": "gYEa_1t4NqlCFyddrXND-6"
+          "target": "PjwmIlIg0k07TCke2Jko-3"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-29",
           "type": "edge",
           "parent": "1",
           "source": "gYEa_1t4NqlCFyddrXND-25",
-          "target": "gYEa_1t4NqlCFyddrXND-6"
+          "target": "PjwmIlIg0k07TCke2Jko-3"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-30",
@@ -162,30 +162,10 @@
           "label": "es gratuita"
         },
         {
-          "id": "gYEa_1t4NqlCFyddrXND-33",
-          "type": "node",
-          "parent": "1",
-          "label": "porcentaje\ndescuento",
-          "html": "porcentaje<div>descuento</div>"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-34",
-          "type": "node",
-          "parent": "1",
-          "label": "puntos \npor peso",
-          "html": "puntos&nbsp;<div>por peso</div>"
-        },
-        {
           "id": "gYEa_1t4NqlCFyddrXND-35",
           "type": "node",
           "parent": "1",
           "label": "plazo meses"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-36",
-          "type": "node",
-          "parent": "1",
-          "label": "precio"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-37",
@@ -218,13 +198,6 @@
           "type": "edge",
           "parent": "1",
           "source": "gYEa_1t4NqlCFyddrXND-32",
-          "target": "gYEa_1t4NqlCFyddrXND-4"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-42",
-          "type": "edge",
-          "parent": "1",
-          "source": "gYEa_1t4NqlCFyddrXND-36",
           "target": "gYEa_1t4NqlCFyddrXND-4"
         },
         {
@@ -329,7 +302,7 @@
           "type": "edge",
           "parent": "1",
           "source": "gYEa_1t4NqlCFyddrXND-59",
-          "target": "gYEa_1t4NqlCFyddrXND-1"
+          "target": "6K6Pn38wNRxhrYrAY6UI-51"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-66",
@@ -382,7 +355,7 @@
           "id": "gYEa_1t4NqlCFyddrXND-76",
           "type": "edge",
           "parent": "1",
-          "source": "gYEa_1t4NqlCFyddrXND-74",
+          "source": "PjwmIlIg0k07TCke2Jko-2",
           "target": "gYEa_1t4NqlCFyddrXND-6"
         },
         {
@@ -427,27 +400,6 @@
           "target": "gYEa_1t4NqlCFyddrXND-56"
         },
         {
-          "id": "gYEa_1t4NqlCFyddrXND-83",
-          "type": "node",
-          "parent": "1",
-          "label": "establece\nreglas para",
-          "html": "establece<div>reglas para</div>"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-84",
-          "type": "edge",
-          "parent": "1",
-          "source": "gYEa_1t4NqlCFyddrXND-83",
-          "target": "gYEa_1t4NqlCFyddrXND-5"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-85",
-          "type": "edge",
-          "parent": "1",
-          "source": "gYEa_1t4NqlCFyddrXND-4",
-          "target": "gYEa_1t4NqlCFyddrXND-83"
-        },
-        {
           "id": "gYEa_1t4NqlCFyddrXND-87",
           "type": "edge",
           "parent": "1",
@@ -466,21 +418,7 @@
           "type": "edge",
           "parent": "1",
           "source": "gYEa_1t4NqlCFyddrXND-35",
-          "target": "gYEa_1t4NqlCFyddrXND-4"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-90",
-          "type": "edge",
-          "parent": "1",
-          "source": "gYEa_1t4NqlCFyddrXND-34",
-          "target": "gYEa_1t4NqlCFyddrXND-4"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-91",
-          "type": "edge",
-          "parent": "1",
-          "source": "gYEa_1t4NqlCFyddrXND-33",
-          "target": "gYEa_1t4NqlCFyddrXND-4"
+          "target": "PjwmIlIg0k07TCke2Jko-24"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-93",
@@ -558,30 +496,6 @@
           "parent": "1",
           "source": "gYEa_1t4NqlCFyddrXND-1",
           "target": "gYEa_1t4NqlCFyddrXND-110"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-112",
-          "type": "node",
-          "parent": "1",
-          "label": "1"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-113",
-          "type": "node",
-          "parent": "1",
-          "label": "1"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-114",
-          "type": "node",
-          "parent": "1",
-          "label": "M"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-115",
-          "type": "node",
-          "parent": "1",
-          "label": "1"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-116",
@@ -685,12 +599,6 @@
           "type": "node",
           "parent": "1",
           "label": "M:1"
-        },
-        {
-          "id": "gYEa_1t4NqlCFyddrXND-138",
-          "type": "node",
-          "parent": "1",
-          "label": "1:M"
         },
         {
           "id": "gYEa_1t4NqlCFyddrXND-139",
@@ -997,12 +905,6 @@
           "label": "ESTADO MEMBRESIA"
         },
         {
-          "id": "6K6Pn38wNRxhrYrAY6UI-63",
-          "type": "node",
-          "parent": "1",
-          "label": "num"
-        },
-        {
           "id": "6K6Pn38wNRxhrYrAY6UI-64",
           "type": "node",
           "parent": "1",
@@ -1018,8 +920,7 @@
           "id": "6K6Pn38wNRxhrYrAY6UI-68",
           "type": "edge",
           "parent": "1",
-          "source": "6K6Pn38wNRxhrYrAY6UI-67",
-          "target": "gYEa_1t4NqlCFyddrXND-5"
+          "source": "6K6Pn38wNRxhrYrAY6UI-67"
         },
         {
           "id": "6K6Pn38wNRxhrYrAY6UI-69",
@@ -1032,7 +933,7 @@
           "id": "6K6Pn38wNRxhrYrAY6UI-72",
           "type": "edge",
           "parent": "1",
-          "source": "6K6Pn38wNRxhrYrAY6UI-63",
+          "source": "PjwmIlIg0k07TCke2Jko-77",
           "target": "6K6Pn38wNRxhrYrAY6UI-62"
         },
         {
@@ -1082,7 +983,7 @@
           "id": "6K6Pn38wNRxhrYrAY6UI-83",
           "type": "node",
           "parent": "1",
-          "label": "USUARIO ADMIN"
+          "label": "USUARIO"
         },
         {
           "id": "6K6Pn38wNRxhrYrAY6UI-85",
@@ -1334,6 +1235,356 @@
           "parent": "1",
           "source": "6K6Pn38wNRxhrYrAY6UI-123",
           "target": "6K6Pn38wNRxhrYrAY6UI-82"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-1",
+          "type": "node",
+          "parent": "1",
+          "label": "1:M"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-2",
+          "type": "node",
+          "parent": "1",
+          "label": "es una \nversión de",
+          "html": "<div>es una&nbsp;</div><div>versión de</div>"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-3",
+          "type": "node",
+          "parent": "1",
+          "label": "VERSIÓN\nRECOMPENSA",
+          "html": "VERSIÓN<div>RECOMPENSA</div>"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-4",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-2",
+          "target": "PjwmIlIg0k07TCke2Jko-3"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-5",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-3",
+          "target": "gYEa_1t4NqlCFyddrXND-74"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-6",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha final"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-7",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-6",
+          "target": "PjwmIlIg0k07TCke2Jko-3"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-9",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-10",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-9",
+          "target": "PjwmIlIg0k07TCke2Jko-3"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-24",
+          "type": "node",
+          "parent": "1",
+          "label": "VERSION PLAN"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-25",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-27",
+          "type": "node",
+          "parent": "1",
+          "label": "porcentaje\ndescuento",
+          "html": "porcentaje<div>descuento</div>"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-28",
+          "type": "node",
+          "parent": "1",
+          "label": "puntos \npor peso",
+          "html": "puntos&nbsp;<div>por peso</div>"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-30",
+          "type": "node",
+          "parent": "1",
+          "label": "precio"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-36",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-30",
+          "target": "PjwmIlIg0k07TCke2Jko-24"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-37",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-25",
+          "target": "PjwmIlIg0k07TCke2Jko-24"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-38",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-24",
+          "target": "PjwmIlIg0k07TCke2Jko-45"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-40",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-28",
+          "target": "PjwmIlIg0k07TCke2Jko-24"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-41",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-27",
+          "target": "PjwmIlIg0k07TCke2Jko-24"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-42",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-43",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-45",
+          "type": "node",
+          "parent": "1",
+          "label": "es una \nversión de",
+          "html": "es una&nbsp;<div>versión&nbsp;<span style=\"background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));\">de</span></div>"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-46",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-45",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-47",
+          "type": "node",
+          "parent": "1",
+          "label": "saldo"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-48",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-47",
+          "target": "6K6Pn38wNRxhrYrAY6UI-48"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-50",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-24",
+          "target": "PjwmIlIg0k07TCke2Jko-51"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-51",
+          "type": "node",
+          "parent": "1",
+          "label": "aplica a"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-52",
+          "type": "node",
+          "parent": "1",
+          "label": "limite canjes"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-53",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-52",
+          "target": "PjwmIlIg0k07TCke2Jko-24"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-54",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-51",
+          "target": "gYEa_1t4NqlCFyddrXND-5"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-66",
+          "type": "node",
+          "parent": "1",
+          "label": "limite canjes",
+          "html": "limite&nbsp;<span style=\"background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));\">canjes</span>"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-67",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-3",
+          "target": "PjwmIlIg0k07TCke2Jko-66"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-68",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-70",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-71",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-72",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-73",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-74",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-75",
+          "type": "node",
+          "parent": "1",
+          "label": "M:M"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-76",
+          "type": "node",
+          "parent": "1",
+          "label": "M:1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-77",
+          "type": "node",
+          "parent": "1",
+          "label": "num"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-79",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha inicio"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-80",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha final"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-81",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-80",
+          "target": "PjwmIlIg0k07TCke2Jko-24"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-82",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-79",
+          "target": "PjwmIlIg0k07TCke2Jko-24"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-84",
+          "type": "node",
+          "parent": "1",
+          "label": "fecha aplicacion"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-86",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-84",
+          "target": "PjwmIlIg0k07TCke2Jko-51"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-88",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-89",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-90",
+          "type": "node",
+          "parent": "1",
+          "label": "1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-91",
+          "type": "node",
+          "parent": "1",
+          "label": "M"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-92",
+          "type": "node",
+          "parent": "1",
+          "label": "M:1"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-96",
+          "type": "node",
+          "parent": "1",
+          "label": "Periodo\nrembolso",
+          "html": "Periodo<div>rembolso</div>"
+        },
+        {
+          "id": "PjwmIlIg0k07TCke2Jko-97",
+          "type": "edge",
+          "parent": "1",
+          "source": "PjwmIlIg0k07TCke2Jko-96",
+          "target": "gYEa_1t4NqlCFyddrXND-4"
         }
       ]
     }

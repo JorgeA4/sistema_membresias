@@ -2,34 +2,60 @@
 Sistema de gestión de membresías y programas de fidelización.
 
 # Nombre
-Nexum — del latín *nexus*, que significa vínculo o unión. El nombre refleja la relación que el sistema establece entre un negocio y sus clientes a través de las membresías.
+Nexum — del latín *nexus*, que significa vínculo o unión. El nombre refleja
+la relación que el sistema establece entre un negocio y sus clientes a través
+de las membresías.
 
 # Problemática
-Los negocios que ofrecen programas de membresía a sus clientes — ya sean gratuitos o de pago — enfrentan la necesidad de gestionar de forma organizada el registro de miembros, el seguimiento de su actividad, la acumulación de puntos y el canje de recompensas. Sin un sistema dedicado, esta gestión se vuelve manual, propensa a errores y difícil de escalar. Al mismo tiempo, los clientes no tienen visibilidad clara del estado de su membresía, sus puntos disponibles ni las recompensas a las que pueden acceder.
+Los negocios que ofrecen programas de membresía a sus clientes —ya sean
+gratuitos o de pago— necesitan gestionar el registro de miembros, la vigencia
+de sus membresías, el seguimiento de su actividad, la acumulación de puntos y
+el canje de recompensas. Sin un sistema dedicado, esta gestión se vuelve
+manual, propensa a errores y difícil de escalar.
 
 # Descripción
-Nexum es un sistema que permite a un negocio configurar y operar un programa de membresías y fidelización, y a sus clientes consultar y gestionar su participación en dicho programa.
+Nexum es un sistema para la gestión de membresías y programas de fidelización.
+Permite a un negocio administrar a sus miembros, los planes, los beneficios y
+las recompensas asociadas, así como dar seguimiento a la actividad de cada
+cliente dentro del programa.
 
-El sistema cuenta con dos interfaces:
+El sistema contempla distintos tipos de acceso. El personal administrativo se
+encarga de la operación y configuración del programa, mientras que los miembros
+pueden consultar su información, su membresía, sus puntos y los beneficios
+disponibles.
 
-- **Interfaz administrativa:** utilizada por el administrador del negocio y por los cajeros. El administrador configura los planes de membresía, gestiona miembros, recompensas y usuarios administrativos, y consulta la actividad del programa. El cajero registra las compras asociándolas a la membresía del cliente al momento de la venta.
+La operación del programa se apoya en un modelo de datos que distingue entre
+entidades base y sus versiones temporales, lo que permite conservar el historial
+de las condiciones aplicadas a lo largo del tiempo.
 
-- **Interfaz del cliente:** utilizada por los miembros para consultar el estado de su membresía, revisar su historial de compras, ver sus puntos disponibles, explorar recompensas disponibles y realizar canjes.
+# Interfaces
+
+## Interfaz de usuario
+Utilizada por las entidades `USUARIO`. El acceso depende del rol asignado:
+
+- El rol `Administrador` tiene acceso completo a la gestión del sistema.
+- El rol `Cajero` unicamente puede registrar compras asociadas a membresías.
+
+
+## Interfaz de miembro
+Utilizada por las entidades `MIEMBRO` para consultar su membresía, la versión
+de plan vigente, sus puntos, las versiones de recompensas disponibles y su
+historial de actividad.
 
 # Funcionalidades principales
 
-## Administrador
-- Gestión de miembros: registro, consulta, modificación y desactivación.
-- Configuración de planes de membresía: nombre, precio, plazo, tasa de acumulación de puntos y porcentaje de descuento.
-- Gestión de recompensas: creación, modificación, activación y desactivación.
-- Gestión de usuarios administrativos con asignación de roles (administrador o cajero).
-- Consulta de actividad: historial de compras, transacciones de puntos e historial de canjes de los miembros.
+## Funciones disponibles según el rol de usuario
+- Gestión de miembros: registro, consulta y modificación.
+- Configuración de planes y sus versiones temporales.
+- Definición de vigencias, precios, beneficios y límites de uso.
+- Gestión de recompensas base y sus versiones disponibles.
+- Gestión de usuarios administrativos y roles.
+- Consulta de compras, transacciones de puntos y canjes.
+- Registro de compras asociadas a una membresía mediante su número.
 
-## Cajero
-- Registro de compras asociadas a la membresía del cliente mediante su número de membresía.
-
-## Cliente
-- Consulta de su información personal y estado de su membresía.
-- Consulta de su saldo de puntos e historial de transacciones de puntos.
-- Consulta y canje de recompensas disponibles.
-- Solicitud de renovación o cancelación de su membresía.
+## Funciones del miembro
+- Consulta de su información personal y estado de membresía.
+- Consulta del plan base y de la versión vigente aplicada.
+- Consulta de puntos y transacciones.
+- Consulta y canje de versiones de recompensas disponibles.
+- Solicitud de renovación o cancelación de la membresía.
