@@ -20,7 +20,7 @@ class Membresia:
         else:
             raise ValueError("El estado ingresado es invalido.")
 
-    def info():
+    def info(self):
         print(f"Numero de membresia: {self.num}")
         print(f"Numero de miembro: {self.num_miembro}")
         print(f"Fecha de activacion: {self.fecha_activacion}")
