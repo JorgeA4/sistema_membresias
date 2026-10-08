@@ -1,15 +1,10 @@
 class Canje:
-    def atributos():
-        num = 0
-        num_membresia = 0.0
-        num_version_recompensa = 0.0
-        return num, num_membresia, num_version_recompensa
+    def __init__(self, num, num_membresia, num_version_recompensa):
+        self.num = num
+        self.num_membresia = num_membresia
+        self.num_version_recompensa = num_version_recompensa
 
-    #Funciones
-    def info():
-        print("Informacion basica: Puedes consultar tus puntos actuales aqui!")
-
-    def main():
-        num, num_membresia, num_version_recompensa = Canje.atributos()
-        Canje.info(num, num_membresia, num_version_recompensa)
-    main()
+    def info(self):
+        print(f"Numero de usuario: {self.num}")
+        print(f"Numero de membresia: {self.num_membresia}")
+        print(f"Version de recompensa: {self.num_version_recompensa}")
