@@ -14,7 +14,7 @@ class Membresia:
     SUSPENDIDA = estado.SUSPENDIDA
     CANCELADA = estado.CANCELADA
 
-    def set_value(self, estado):
+    def definir_estado(self, estado):
         if estado in Membresia.estado:
             self.estado = estado
         else:
