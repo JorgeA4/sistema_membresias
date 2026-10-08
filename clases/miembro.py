@@ -1,19 +1,16 @@
-class miembro:
-    def atributos():
-        num = 0
-        nombre = str(input("Favor de ingresar su nombre: "))
-        primer_apellido = str(input("Primer apellido: "))
-        segundo_apellido = str(input("Segundo apellido: "))
-        telefono = int(input("Ingrese su numero de telefono: "))
-        correo = str(input("Ingrese su correo electronico: "))
+class Miembro:
+    def __init__(self, num, nombre, primer_apellido, segundo_apellido, telefono, correo):
+        self.num = num
+        self.nombre = nombre
+        self.primer_apellido = primer_apellido
+        self.segundo_apellido = segundo_apellido
+        self.telefono = telefono
+        self.correo = correo
 
-        return num, nombre, primer_apellido, segundo_apellido, telefono, correo
-
-    def info(num, nombre, primer_apellido, segundo_apellido,  telefono, correo):
-        print(f"{num}\n{nombre}\n{primer_apellido}\n{segundo_apellido}\n{telefono}\n{correo}")
-
-    def main():
-        num, nombre, primer_apellido, segundo_apellido,  telefono, correo = miembro.atributos()
-        miembro.info(num, nombre, primer_apellido, segundo_apellido,  telefono, correo)
-
-miembro.main()
+    def info(self):
+        print(f"Numero: {self.num}")
+        print(f"Nombre de usuario: {self.nombre}")
+        print(f"Primer Apellido: {self.primer_apellido}")
+        print(f"Segundo Apellido: {self.segundo_apellido}")
+        print(f"Numero de Telefono: {self.telefono}")
+        print(f"Correo Electronico: {self.correo}")
