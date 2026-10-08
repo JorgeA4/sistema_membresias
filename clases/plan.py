@@ -1,6 +1,6 @@
 class Plan:
     def __init__(self, es_gratuita, num, nombre, descripcion):
-        self.es_gratuita = False if es_gratuita == "False" else True
+        self.es_gratuita = es_gratuita
         self.num = num
         self.nombre = nombre
         self.descripcion = descripcion
