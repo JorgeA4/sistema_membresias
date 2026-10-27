@@ -17,7 +17,7 @@ class TransaccionPuntos:
         self.compra = compra # FK
         self.canje = canje # FK
     
-    def definir_estado(self, tipo):
+    def definir_tipo(self, tipo):
         if tipo in TransaccionPuntos.Tipo:
             self.tipo = tipo
         else:

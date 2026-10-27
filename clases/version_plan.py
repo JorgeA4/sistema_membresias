@@ -9,14 +9,11 @@ class VersionPlan:
         self.puntos_por_peso = puntos_por_peso
         self.porcentaje_descuento = porcentaje_descuento
         self.limite_canjes = limite_canjes
-        self.plazo_mese = plazo_meses
+        self.plazo_meses = plazo_meses
         self.plan = plan #FK
 
     def esta_vigente(self):
-        if self.fecha_inicio <= datetime.now() <= self.fecha_final:
-            return True
-        else:
-            return False
+        return self.fecha_inicio <= datetime.now() <= self.fecha_final:
 
     def info(self):
         print(f"Numero de version: {self.num}")

@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 
 class Membresia:
     class Estado(Enum):
@@ -12,6 +13,9 @@ class Membresia:
         self.fecha_vencimiento = fecha_vencimiento
         self.miembro = miembro  # FK
         self.estado = Membresia.Estado(estado) #self.estado.value = FK
+
+    def esta_vigente(self):
+        return self.fecha_activacion <= datetime.now() <= self.fecha_vencimiento
 
     def definir_estado(self, estado):
         if estado in Membresia.Estado:

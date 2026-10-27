@@ -1,12 +1,12 @@
 class Usuario:
-    def __init__(self, num, nombre, primer_apellido, segundo_apellido, telefono, correo, contrasena, rol):
+    def __init__(self, num, nombre, primer_apellido, segundo_apellido, telefono, correo, contraseña, rol):
         self.num = num
         self.nombre = nombre
         self.primer_apellido = primer_apellido
         self.segundo_apellido = segundo_apellido        
         self.telefono = telefono
         self.correo = correo
-        self.contrasena = contrasena
+        self.contraseña = contraseña
         self.rol = rol
 
     def info(self):
@@ -16,5 +16,5 @@ class Usuario:
         print(f"Primer apellido: {self.primer_apellido}")
         print(f"Segundo apellido: {self.segundo_apellido}")
         print(f"Correo: {self.correo}")
-        print(f"Contrasena: {self.contrasena}")
+        print(f"Contraseña: {self.contraseña}")
         print(f"Telefono: {self.telefono}")

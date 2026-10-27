@@ -159,7 +159,7 @@ Funciones: `info()`.
 ## aplicacion_version_plan.py
 Conecta membresia y version plan, en una relación muchos a muchos.
 
-Atributos: `membresia`, `version_plan`, `fecha_aplicacion`.
+Atributos: `membresia`, `version_plan`, `fecha`.
 
 Funciones:
 

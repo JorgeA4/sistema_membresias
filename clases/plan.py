@@ -12,6 +12,6 @@ class Plan:
         else:
             print("Su plan es de pago")
 
-        print(f"Numero de plan: {self.num}")
+        print(f"Numero de plan: {self.codigo}")
         print(f"Nombre de usuario: {self.nombre}")
         print(f"Descripcion: {self.descripcion}")
