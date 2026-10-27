@@ -80,7 +80,7 @@ Atributos: `num`, `fecha_activacion`, `fecha_vencimiento`, `miembro`, `estado`(E
 
 Funciones: `info()`, `esta_vigente()`.
 
-La relación entre `VERSION_PLAN` y `MEMBRESIA` registra `fecha_aplicacion`.
+La relación entre `VERSION_PLAN` y `MEMBRESIA` registra `fecha`.
 Esto permite conservar el historial de versiones aplicadas y volver a la
 versión regular cuando termina una versión promocional.
 

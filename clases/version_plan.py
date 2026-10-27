@@ -13,7 +13,7 @@ class VersionPlan:
         self.plan = plan #FK
 
     def esta_vigente(self):
-        return self.fecha_inicio <= datetime.now() <= self.fecha_final:
+        return self.fecha_inicio <= date.today() <= self.fecha_final
 
     def info(self):
         print(f"Numero de version: {self.num}")
