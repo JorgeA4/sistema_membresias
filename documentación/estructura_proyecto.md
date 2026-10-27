@@ -14,7 +14,7 @@ sistema_membresias/
 │   ├── renovacion.py
 │   ├── canje.py
 │   ├── rol.py
-│   └── usuario_admin.py
+│   └── usuario.py
 │
 ├── servicios/
 │   ├── servicio_miembro.py
@@ -22,7 +22,7 @@ sistema_membresias/
 │   ├── servicio_version_plan.py
 │   ├── servicio_membresia.py
 │   ├── servicio_recompensa.py
-│   └── servicio_usuario_admin.py
+│   └── servicio_usuario.py
 │
 ├── base_de_datos/
 │   └── ...
@@ -43,8 +43,7 @@ principal del modelo.
 ## miembro.py
 Representa a la persona que participa en el programa.
 
-Atributos: `num`, `telefono`, `correo`, `nombre`, `primer_apellido`,
-`segundo_apellido`, `fecha_registro`, `contraseña`.
+Atributos: `num`, `nombre`, `primer_apellido`, `segundo_apellido`, `telefono`, `correo`, `contraseña`, `fecha_registro`.
 
 Funciones: `info()`.
 
@@ -53,17 +52,17 @@ Representa la identidad y las características estructurales de un plan.
 `es_gratuita` indica si el plan es gratuito por su naturaleza base; no indica
 el precio temporal de una versión concreta.
 
-Atributos: `num`, `nombre`, `descripcion`, `es_gratuita`.
+Atributos: `codigo`, `nombre`, `descripcion`, `es_gratuita`, `preiodo_rembolso`.
 
-Funciones: `info()`.
+Funciones: `info()`
 
 ## version_plan.py
 Representa una versión temporal de un plan. Puede ser una versión regular o
 una versión promocional. Sus condiciones no deben modificarse después de que
 se hayan definido; la versión es inmutable.
 
-Atributos: `num`, `precio`, `plazo_meses`, `puntos_por_peso`,
-`porcentaje_descuento`, `limite_canjes`, `fecha_inicio`, `fecha_final`.
+Atributos: `num`, `fecha_inicio`, `fecha_final`, `precio`, `puntos_por_peso`,
+`porcentaje_descuento`, `limite_canjes`, `plazo_meses`, `plan`.
 
 Una versión pertenece a un único plan. La vigencia de la versión se controla
 con sus fechas. El límite de canjes se interpreta por miembro y se calcula a
@@ -77,10 +76,9 @@ Representa la participación de un miembro en el programa. Sus condiciones
 económicas y beneficios se obtienen de la versión de plan aplicada que esté
 vigente.
 
-Atributos: `num`, `num_miembro`, `estado`(Enum), `fecha_activacion`,
-`fecha_vencimiento`.
+Atributos: `num`, `fecha_activacion`, `fecha_vencimiento`, `miembro`, `estado`(Enum).
 
-Funciones: `info()`, `esta_vencida()`.
+Funciones: `info()`, `esta_vigente()`.
 
 La relación entre `VERSION_PLAN` y `MEMBRESIA` registra `fecha_aplicacion`.
 Esto permite conservar el historial de versiones aplicadas y volver a la
@@ -89,8 +87,7 @@ versión regular cuando termina una versión promocional.
 ## transaccion_puntos.py
 Representa una acumulación o gasto de puntos.
 
-Atributos: `num`, `num_miembro`, `num_membresia`, `cantidad`, `fecha`,
-`tipo`(Enum), `descripcion`.
+Atributos: `num`, `fecha`, `cantidad`, `saldo`, `miembro`, `membresia`, `tipo`(Enum), `compra`, `canje`.
 
 Funciones: `info()`.
 
@@ -102,7 +99,7 @@ relaciones correspondientes.
 Representa una compra asociada a una membresía y registrada por un usuario
 administrativo.
 
-Atributos: `num`, `num_membresia`, `num_usuario_admin`, `monto`.
+Atributos: `num`, `monto`, `usuario`.
 
 La fecha de la compra se obtiene de la transacción asociada.
 
@@ -111,7 +108,7 @@ Funciones: `info()`.
 ## recompensa.py
 Representa la identidad base de una recompensa.
 
-Atributos: `num`, `nombre`, `descripcion`.
+Atributos: `codigo`, `nombre`, `descripcion`.
 
 Funciones: `info()`.
 
@@ -120,7 +117,7 @@ Representa una versión temporal de una recompensa. El costo, la disponibilidad
 y los límites pueden variar entre versiones sin modificar la recompensa base.
 
 Atributos: `num`, `costo_puntos`, `fecha_inicio`, `fecha_final`,
-`limite_canjes`.
+`limite_canjes`, `recompensa`.
 
 Funciones: `info()`, `esta_vigente()`.
 
@@ -131,14 +128,14 @@ miembro para esa versión.
 ## renovacion.py
 Representa una renovación de una membresía.
 
-Atributos: `num`, `num_membresia`, `monto_pagado`, `fecha`.
+Atributos: `num`, `fecha`, `monto_pagado`, `membresia`.
 
 Funciones: `info()`.
 
 ## canje.py
 Representa el canje de puntos de una membresía por una versión de recompensa.
 
-Atributos: `num`, `num_membresia`, `num_version_recompensa`.
+Atributos: `num`, `version_recompensa`.
 
 La fecha y el gasto de puntos se registran mediante la transacción asociada al
 canje.
@@ -148,25 +145,23 @@ Funciones: `info()`.
 ## rol.py
 Representa un rol de usuario administrativo.
 
-Atributos: `num`, `nombre`, `descripcion`.
+Atributos: `codigo`, `nombre`, `descripcion`.
 
 Funciones: `info()`.
 
-## usuario_admin.py
-Representa a un usuario administrativo con un rol asignado.
+## usuario.py
+Representa a un usuario con un rol asignado.
 
-Atributos: `num`, `num_rol`, `nombre`, `primer_apellido`, `segundo_apellido`,
-`correo`, `telefono`, `contraseña`.
+Atributos: `num`, `nombre`, `primer_apellido`, `segundo_apellido`, `telefono`, `correo`,`contraseña`, `rol`.
 
 Funciones: `info()`.
 
-# Relaciones con información propia
-En el modelo relacional, las relaciones que contienen atributos se convierten
-en tablas intermedias. En particular:
+## aplicacion_version_plan.py
+Conecta membresia y version plan, en una relación muchos a muchos.
 
-- La relación entre `VERSION_PLAN` y `MEMBRESIA` conserva `fecha_aplicacion`.
-- Las relaciones entre transacciones y compras o canjes identifican el origen
-  de la operación de puntos.
+Atributos: `membresia`, `version_plan`, `fecha_aplicacion`.
+
+Funciones:
 
 # servicios/
 Guarda operaciones que involucran varias entidades y no pertenecen a una
@@ -191,7 +186,7 @@ Funciones para crear, modificar y consultar recompensas base y sus versiones.
 Las versiones de recompensa son inmutables; los cambios se representan mediante
 una nueva versión.
 
-## servicio_usuario_admin.py
+## servicio_usuario.py
 Funciones: `eliminar(num)`, `modificar(num, datos)`.
 
 # base_de_datos/

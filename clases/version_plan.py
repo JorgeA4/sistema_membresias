@@ -1,16 +1,19 @@
+from datetime import date, datetime
+
 class VersionPlan:
-    def __init__(self, num, precio, plazo_mese, puntos_por_peso, porcentaje_descuento, limite_canjes, fecha_inicio, fecha_final):
+    def __init__(self, num, fecha_inicio, fecha_final, precio, puntos_por_peso, porcentaje_descuento, limite_canjes, plazo_meses, plan):
         self.num = num
+        self.fecha_inicio = fecha_inicio
+        self.fecha_final = fecha_final
         self.precio = precio
-        self.plazo_mese = plazo_mese
         self.puntos_por_peso = puntos_por_peso
         self.porcentaje_descuento = porcentaje_descuento
         self.limite_canjes = limite_canjes
-        self.fecha_inicio = fecha_inicio
-        self.fecha_final = fecha_final
+        self.plazo_mese = plazo_meses
+        self.plan = plan #FK
 
-    def esta_vigente(self, fecha_actual):
-        if self.fecha_inicio <= fecha_actual <= self.fecha_final:
+    def esta_vigente(self):
+        if self.fecha_inicio <= datetime.now() <= self.fecha_final:
             return True
         else:
             return False
@@ -18,7 +21,7 @@ class VersionPlan:
     def info(self):
         print(f"Numero de version: {self.num}")
         print(f"Precio: {self.precio}")
-        print(f"Plazo en meses: {self.plazo_mese}")
+        print(f"Plazo en meses: {self.plazo_meses}")
         print(f"Puntos por peso: {self.puntos_por_peso}")
         print(f"Porcentaje de descuento: {self.porcentaje_descuento}")
         print(f"Limite de canjes: {self.limite_canjes}")

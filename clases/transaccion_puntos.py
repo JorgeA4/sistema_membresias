@@ -1,25 +1,25 @@
-class TransaccionPuntos:
-    def __init__(self, num, num_miembro, num_membresia, cantidad, fecha, tipo, descripcion):
-        self.num = num
-        self.num_miembro = num_miembro
-        self.num_membresia = num_membresia
-        self.cantidad = cantidad
-        self.fecha = fecha
-        self.descripcion = descripcion
+from enum import Enum
 
-    class tipo(Enum):
-        JA = 1
-        JE = 2
-        JI = 3
-        JOrgito_observa = 4
-    JA = tipo.JA
-    JE = tipo.JE
-    JI = tipo.JI
-    JOrgito_observa = tipo.JOrgito_observa
+class TransaccionPuntos:
+    class Tipo(Enum):
+        INGRESO = 1
+        EGRESO = 2
+        AJUSTE = 3
+
+    def __init__(self, num, fecha, cantidad, saldo, miembro, membresia, tipo, compra, canje):
+        self.num = num # PK
+        self.fecha = fecha
+        self.cantidad = cantidad
+        self.saldo = saldo
+        self.miembro = miembro # FK
+        self.membresia = membresia # FK
+        self.tipo = TransaccionPuntos.Tipo(tipo) # FK
+        self.compra = compra # FK
+        self.canje = canje # FK
     
     def definir_estado(self, tipo):
-        if tipo in TransaccionPuntos.tipo:
+        if tipo in TransaccionPuntos.Tipo:
             self.tipo = tipo
         else:
-            raise ValueError("El tipo ingresado es invalido.")
+            raise ValueError("El tipo de transaccion ingresado es invalido.")
     
