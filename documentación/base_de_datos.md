@@ -5,19 +5,17 @@ reflejar las entidades y relaciones definidas en `documentación/DER.json`.
 
 ## Decisiones de implementación
 
-- El sistema utilizará PostgreSQL como sistema gestor de bases de datos.
-- El entorno de desarrollo ejecutará PostgreSQL mediante Docker Compose.
-- Se utilizará un volumen de Docker para conservar los datos entre reinicios.
-- pgAdmin podrá utilizarse como herramienta gráfica de administración.
-- La conexión desde Python se realizará mediante `psycopg`.
+- El sistema utilizará MariaDB como sistema gestor de bases de datos.
+- El entorno de desarrollo ejecutará MariaDB mediante XAMPP/LAMP.
+- phpMyAdmin podrá utilizarse como herramienta gráfica de administración.
+- La conexión desde Python se realizará mediante `PyMySQL`.
 - Las credenciales se proporcionarán mediante variables de entorno y no se
   almacenarán en el código fuente.
-- Las claves primarias utilizarán `INTEGER GENERATED ALWAYS AS IDENTITY`.
-- Los valores monetarios utilizarán `NUMERIC(10, 2)`; no se utilizará `FLOAT`
+- Las claves primarias utilizarán `INT AUTO_INCREMENT`.
+- Los valores monetarios utilizarán `DECIMAL(10, 2)`; no se utilizará `FLOAT`
   para representar dinero.
-- Las fechas y horas se almacenarán como `TIMESTAMPTZ`.
-- Las contraseñas se almacenarán únicamente como hashes generados con bcrypt o
-  Argon2.
+- Las fechas y horas se almacenarán como `DATETIME`.
+- Las contraseñas se almacenarán únicamente como hashes generados con `bcrypt`.
 - La integridad de los datos se protegerá mediante claves foráneas,
   restricciones `CHECK`, restricciones `UNIQUE` y transacciones.
 - Las versiones históricas de planes y recompensas serán inmutables. Los
