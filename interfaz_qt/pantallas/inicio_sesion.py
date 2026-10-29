@@ -9,8 +9,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from interfaz.componentes.botones import boton_volver
-from interfaz.componentes.mensajes import advertencia, informacion
+from interfaz_qt.componentes.botones import boton_volver
+from interfaz_qt.componentes.mensajes import advertencia, informacion
 
 
 class PantallaInicioSesion(QWidget):

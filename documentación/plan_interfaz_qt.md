@@ -37,7 +37,7 @@ Estructura real (ajustada respecto al borrador inicial):
 
 ```text
 interfaz/
-    ventana.py                  ✅ punto de entrada; monta el QStackedWidget principal
+    ventana_inicio.py           ✅ punto de entrada; monta el QStackedWidget principal
     pantallas/
         bienvenida.py           ✅ pantalla de selección Miembro / Usuario (nueva)
         inicio_sesion.py        ✅ formulario de login con señales login_exitoso y volver
@@ -47,7 +47,7 @@ interfaz/
             puntos.py
             recompensas.py
             historial.py
-        usuario/                ✅ carpeta para la interfaz de usuario administrativo
+        usuario/                ✅ carpeta compartida para Administrador y Cajero
             principal.py        ✅ esqueleto con mensaje de confirmación y cerrar sesión
             miembros.py
             planes.py
@@ -82,7 +82,7 @@ nueva ventana para cada acción. ✅
 
 ### Patrón de navegación entre pantallas ✅
 
-Cada pantalla emite señales hacia arriba; `ventana.py` las escucha y mueve el
+Cada pantalla emite señales hacia arriba; `ventana_inicio.py` las escucha y mueve el
 stack. Las pantallas no se conocen entre sí.
 
 ```text
@@ -123,7 +123,12 @@ Roles contemplados:
 - `Cajero`.
 - `Miembro`.
 
-### 4.2 Administrador
+### 4.2 Usuarios (Administrador y Cajero)
+
+Cajero y Administrador son ambos **usuarios administrativos** y comparten la
+misma interfaz en `usuario/`. Solo difieren en las opciones que ven: eso se
+controla en la Fase 3 según el rol devuelto por el servicio de autenticación.
+No hay dos interfaces de usuario; hay una sola que se adapta al rol.
 
 La primera versión incluirá:
 
@@ -143,20 +148,11 @@ Los módulos principales deberán incluir, según corresponda:
 - Modificación.
 - Búsqueda o filtro básico.
 
-### 4.3 Cajero
+El cajero verá únicamente el subconjunto de opciones que le corresponde
+(principalmente compras); el administrador verá todo. Esto se implementará en
+la Fase 3.
 
-La interfaz del cajero será reducida y permitirá:
-
-- Buscar una membresía.
-- Mostrar información básica.
-- Registrar una compra.
-- Confirmar la operación.
-- Mostrar los puntos generados cuando corresponda.
-
-> **Nota:** Cajero y Administrador comparten la carpeta `usuario/`. La
-> diferenciación de opciones visibles según rol se implementará en la Fase 3.
-
-### 4.4 Miembro
+### 4.3 Miembro
 
 La primera versión incluirá:
 

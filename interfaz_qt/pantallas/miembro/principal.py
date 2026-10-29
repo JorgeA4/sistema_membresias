@@ -1,11 +1,11 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
-from interfaz.componentes.botones import boton_cerrar_sesion
+from interfaz_qt.componentes.botones import boton_cerrar_sesion
 
 
-class PantallaPrincipalUsuario(QWidget):
-    """Pantalla principal de la interfaz de usuario administrativo (esqueleto)."""
+class PantallaPrincipalMiembro(QWidget):
+    """Pantalla principal de la interfaz de miembro (esqueleto)."""
 
     cerrar_sesion = Signal()
 
@@ -14,7 +14,7 @@ class PantallaPrincipalUsuario(QWidget):
         self._construir()
 
     def _construir(self):
-        mensaje = QLabel("✓ Bienvenido. Estás en la interfaz de Usuario.")
+        mensaje = QLabel("✓ Bienvenido. Estás en la interfaz de Miembro.")
         mensaje.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         btn_cerrar = boton_cerrar_sesion(self.cerrar_sesion)

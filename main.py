@@ -1,3 +1,3 @@
-from interfaz.ventana_inicio import ejecutar_aplicacion
+from interfaz_qt.ventana_inicio import ejecutar_aplicacion
 
 ejecutar_aplicacion()

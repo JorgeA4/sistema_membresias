@@ -2,10 +2,10 @@ import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget
 
-from interfaz.pantallas.bienvenida import PantallaBienvenida
-from interfaz.pantallas.inicio_sesion import PantallaInicioSesion
-from interfaz.pantallas.miembro.principal import PantallaPrincipalMiembro
-from interfaz.pantallas.usuario.principal import PantallaPrincipalUsuario
+from interfaz_qt.pantallas.bienvenida import PantallaBienvenida
+from interfaz_qt.pantallas.inicio_sesion import PantallaInicioSesion
+from interfaz_qt.pantallas.miembro.principal import PantallaPrincipalMiembro
+from interfaz_qt.pantallas.usuario.principal import PantallaPrincipalUsuario
 
 # Índices de cada pantalla dentro del QStackedWidget
 BIENVENIDA   = 0
