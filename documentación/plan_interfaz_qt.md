@@ -1,5 +1,9 @@
 # Plan de interfaz con Qt
 
+> ⚠️ **Este plan está en pausa.** Se decidió implementar la interfaz en terminal
+> (ver `plan_interfaz_term.md`). El código de `interfaz_qt/` se conserva como
+> referencia histórica pero no está en uso y no es necesario completarlo.
+
 ## 1. Decisiones técnicas
 
 La interfaz será una aplicación local de escritorio para ejecutarse en un solo
@@ -36,7 +40,7 @@ vigencias, límites, saldos y operaciones.
 Estructura real (ajustada respecto al borrador inicial):
 
 ```text
-interfaz/
+interfaz_qt/
     ventana_inicio.py           ✅ punto de entrada; monta el QStackedWidget principal
     pantallas/
         bienvenida.py           ✅ pantalla de selección Miembro / Usuario (nueva)

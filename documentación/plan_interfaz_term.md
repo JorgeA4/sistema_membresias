@@ -1,5 +1,12 @@
 # Plan de interfaz en terminal (TUI)
 
+## Estado
+
+**Esta es la interfaz activa del proyecto.** Se tomó la decisión de implementar
+la interfaz en terminal en lugar de la interfaz gráfica con Qt. El código de
+`interfaz_qt/` se conserva como referencia pero no está en uso y no es necesario
+completarlo.
+
 ## 1. Decisiones técnicas
 
 La interfaz será una aplicación de terminal que se ejecuta en un solo ordenador.
@@ -70,48 +77,93 @@ datos.
 
 ### Concepto central
 
-En lugar de señales Qt, cada pantalla es una **función Python** que:
+Cada pantalla es una **función Python** que:
 
 1. Dibuja su contenido con Rich.
-2. Pide al usuario que elija una acción.
-3. **Devuelve un string** que indica a dónde ir a continuación.
+2. Pide al usuario que elija una acción con questionary.
+3. **Devuelve una tupla `(interfaz, pantalla)`** que indica a dónde ir a
+   continuación.
 
-`ventana_inicio.py` contiene un loop que llama a la función correcta según ese
-valor de retorno. Las pantallas no se conocen entre sí — solo devuelven strings.
+`ventana_inicio.py` contiene un loop que mantiene un objeto `sesion` compartido
+y llama a la función correcta según esos valores. Las pantallas no se conocen
+entre sí — solo reciben `sesion` y devuelven la tupla.
 
-```text
-ejecutar_aplicacion()          ← loop principal
-    │
-    ├── mostrar_bienvenida()   → devuelve: "miembro" | "usuario"
-    ├── mostrar_login(tipo)    → devuelve: "ok:administrador" | "ok:cajero" |
-    │                                      "ok:miembro" | "volver"
-    ├── mostrar_miembro()      → devuelve: "cerrar_sesion"
-    └── mostrar_usuario(rol)   → devuelve: "cerrar_sesion"
+### El objeto `sesion`
+
+```python
+sesion = {
+    "interfaz": None,   # str o None: "miembro" | "usuario" | None
+    "historial": []     # list[int]: pila de números de pantalla visitados
+}
 ```
 
-Flujo de navegación:
-- Bienvenida → elige tipo → Login
-- Login → Volver → Bienvenida
-- Login → credenciales correctas → Miembro o Usuario según tipo
-- Miembro / Usuario → Cerrar sesión → Bienvenida
+Todas las funciones de pantalla reciben `sesion` como único argumento y lo
+usan para leer el contexto actual (p. ej. `sesion["interfaz"]` para saber el
+tipo de acceso activo).
+
+### Números de pantalla
+
+| Número | Pantalla                          |
+|--------|-----------------------------------|
+| 1      | Bienvenida                        |
+| 2      | Inicio de sesión                  |
+| 3      | Menú principal (miembro o usuario)|
+| 4      | Volver (acción especial)          |
+| 5      | Salir (rompe el loop)             |
+
+### Tabla de despacho (`flujo`)
+
+El loop usa un diccionario de dos niveles `flujo[interfaz][numero_pantalla]`
+para resolver qué función llamar. El mismo número `3` apunta a funciones
+distintas según la interfaz activa:
+
+```python
+flujo = {
+    None: {
+        1: mostrar_bienvenida
+    },
+    "miembro": {
+        2: mostrar_login_con_volver,
+        3: mostrar_miembro,
+        4: volver
+    },
+    "usuario": {
+        2: mostrar_login_con_volver,
+        3: mostrar_usuario,
+        4: volver
+    }
+}
+```
+
+### Firmas de las pantallas
+
+```text
+mostrar_bienvenida(sesion)       → ("miembro" | "usuario" | None, 2 | 5)
+mostrar_login_con_volver(sesion) → (tipo, 3 | 4)
+mostrar_miembro(sesion)          → (None, 1)
+mostrar_usuario(sesion)          → (None, 1)
+volver(sesion)                   → (interfaz, None)   ← función interna del loop
+```
+
+### Función `volver`
+
+`volver` elimina **dos entradas** del historial con `del sesion["historial"][-2:]`:
+el `4` que representa la propia llamada a volver y la pantalla de origen. De
+este modo el loop regresa a la pantalla anterior correcta.
+
+### Flujo de navegación
+
+```text
+Bienvenida (1) → elige tipo → Login (2)
+Login (2)      → Volver     → volver (4) → Bienvenida (1)
+Login (2)      → credenciales correctas  → Menú principal (3)
+Menú (3)       → Cerrar sesión           → Bienvenida (1)
+Bienvenida (1) → Salir                   → 5 → break
+```
 
 Cuando las interfaces de miembro y usuario crezcan, cada una tendrá su propio
 loop interno con menú lateral. `ejecutar_aplicacion()` solo navegará entre
 bienvenida, login y la interfaz correspondiente.
-
-### Equivalencias con Qt
-
-| Concepto Qt               | Equivalente en terminal              |
-|---------------------------|--------------------------------------|
-| `QStackedWidget` + señales | loop + valor de retorno de funciones |
-| Clase pantalla            | función pantalla                     |
-| Señal entre pantallas     | `return "destino"`                   |
-| `QTableWidget`            | `Table` de Rich                      |
-| `QDialog` de confirmación | panel Rich + `questionary.confirm()` |
-| `QMessageBox`             | `Panel` de Rich con color            |
-| Botones (Volver, Salir)   | opción en el menú de questionary     |
-| Menú lateral              | `questionary.select()` al inicio     |
-| `.qss` (tema visual)      | constantes en `estilos/tema.py`      |
 
 ## 4. Componentes reutilizables
 
@@ -123,6 +175,7 @@ esperan que el usuario presione Enter para continuar.
 - `informacion(texto)` — panel azul.
 - `advertencia(texto)` — panel amarillo.
 - `error(texto)` — panel rojo.
+- `exito(texto)` — panel verde.
 - `confirmar(pregunta)` — devuelve `True` / `False` usando `questionary.confirm()`.
 
 ### 4.2 tabla.py
@@ -176,7 +229,9 @@ La primera versión incluirá:
 - Menú principal con opciones numeradas.
 - Miembros (tabla + alta + consulta + modificación).
 - Planes.
+- Versiones de planes.
 - Recompensas.
+- Versiones de recompensas.
 - Compras.
 - Actividad.
 - Usuarios y roles, si el tiempo lo permite.
