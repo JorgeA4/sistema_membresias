@@ -13,23 +13,30 @@ def eliminar(lista, num): # 'num' es la clave del elemento
     if isinstance(lista, dict):
         if num in lista:
             del lista[num]
-            print(f"El elemento '{num}' fue eliminado exitosamente")
+            # print(f"El elemento '{num}' fue eliminado exitosamente")
+            return True
         else:
-            print(f"El elemento '{num}' no existe")
+            # print(f"El elemento '{num}' no existe")
+            return False
 
     #Lista de datos
     elif isinstance(lista, list): # num puede tratarse de la 'id' dentro de la lista
         for i in lista:
             if getattr(i, 'id', None) == num:
                 lista.remove(num)
-                print(f"El elemento con la ID {num} ha sido eliminado exitosamente")
-        print(f"El elemento con la ID {num} no se encuentra")
+                # print(f"El elemento con la ID {num} ha sido eliminado exitosamente")
+                return True
+        # print(f"El elemento con la ID {num} no existe")
+        return False
     else: 
-        print("El tipo de lista no es compatible")
+        # print("El tipo de lista no es compatible")
+        return False
 
 def modificar(elemento, atributo: str, nuevo_valor): # atributo es para definir el tipo de variable
     if hasattr(elemento, atributo):
         setattr(elemento, atributo, nuevo_valor)
-        print(f"El elemento '{atributo}' ahora es '{nuevo_valor}'")
+        # print(f"El elemento '{atributo}' ahora es '{nuevo_valor}'")
+        return True
     else:
-        print(f"El elemento'{atributo}' no existe en este objeto")
+        # print(f"El elemento'{atributo}' no existe en este objeto")
+        return False
