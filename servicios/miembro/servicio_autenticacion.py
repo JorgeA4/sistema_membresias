@@ -1,5 +1,6 @@
 from clases.miembro import Miembro
 import base_de_datos.consultas as bd
+from datetime import date. datetime
 
 def autenticar_miembro(correo: str, contraseña: str) -> Miembro | None:
     miembro = bd.buscar_miembro_por_correo(correo)
@@ -7,6 +8,13 @@ def autenticar_miembro(correo: str, contraseña: str) -> Miembro | None:
         return miembro
     else:
         return None
+
+def crear_miembro(nombre, p_apellido, telefono, correo, contraseña, s_apellido = None):
+    nuevo_miembro = Miembro(None, nombre, p_apellido, s_apellido, telefono, correo, contraseña, fecha_registro = date.today())
+    guardar_miembro(nuevo_miembro)
+
+def guardar_miembro(miembro):
+    bd.guardar_miembro(miembro)
 
 def eliminar(lista, num): # 'num' es la clave del elemento
     #Diccionario de datos
@@ -31,7 +39,7 @@ def eliminar(lista, num): # 'num' es la clave del elemento
     else: 
         # print("El tipo de lista no es compatible")
         return False
-
+        
 def modificar(elemento, atributo: str, nuevo_valor): # atributo es para definir el tipo de variable
     if hasattr(elemento, atributo):
         setattr(elemento, atributo, nuevo_valor)
