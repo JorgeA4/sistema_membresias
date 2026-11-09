@@ -1,5 +1,6 @@
 import mariadb
 import sys
+from datetime import datetime
 
 from base_de_datos.consultas_simuladas import (
     # Miembro
@@ -12,7 +13,7 @@ from base_de_datos.consultas_simuladas import (
     buscar_usuario_por_correo, #<
     buscar_usuario_por_num, #<
     obtener_todos_los_usuarios, #<
-    guardar_usuario, #PENDING
+    guardar_usuario, #<
     eliminar_usuario, #<
     # Plan y VersionPlan
     buscar_plan_por_codigo,
@@ -71,11 +72,12 @@ def obtener_todos_los_miembros(conn):
     miembro = cur.fetchall()
     return miembro
 
-def guardar_miembro(conn, nombre, PrimerApell, correo, SegApell = None):
+def guardar_miembro(conn, nombre, PrimerApell, telefono, correo, contraseña, rol, SegApell = None):
     cursor = conn.cursor()
-    consulta = "INSERT INTO miembro (nombre, PrimerApell, SegApell, correo) VALUES (?, ?, ?, ?)"
+    consulta = "INSERT INTO usuario (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    fechaRegist = datetime.now()
     
-    nuevo_miembro = (nombre, PrimerApell, SegApell, correo)
+    nuevo_miembro = (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol, fechaRegist)
     cursor = execute(consulta, nuevo_miembro)
     return nuevo_miembro
 
@@ -111,11 +113,11 @@ def obtener_todos_los_usuarios(conn):
     usuario = cur.fetchall()
     return usuario
 
-def guardar_usuario(conn, nombre, PrimerApell, correo, SegApell = None):
+def guardar_usuario(conn, nombre, PrimerApell, telefono, correo, contraseña, rol, SegApell = None):
     cursor = conn.cursor()
-    consulta = "INSERT INTO usuario (nombre, PrimerApell, SegApell, correo) VALUES (?, ?, ?, ?)"
+    consulta = "INSERT INTO usuario (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol) VALUES (?, ?, ?, ?, ?, ?, ?)"
     
-    nuevo_usuario = (nombre, PrimerApell, SegApell, correo)
+    nuevo_usuario = (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol)
     cursor = execute(consulta, nuevo_usuario)
     return nuevo_usuario
 
