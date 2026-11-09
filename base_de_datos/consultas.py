@@ -3,17 +3,17 @@ import sys
 
 from base_de_datos.consultas_simuladas import (
     # Miembro
-    buscar_miembro_por_correo, #F
-    buscar_miembro_por_num, #F
-    obtener_todos_los_miembros, #F
-    guardar_miembro, #F
-    eliminar_miembro, #F
+    buscar_miembro_por_correo, #<
+    buscar_miembro_por_num, #<
+    obtener_todos_los_miembros, #<
+    guardar_miembro, #<
+    eliminar_miembro, #<
     # Usuario
-    buscar_usuario_por_correo,
-    buscar_usuario_por_num,
-    obtener_todos_los_usuarios,
-    guardar_usuario,
-    eliminar_usuario,
+    buscar_usuario_por_correo, #<
+    buscar_usuario_por_num, #<
+    obtener_todos_los_usuarios, #<
+    guardar_usuario, #PENDING
+    eliminar_usuario, #<
     # Plan y VersionPlan
     buscar_plan_por_codigo,
     obtener_todos_los_planes,
@@ -46,7 +46,7 @@ from base_de_datos.consultas_simuladas import (
     buscar_rol_por_codigo,
     obtener_todos_los_roles,
 )
-#Funciones de Miembro
+#Funciones de Miembro:
 def buscar_miembro_por_correo(correo, conn):
     cursor = conn.cursor()
     consulta = "SELECT * FROM miembro WHERE correo = ?"
@@ -86,3 +86,42 @@ def eliminar_miembro(conn, num):
     miembro = conn.commit()
     return miembro #Esto ultimo solo te muestra la nueva lista actualizada donde tu puedes verificar que en efecto, se elimino dicho miembro
     
+#Funciones de Usuario:
+def buscar_usuario_por_correo(correo, conn):
+    cursor = conn.cursor()
+    consulta = "SELECT * FROM usuario WHERE correo = ?"
+    cursor.execute(consulta, (correo,))
+    
+    usuario = cursor.fetchone()
+    return usuario
+
+def buscar_usuario_por_num(num, conn):
+    cursor = conn.cursor()
+    consulta = "SELECT * FROM usuario WHERE num = ?"
+    cursor.execute(consulta, (num,))
+    
+    usuario = cursor.fetchone()
+    return usuario
+
+def obtener_todos_los_usuarios(conn):
+    cursor = conn.cursor()
+    consulta = "SELECT * FROM usuario"
+    cursor.execute(consulta)
+    
+    usuario = cur.fetchall()
+    return usuario
+
+def guardar_usuario(conn, nombre, PrimerApell, correo, SegApell = None):
+    cursor = conn.cursor()
+    consulta = "INSERT INTO usuario (nombre, PrimerApell, SegApell, correo) VALUES (?, ?, ?, ?)"
+    
+    nuevo_usuario = (nombre, PrimerApell, SegApell, correo)
+    cursor = execute(consulta, nuevo_usuario)
+    return nuevo_usuario
+
+def eliminar_usuario(conn, num):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM usuario WHERE num = ?", (num,))
+    
+    usuario = conn.commit()
+    return usuario #Esto ultimo solo te muestra la nueva lista actualizada donde tu puedes verificar que en efecto, se elimino dicho usuario
