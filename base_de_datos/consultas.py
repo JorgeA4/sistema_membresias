@@ -1,3 +1,6 @@
+import mariadb
+import sys
+
 from base_de_datos.consultas_simuladas import (
     # Miembro
     buscar_miembro_por_correo,
@@ -43,3 +46,18 @@ from base_de_datos.consultas_simuladas import (
     buscar_rol_por_codigo,
     obtener_todos_los_roles,
 )
+def buscar_miembro_por_correo(correo, conn):
+    cursor = conn.cursor()
+    consulta = "SELECT * FROM miembro WHERE correo = ?"
+    cursor.execute(consulta, (correo,))
+    
+    miembro = cursor.fetchone()
+    return miembro
+
+def buscar_miembro_por_num(num, conn):
+    cursor = conn.cursor()
+    consulta = "SELECT * FROM miembro WHERE num = ?"
+    cursor.execute(consulta, (num,))
+    
+    miembro = cursor.fetchone()
+    return miembro
