@@ -3,11 +3,11 @@ import sys
 
 from base_de_datos.consultas_simuladas import (
     # Miembro
-    buscar_miembro_por_correo,
-    buscar_miembro_por_num,
-    obtener_todos_los_miembros,
-    guardar_miembro,
-    eliminar_miembro,
+    buscar_miembro_por_correo, #F
+    buscar_miembro_por_num, #F
+    obtener_todos_los_miembros, #F
+    guardar_miembro, #F
+    eliminar_miembro, #F
     # Usuario
     buscar_usuario_por_correo,
     buscar_usuario_por_num,
@@ -46,6 +46,7 @@ from base_de_datos.consultas_simuladas import (
     buscar_rol_por_codigo,
     obtener_todos_los_roles,
 )
+#Funciones de Miembro
 def buscar_miembro_por_correo(correo, conn):
     cursor = conn.cursor()
     consulta = "SELECT * FROM miembro WHERE correo = ?"
@@ -61,3 +62,27 @@ def buscar_miembro_por_num(num, conn):
     
     miembro = cursor.fetchone()
     return miembro
+
+def obtener_todos_los_miembros(conn):
+    cursor = conn.cursor()
+    consulta = "SELECT * FROM miembro"
+    cursor.execute(consulta)
+    
+    miembro = cur.fetchall()
+    return miembro
+
+def guardar_miembro(conn, nombre, PrimerApell, correo, SegApell = None):
+    cursor = conn.cursor()
+    consulta = "INSERT INTO miembro (nombre, PrimerApell, SegApell, correo) VALUES (?, ?, ?, ?)"
+    
+    nuevo_miembro = (nombre, PrimerApell, SegApell, correo)
+    cursor = execute(consulta, nuevo_miembro)
+    return nuevo_miembro
+
+def eliminar_miembro(conn, num):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM miembro WHERE num = ?", (num,))
+    
+    miembro = conn.commit()
+    return miembro
+    
