@@ -84,5 +84,5 @@ def eliminar_miembro(conn, num):
     cursor.execute("DELETE FROM miembro WHERE num = ?", (num,))
     
     miembro = conn.commit()
-    return miembro
+    return miembro #Esto ultimo solo te muestra la nueva lista actualizada donde tu puedes verificar que en efecto, se elimino dicho miembro
     
