@@ -16,9 +16,9 @@ from base_de_datos.consultas_simuladas import (
     guardar_usuario, #<
     eliminar_usuario, #<
     # Plan y VersionPlan
-    buscar_plan_por_codigo,
-    obtener_todos_los_planes,
-    guardar_plan,
+    buscar_plan_por_codigo, #<
+    obtener_todos_los_planes, #<
+    guardar_plan, #<
     obtener_versiones_de_plan,
     buscar_version_plan_vigente,
     guardar_version_plan,
@@ -145,3 +145,11 @@ def buscar_plan_por_codigo(conn, num):
         return None #Esto es en caso de que no se pueda encontrar el codigo en la base de datos
     finally:
         cursor.close()
+
+def obtener_todos_los_planes(conn):
+    cursor = conn.cursor()
+    consulta = SELECT * FROM plan
+    cursor.execute(consulta)
+    
+    lista_planes = cur.fetchall()
+    return lista_planes
