@@ -46,11 +46,10 @@ from base_de_datos.consultas_simuladas import (
     obtener_todos_los_roles,
 )
 
-"""
 #Funciones de Miembro:
 def buscar_miembro_por_correo(correo, conn):
     cursor = conn.cursor()
-    consulta = SELECT * FROM miembro WHERE correo = ?
+    consulta = 'SELECT * FROM miembro WHERE correo = ?'
     cursor.execute(consulta, (correo,))
     
     miembro = cursor.fetchone()
@@ -58,7 +57,7 @@ def buscar_miembro_por_correo(correo, conn):
 
 def buscar_miembro_por_num(num, conn):
     cursor = conn.cursor()
-    consulta = SELECT * FROM miembro WHERE num = ?
+    consulta = 'SELECT * FROM miembro WHERE num = ?'
     cursor.execute(consulta, (num,))
     
     miembro = cursor.fetchone()
@@ -66,15 +65,15 @@ def buscar_miembro_por_num(num, conn):
 
 def obtener_todos_los_miembros(conn):
     cursor = conn.cursor()
-    consulta = SELECT * FROM miembro
+    consulta = 'SELECT * FROM miembro'
     cursor.execute(consulta)
     
-    miembro = cur.fetchall()
+    miembro = cursor.fetchall()
     return miembro
 
 def guardar_miembro(conn, nombre, PrimerApell, telefono, correo, contraseña, rol, SegApell = None):
     cursor = conn.cursor()
-    consulta = INSERT INTO usuario (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol) VALUES (?, ?, ?, ?, ?, ?, ?)
+    consulta = 'INSERT INTO usuario (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol) VALUES (?, ?, ?, ?, ?, ?, ?)'
     fechaRegist = datetime.now()
     
     nuevo_miembro = (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol, fechaRegist)
@@ -83,7 +82,7 @@ def guardar_miembro(conn, nombre, PrimerApell, telefono, correo, contraseña, ro
 
 def eliminar_miembro(conn, num):
     cursor = conn.cursor()
-    cursor.execute(DELETE FROM miembro WHERE num = ?, (num,))
+    cursor.execute('DELETE FROM miembro WHERE num = ?, (num,)')
     
     miembro = conn.commit()
     return miembro #Esto ultimo solo te muestra la nueva lista actualizada donde tu puedes verificar que en efecto, se elimino dicho miembro
@@ -91,7 +90,7 @@ def eliminar_miembro(conn, num):
 #Funciones de Usuario:
 def buscar_usuario_por_correo(correo, conn):
     cursor = conn.cursor()
-    consulta = SELECT * FROM usuario WHERE correo = ?
+    consulta = 'SELECT * FROM usuario WHERE correo = ?'
     cursor.execute(consulta, (correo,))
     
     usuario = cursor.fetchone()
@@ -99,7 +98,7 @@ def buscar_usuario_por_correo(correo, conn):
 
 def buscar_usuario_por_num(num, conn):
     cursor = conn.cursor()
-    consulta = SELECT * FROM usuario WHERE num = ?
+    consulta = 'SELECT * FROM usuario WHERE num = ?'
     cursor.execute(consulta, (num,))
     
     usuario = cursor.fetchone()
@@ -107,15 +106,15 @@ def buscar_usuario_por_num(num, conn):
 
 def obtener_todos_los_usuarios(conn):
     cursor = conn.cursor()
-    consulta = SELECT * FROM usuario
+    consulta = 'SELECT * FROM usuario'
     cursor.execute(consulta)
     
-    usuario = cur.fetchall()
+    usuario = cursor.fetchall()
     return usuario
 
 def guardar_usuario(conn, nombre, PrimerApell, telefono, correo, contraseña, rol, SegApell = None):
     cursor = conn.cursor()
-    consulta = INSERT INTO usuario (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol) VALUES (?, ?, ?, ?, ?, ?, ?)
+    consulta = 'INSERT INTO usuario (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol) VALUES (?, ?, ?, ?, ?, ?, ?)'
     
     nuevo_usuario = (nombre, PrimerApell, SegApell, telefono, correo, contraseña, rol)
     cursor = execute(consulta, nuevo_usuario)
@@ -123,7 +122,7 @@ def guardar_usuario(conn, nombre, PrimerApell, telefono, correo, contraseña, ro
 
 def eliminar_usuario(conn, num):
     cursor = conn.cursor()
-    cursor.execute(DELETE FROM usuario WHERE num = ?, (num,))
+    cursor.execute('DELETE FROM usuario WHERE num = ?, (num,)')
     
     usuario = conn.commit()
     return usuario #Esto ultimo solo te muestra la nueva lista actualizada donde tu puedes verificar que en efecto, se elimino dicho usuario
@@ -132,10 +131,10 @@ def eliminar_usuario(conn, num):
 def buscar_plan_por_codigo(conn, num):
     cursor = conn.cursor()
     consulta = 
-        SELECT id, codigo, nombre, descripcion, precio, duracion_dias
+        """SELECT id, codigo, nombre, descripcion, precio, duracion_dias
         FROM plan
         WHERE codigo = ?
-        LIMIT 1;
+        LIMIT 1;"""
 
     try:
         cursor.execute(consulta, (num,))
@@ -148,9 +147,8 @@ def buscar_plan_por_codigo(conn, num):
 
 def obtener_todos_los_planes(conn):
     cursor = conn.cursor()
-    consulta = SELECT * FROM plan
+    consulta = 'SELECT * FROM plan'
     cursor.execute(consulta)
     
-    lista_planes = cur.fetchall()
+    lista_planes = cursor.fetchall()
     return lista_planes
-"""
