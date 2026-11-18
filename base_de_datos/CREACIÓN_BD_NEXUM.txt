@@ -66,3 +66,16 @@ CREATE TABLE rol (
     nombre VARCHAR(100) NOT NULL UNIQUE,
     descripcion VARCHAR(500)
 );
+
+CREATE TABLE compra (
+    num INT PRIMARY KEY AUTO_INCREMENT,
+    monto_base DECIMAL(10,2) NOT NULL,
+    porcentaje_descuento DECIMAL(10,2) NOT NULL,
+    descuento_nominal DECIMAL(10,2) NOT NULL,
+    cashback_aplicado DECIMAL(10,2) NOT NULL,
+    monto_final DECIMAL(10,2) NOT NULL,
+    membresia INT NOT NULL,
+    usuario INT NOT NULL,
+    FOREIGN KEY (membresia) REFERENCES membresia(num),
+    FOREIGN KEY (usuario) REFERENCES usuario(num)
+);
