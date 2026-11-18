@@ -4,11 +4,10 @@ from clases.rol import Rol
 from clases.usuario import Usuario
 from clases.miembro import Miembro
 from clases.plan import Plan
-from clases.version_plan import VersionPlan
+from clases.version_plan import ConfigDescuento, ConfigPuntos, TipoAplicacionPlan, VersionPlan
 from clases.recompensa import Recompensa
 from clases.version_recompensa import VersionRecompensa
 from clases.membresia import Membresia
-from clases.aplicacion_version_plan import AplicacionVersionPlan
 
 # ---------------------------------------------------------------------------
 # Roles
@@ -39,6 +38,7 @@ usuario_1 = Usuario(
     correo="carlos.mendoza@nexum.com",
     contraseña="admin123",
     rol=rol_administrador,
+    fecha_registro=date(2024, 1, 10),
 )
 
 # ---------------------------------------------------------------------------
@@ -63,29 +63,43 @@ miembro_1 = Miembro(
 plan_basico = Plan(
     codigo="BAS",
     nombre="Básico",
-    descripcion="Plan de entrada sin costo",
-    es_gratuita=True,
-    periodo_rembolso=0,
+    descripcion="Plan de entrada",
+    periodo_rembolso=None,
 )
 
 plan_premium = Plan(
     codigo="PRE",
     nombre="Premium",
     descripcion="Plan de pago con beneficios extendidos",
-    es_gratuita=False,
     periodo_rembolso=30,
+)
+
+config_puntos_basico = ConfigPuntos(
+    num=1,
+    porcentaje=0.01,
+    vigencia_meses=None,
+)
+
+config_puntos_premium = ConfigPuntos(
+    num=2,
+    porcentaje=0.025,
+    vigencia_meses=12,
+)
+
+config_descuento_premium = ConfigDescuento(
+    num=1,
+    porcentaje=0.10,
 )
 
 version_plan_1 = VersionPlan(
     num=1,
     fecha_inicio=date(2024, 1, 1),
     fecha_final=date(2026, 12, 31),
-    precio=0.0,
-    puntos_por_peso=1.0,
-    porcentaje_descuento=0,
-    limite_canjes=3,
+    precio=1.0,
     plazo_meses=12,
+    aplica_en=TipoAplicacionPlan.AMBAS,
     plan=plan_basico,
+    config_puntos=config_puntos_basico,
 )
 
 version_plan_2 = VersionPlan(
@@ -93,11 +107,11 @@ version_plan_2 = VersionPlan(
     fecha_inicio=date(2024, 1, 1),
     fecha_final=date(2026, 12, 31),
     precio=299.0,
-    puntos_por_peso=2.5,
-    porcentaje_descuento=10,
-    limite_canjes=10,
     plazo_meses=12,
+    aplica_en=TipoAplicacionPlan.AMBAS,
     plan=plan_premium,
+    config_puntos=config_puntos_premium,
+    config_descuento=config_descuento_premium,
 )
 
 # ---------------------------------------------------------------------------
@@ -135,19 +149,13 @@ version_recompensa_2 = VersionRecompensa(
 )
 
 # ---------------------------------------------------------------------------
-# Membresías y aplicaciones de versión de plan
+# Membresías
 # ---------------------------------------------------------------------------
 
 membresia_1 = Membresia(
     num=1,
-    fecha_activacion=date(2026, 1, 1),
-    fecha_vencimiento=date(2027, 1, 1),
+    fecha_contratacion=date(2026, 1, 1),
+    estado=Membresia.Estado.ACTIVA,
     miembro=miembro_1,
-    estado=1,  # Membresia.Estado.ACTIVA
-)
-
-aplicacion_1 = AplicacionVersionPlan(
-    membresia=membresia_1,
-    version_plan=version_plan_2,
-    fecha=date(2026, 1, 1),
+    version_plan_actual=version_plan_2,
 )

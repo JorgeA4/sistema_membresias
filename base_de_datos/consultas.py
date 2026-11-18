@@ -22,12 +22,10 @@ from base_de_datos.consultas_simuladas import (
     obtener_versiones_de_plan,
     buscar_version_plan_vigente,
     guardar_version_plan,
-    # Membresia y AplicacionVersionPlan
+    # Membresia
     buscar_membresia_por_num,
     buscar_membresia_de_miembro,
     guardar_membresia,
-    obtener_aplicaciones_de_membresia,
-    guardar_aplicacion_version_plan,
     # Recompensa y VersionRecompensa
     buscar_recompensa_por_codigo,
     obtener_todas_las_recompensas,
@@ -35,14 +33,18 @@ from base_de_datos.consultas_simuladas import (
     obtener_versiones_de_recompensa,
     buscar_version_recompensa_vigente,
     guardar_version_recompensa,
-    # Compra, Canje, Renovacion y TransaccionPuntos
+    # Compra, Renovacion y transacciones
+    buscar_compra_por_num,
     guardar_compra,
-    guardar_canje,
+    obtener_compras_de_membresia,
     guardar_renovacion,
     obtener_renovaciones_de_membresia,
     guardar_transaccion_puntos,
     obtener_transacciones_de_miembro,
     obtener_saldo_de_miembro,
+    guardar_transaccion_cashback,
+    obtener_transacciones_cashback_de_membresia,
+    obtener_saldo_cashback_de_membresia,
     # Rol
     buscar_rol_por_codigo,
     obtener_todos_los_roles,

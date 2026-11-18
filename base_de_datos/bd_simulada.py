@@ -2,13 +2,12 @@ from clases.miembro import Miembro
 from clases.plan import Plan
 from clases.version_plan import VersionPlan
 from clases.membresia import Membresia
-from clases.aplicacion_version_plan import AplicacionVersionPlan
 from clases.transaccion_puntos import TransaccionPuntos
+from clases.transaccion_cashback import TransaccionCashback
 from clases.compra import Compra
 from clases.recompensa import Recompensa
 from clases.version_recompensa import VersionRecompensa
 from clases.renovacion import Renovacion
-from clases.canje import Canje
 from clases.rol import Rol
 from clases.usuario import Usuario
 
@@ -24,16 +23,11 @@ miembros: dict[int, Miembro] = {}
 versiones_plan: dict[int, VersionPlan] = {}
 membresias: dict[int, Membresia] = {}
 transacciones_puntos: dict[int, TransaccionPuntos] = {}
+transacciones_cashback: dict[int, TransaccionCashback] = {}
 compras: dict[int, Compra] = {}
 versiones_recompensa: dict[int, VersionRecompensa] = {}
 renovaciones: dict[int, Renovacion] = {}
-canjes: dict[int, Canje] = {}
 usuarios: dict[int, Usuario] = {}
-
-# --- Tabla puente M:M (sin PK propia) ---
-
-# La clave lógica es la combinación (membresia, version_plan).
-aplicaciones_version_plan: list[AplicacionVersionPlan] = []
 
 
 # ---------------------------------------------------------------------------
@@ -63,8 +57,6 @@ def _cargar_datos_prueba():
     versiones_recompensa[dp.version_recompensa_2.num] = dp.version_recompensa_2
 
     membresias[dp.membresia_1.num] = dp.membresia_1
-
-    aplicaciones_version_plan.append(dp.aplicacion_1)
 
 
 _cargar_datos_prueba()

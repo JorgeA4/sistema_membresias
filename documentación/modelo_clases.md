@@ -220,18 +220,6 @@ class Membresia:
 El cambio de estado, la renovación y la selección de versiones vigentes son
 operaciones coordinadas por servicios.
 
-### `AplicacionVersionPlan`
-
-Representa el historial de versiones de plan aplicadas a una membresía. Es una
-relación con atributo propio, `fecha`.
-
-```python
-class AplicacionVersionPlan:
-    membresia: Membresia
-    version_plan: VersionPlan
-    fecha: date
-```
-
 ## Operaciones y movimientos
 
 ### `Renovacion`

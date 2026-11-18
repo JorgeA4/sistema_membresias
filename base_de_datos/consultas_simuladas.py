@@ -1,15 +1,15 @@
 import base_de_datos.bd_simulada as bd
+from decimal import Decimal
 from clases.miembro import Miembro
 from clases.plan import Plan
 from clases.version_plan import VersionPlan
 from clases.membresia import Membresia
-from clases.aplicacion_version_plan import AplicacionVersionPlan
 from clases.recompensa import Recompensa
 from clases.version_recompensa import VersionRecompensa
 from clases.compra import Compra
-from clases.canje import Canje
 from clases.renovacion import Renovacion
 from clases.transaccion_puntos import TransaccionPuntos
+from clases.transaccion_cashback import TransaccionCashback
 from clases.usuario import Usuario
 from clases.rol import Rol
 
@@ -83,7 +83,7 @@ def guardar_version_plan(version_plan: VersionPlan) -> None:
     bd.versiones_plan[version_plan.num] = version_plan
 
 # ---------------------------------------------------------------------------
-# Membresia y AplicacionVersionPlan
+# Membresia
 # ---------------------------------------------------------------------------
 
 def buscar_membresia_por_num(num: int) -> Membresia | None:
@@ -91,18 +91,13 @@ def buscar_membresia_por_num(num: int) -> Membresia | None:
 
 def buscar_membresia_de_miembro(num_miembro: int) -> Membresia | None:
     for membresia in bd.membresias.values():
-        if membresia.miembro.num == num_miembro and membresia.esta_vigente():
+        if (membresia.miembro.num == num_miembro
+                and membresia.estado == Membresia.Estado.ACTIVA):
             return membresia
     return None
 
 def guardar_membresia(membresia: Membresia) -> None:
     bd.membresias[membresia.num] = membresia
-
-def obtener_aplicaciones_de_membresia(num_membresia: int) -> list[AplicacionVersionPlan]:
-    return [a for a in bd.aplicaciones_version_plan if a.membresia.num == num_membresia]
-
-def guardar_aplicacion_version_plan(aplicacion: AplicacionVersionPlan) -> None:
-    bd.aplicaciones_version_plan.append(aplicacion)
 
 # ---------------------------------------------------------------------------
 # Recompensa y VersionRecompensa
@@ -130,14 +125,17 @@ def guardar_version_recompensa(version_recompensa: VersionRecompensa) -> None:
     bd.versiones_recompensa[version_recompensa.num] = version_recompensa
 
 # ---------------------------------------------------------------------------
-# Compra, Canje, Renovacion y TransaccionPuntos
+# Compra, Renovacion y transacciones
 # ---------------------------------------------------------------------------
+
+def buscar_compra_por_num(num: int) -> Compra | None:
+    return bd.compras.get(num)
 
 def guardar_compra(compra: Compra) -> None:
     bd.compras[compra.num] = compra
 
-def guardar_canje(canje: Canje) -> None:
-    bd.canjes[canje.num] = canje
+def obtener_compras_de_membresia(num_membresia: int) -> list[Compra]:
+    return [c for c in bd.compras.values() if c.membresia.num == num_membresia]
 
 def guardar_renovacion(renovacion: Renovacion) -> None:
     bd.renovaciones[renovacion.num] = renovacion
@@ -149,12 +147,32 @@ def guardar_transaccion_puntos(transaccion: TransaccionPuntos) -> None:
     bd.transacciones_puntos[transaccion.num] = transaccion
 
 def obtener_transacciones_de_miembro(num_miembro: int) -> list[TransaccionPuntos]:
-    return [t for t in bd.transacciones_puntos.values() if t.miembro.num == num_miembro]
+    return [
+        t for t in bd.transacciones_puntos.values()
+        if t.membresia.miembro.num == num_miembro
+    ]
 
 def obtener_saldo_de_miembro(num_miembro: int) -> int:
     transacciones = obtener_transacciones_de_miembro(num_miembro)
     if not transacciones:
         return 0
+    return max(transacciones, key=lambda t: t.fecha).saldo
+
+def guardar_transaccion_cashback(transaccion: TransaccionCashback) -> None:
+    bd.transacciones_cashback[transaccion.num] = transaccion
+
+def obtener_transacciones_cashback_de_membresia(
+    num_membresia: int,
+) -> list[TransaccionCashback]:
+    return [
+        t for t in bd.transacciones_cashback.values()
+        if t.membresia.num == num_membresia
+    ]
+
+def obtener_saldo_cashback_de_membresia(num_membresia: int) -> Decimal:
+    transacciones = obtener_transacciones_cashback_de_membresia(num_membresia)
+    if not transacciones:
+        return Decimal("0")
     return max(transacciones, key=lambda t: t.fecha).saldo
 
 # ---------------------------------------------------------------------------
