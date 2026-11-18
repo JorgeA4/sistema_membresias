@@ -8,11 +8,3 @@ class Miembro:
         self.correo = correo
         self.contraseña = contraseña
         self.fecha_registro = fecha_registro
-
-    def info(self):
-        print(f"Numero: {self.num}")
-        print(f"Nombre de usuario: {self.nombre}")
-        print(f"Primer Apellido: {self.primer_apellido}")
-        print(f"Segundo Apellido: {self.segundo_apellido}")
-        print(f"Numero de Telefono: {self.telefono}")
-        print(f"Correo Electronico: {self.correo}")

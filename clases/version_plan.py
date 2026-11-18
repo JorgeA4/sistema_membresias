@@ -1,26 +1,94 @@
-from datetime import date, datetime
+from datetime import date
+from enum import Enum
+
+
+class TipoAplicacionPlan(Enum):
+    CONTRATACION = "CONTRATACION"
+    RENOVACION = "RENOVACION"
+    AMBAS = "AMBAS"
+
+
+class ConfigCashback:
+    def __init__(self, num, porcentaje, limite_mensual=None):
+        self.num = num
+        self.porcentaje = porcentaje
+        self.limite_mensual = limite_mensual
+
+
+class ConfigPuntos:
+    def __init__(self, num, porcentaje, vigencia_meses=None):
+        self.num = num
+        self.porcentaje = porcentaje
+        self.vigencia_meses = vigencia_meses
+
+
+class ConfigDescuento:
+    def __init__(self, num, porcentaje, monto_minimo=None, dias_aplicables=None):
+        self.num = num
+        self.porcentaje = porcentaje
+        self.monto_minimo = monto_minimo
+        self.dias_aplicables = [] if dias_aplicables is None else dias_aplicables
+
+
+class DiaAplicableDesc:
+    def __init__(self, config_descuento, dia_semana):
+        self.config_descuento = config_descuento
+        self.dia_semana = dia_semana
+
 
 class VersionPlan:
-    def __init__(self, num, fecha_inicio, fecha_final, precio, puntos_por_peso, porcentaje_descuento, limite_canjes, plazo_meses, plan):
+    _atributos_inmutables = (
+        "num",
+        "fecha_inicio",
+        "fecha_final",
+        "precio",
+        "plazo_meses",
+        "aplica_en",
+        "plan",
+        "config_cashback",
+        "config_puntos",
+        "config_descuento",
+        "version_base_de_promo",
+    )
+
+    def __init__(
+        self,
+        num,
+        fecha_inicio,
+        fecha_final,
+        precio,
+        plazo_meses,
+        aplica_en,
+        plan,
+        config_cashback=None,
+        config_puntos=None,
+        config_descuento=None,
+        version_base_de_promo=None,
+    ):
         self.num = num
         self.fecha_inicio = fecha_inicio
         self.fecha_final = fecha_final
         self.precio = precio
-        self.puntos_por_peso = puntos_por_peso
-        self.porcentaje_descuento = porcentaje_descuento
-        self.limite_canjes = limite_canjes
         self.plazo_meses = plazo_meses
-        self.plan = plan #FK
+        self.aplica_en = TipoAplicacionPlan(aplica_en)
+        self.plan = plan
+        self.config_cashback = config_cashback
+        self.config_puntos = config_puntos
+        self.config_descuento = config_descuento
+        self.version_base_de_promo = version_base_de_promo
+        self._inicializada = True
 
-    def esta_vigente(self):
-        return self.fecha_inicio <= date.today() <= self.fecha_final
+    def __setattr__(self, nombre, valor):
+        if getattr(self, "_inicializada", False) and nombre in self._atributos_inmutables:
+            raise AttributeError("Las condiciones de una version de plan son inmutables.")
+        object.__setattr__(self, nombre, valor)
 
-    def info(self):
-        print(f"Numero de version: {self.num}")
-        print(f"Precio: {self.precio}")
-        print(f"Plazo en meses: {self.plazo_meses}")
-        print(f"Puntos por peso: {self.puntos_por_peso}")
-        print(f"Porcentaje de descuento: {self.porcentaje_descuento}")
-        print(f"Limite de canjes: {self.limite_canjes}")
-        print(f"Fecha de inicio: {self.fecha_inicio}")
-        print(f"Fecha de finalizacion: {self.fecha_final}")
+    def esta_vigente(self, fecha=None):
+        if fecha is None:
+            fecha = date.today()
+        return self.fecha_inicio <= fecha <= self.fecha_final
+
+    def finalizar_vigencia(self, fecha):
+        if fecha < self.fecha_inicio or fecha > self.fecha_final:
+            raise ValueError("La fecha final debe estar dentro de la vigencia actual.")
+        object.__setattr__(self, "fecha_final", fecha)
