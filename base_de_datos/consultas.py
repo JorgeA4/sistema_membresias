@@ -1,7 +1,3 @@
-#import mariadb
-import sys
-from datetime import datetime
-
 from base_de_datos.consultas_simuladas import (
     # Miembro
     buscar_miembro_por_correo, #<

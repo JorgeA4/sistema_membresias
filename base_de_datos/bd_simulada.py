@@ -29,6 +29,14 @@ versiones_recompensa: dict[int, VersionRecompensa] = {}
 renovaciones: dict[int, Renovacion] = {}
 usuarios: dict[int, Usuario] = {}
 
+_secuencias: dict[str, int] = {}
+
+
+def siguiente_numero(nombre_tabla: str, tabla: dict[int, object]) -> int:
+    siguiente = max(_secuencias.get(nombre_tabla, 1), max(tabla, default=0) + 1)
+    _secuencias[nombre_tabla] = siguiente + 1
+    return siguiente
+
 
 # ---------------------------------------------------------------------------
 # Carga inicial de datos de prueba

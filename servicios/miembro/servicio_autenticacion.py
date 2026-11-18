@@ -1,6 +1,6 @@
 from clases.miembro import Miembro
 import base_de_datos.consultas as bd
-from datetime import date, datetime
+from datetime import date
 
 def autenticar_miembro(correo: str, contraseña: str) -> Miembro | None:
     miembro = bd.buscar_miembro_por_correo(correo)
@@ -12,6 +12,7 @@ def autenticar_miembro(correo: str, contraseña: str) -> Miembro | None:
 def crear_miembro(nombre, p_apellido, telefono, correo, contraseña, s_apellido = None):
     nuevo_miembro = Miembro(None, nombre, p_apellido, s_apellido, telefono, correo, contraseña, fecha_registro = date.today())
     guardar_miembro(nuevo_miembro)
+    return nuevo_miembro
 
 def guardar_miembro(miembro):
     bd.guardar_miembro(miembro)
@@ -30,8 +31,8 @@ def eliminar(lista, num): # 'num' es la clave del elemento
     #Lista de datos
     elif isinstance(lista, list): # num puede tratarse de la 'id' dentro de la lista
         for i in lista:
-            if getattr(i, 'id', None) == num:
-                lista.remove(num)
+            if getattr(i, 'num', None) == num:
+                lista.remove(i)
                 # print(f"El elemento con la ID {num} ha sido eliminado exitosamente")
                 return True
         # print(f"El elemento con la ID {num} no existe")

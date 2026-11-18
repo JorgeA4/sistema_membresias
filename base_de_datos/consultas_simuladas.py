@@ -30,6 +30,8 @@ def obtener_todos_los_miembros() -> list[Miembro]:
     return list(bd.miembros.values())
 
 def guardar_miembro(miembro: Miembro) -> None:
+    if miembro.num is None:
+        miembro.num = bd.siguiente_numero("miembros", bd.miembros)
     bd.miembros[miembro.num] = miembro
 
 def eliminar_miembro(num: int) -> None:
