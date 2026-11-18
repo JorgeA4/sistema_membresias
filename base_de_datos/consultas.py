@@ -1,4 +1,4 @@
-import mariadb
+#import mariadb
 import sys
 from datetime import datetime
 
@@ -49,6 +49,8 @@ from base_de_datos.consultas_simuladas import (
     buscar_rol_por_codigo,
     obtener_todos_los_roles,
 )
+
+"""
 #Funciones de Miembro:
 def buscar_miembro_por_correo(correo, conn):
     cursor = conn.cursor()
@@ -155,3 +157,4 @@ def obtener_todos_los_planes(conn):
     
     lista_planes = cur.fetchall()
     return lista_planes
+"""
