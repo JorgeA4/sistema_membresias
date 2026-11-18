@@ -1,0 +1,26 @@
+-- BASE DE DATOS NEXUM
+
+CREATE DATABASE Nexum;
+USE Nexum;
+
+-- Crear la tabla config_cashback
+CREATE TABLE config_cashback (
+    num INT PRIMARY KEY AUTO_INCREMENT,
+    porcentaje DECIMAL(10,2) NOT NULL,
+    limite_mensual DECIMAL(10,2)
+);
+
+-- Crear la tabla config_puntos
+CREATE TABLE config_puntos (
+    num INT PRIMARY KEY AUTO_INCREMENT,
+    porcentaje DECIMAL(10,2) NOT NULL,
+    vigencia_meses INT
+);
+
+-- Crear la tabla config_descuento
+CREATE TABLE config_descuento (
+    num INT PRIMARY KEY AUTO_INCREMENT,
+    porcentaje DECIMAL(10,2) NOT NULL,
+    monto_minimo DECIMAL(10,2)
+);
+
