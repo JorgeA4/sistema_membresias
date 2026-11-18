@@ -130,11 +130,12 @@ def eliminar_usuario(conn, num):
 #Funciones para Plan y VersionPlan
 def buscar_plan_por_codigo(conn, num):
     cursor = conn.cursor()
-    consulta = 
-        """SELECT id, codigo, nombre, descripcion, precio, duracion_dias
+    consulta = """
+        SELECT id, codigo, nombre, descripcion, precio, duracion_dias
         FROM plan
-        WHERE codigo = ?
-        LIMIT 1;"""
+        WHERE codigo = %s
+        LIMIT 1;
+    """
 
     try:
         cursor.execute(consulta, (num,))
