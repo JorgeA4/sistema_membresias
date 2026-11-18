@@ -1,0 +1,157 @@
+DICCIONARIO DE DATOS					
+Base de datos: Nexum					
+Objetivo: Documentar los campos del modelo relacional de Nexum.					
+					
+Tabla: CONFIG_CASHBACK					
+Objetivo:	Definir las condiciones de cashback que ofrece una versión de plan.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la configuración de cashback.
+2	porcentaje	num decimal		NOT NULL	Porcentaje de cashback que se genera en una compra. Debe ser mayor a 0 y menor a 1. Este se calcula sobre el COMPRA.monto_final.
+3	limite mensual	num decimal			Límite mensual de cashback que puede generarse. Si es NULL, no hay limite mensual. Debe ser mayor a 0.
+					
+Tabla: CONFIG_PUNTOS					
+Objetivo:	Definir las condiciones de acumulación y vigencia de los puntos de una versión de plan.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la configuración de puntos.
+2	porcentaje	num decimal		NOT NULL	Porcentaje de puntos que se genera en una compra. Debe ser mayor a 0 y menor a 1. Este se calcula sobre el COMPRA.monto_final.
+3	vigencia_meses	num entero			Cantidad de meses durante los que se mantienen vigentes los puntos acumulados. Si es NULL no hay vencimiento para los puntos. Debe ser mayor a 0.
+					
+Tabla: CONFIG_DESCUENTO					
+Objetivo:	Definir las condiciones de descuento que ofrece una versión de plan.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la configuración de descuento.
+2	porcentaje	num decimal		NOT NULL	Porcentaje de descuento que puede aplicarse en una compra. Debe ser mayor a 0 y menor a 1. Se calcula sobre el COMPRA.monto_base.
+3	monto_minimo	num decimal			Monto mínimo que debe alcanzar una compra para aplicar el descuento. Si es NULL no hay monto minimo. Debe ser mayor a 0.
+					
+Tabla: DIA_APLICABLE_DESC					
+Objetivo:	Relacionar una configuración de descuento con los días de la semana en que puede aplicarse.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	config_descuento	num entero		PK, FK	Configuración de descuento a la que pertenece el día aplicable.
+2	dia_semana	num entero		PK, CHECK(1,2,3,4,5,6,7)	Día de la semana en que puede aplicarse el descuento.
+					
+Tabla: PLAN					
+Objetivo:	Representar la identidad y las características generales de un plan de membresía.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	codigo	texto	10	PK	Código único del plan base.
+2	nombre	texto	100	NOT NULL, UNIQUE	Nombre comercial del plan.
+3	periodo_rembolso	num entero			Periodo definido por el plan para solicitar un reembolso medido en meses. Si es NULL no hay periodo de rembolso. Debe ser mayor a 0.
+4	descripcion	texto	500		Descripción general del plan base.
+					
+Tabla: MIEMBRO					
+Objetivo:	Representar a la persona que participa en el programa de membresías y beneficios.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador del miembro.
+2	nombre	texto	50	NOT NULL	Nombre del miembro.
+3	primer_apellido	texto	50	NOT NULL	Primer apellido del miembro.
+4	segundo_apellido	texto	50		Segundo apellido del miembro.
+5	telefono	texto	10	NOT NULL	Teléfono del miembro. Incluye lada, no incluye código de país. Es solo el numero sin ningún separador.
+6	correo	texto	150	NOT NULL, UNIQUE	Correo electrónico del miembro. Se usa para que el usuario acceda a su cuenta en el sistema.
+7	contraseña	texto	255	NOT NULL	Hash de la contraseña del miembro.
+8	fecha_registro	fecha		NOT NULL	Fecha en que se registró el miembro.
+					
+Tabla: RECOMPENSA					
+Objetivo:	Representar la identidad base de una recompensa que puede obtenerse mediante puntos.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	codigo	texto	10	PK	Código único de la recompensa.
+2	nombre	texto	100	NOT NULL	Nombre de la recompensa.
+3	descripcion	texto	500		Descripción de la recompensa.
+					
+Tabla: ROL					
+Objetivo:	Representar un rol administrativo y su alcance dentro del sistema.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	codigo	texto	10	PK	Código único del rol administrativo.
+2	nombre	texto	100	NOT NULL, UNIQUE	Nombre del rol administrativo.
+3	descripcion	texto	500		Descripción de los permisos o alcance del rol.
+					
+Tabla: VERSION_PLAN					
+Objetivo:	Representar las condiciones comerciales inmutables de una versión de plan durante un periodo de vigencia.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la versión del plan.
+2	fecha_inicio	fecha		NOT NULL	Inicio de la vigencia comercial de la versión del plan.
+3	fecha_final	fecha		NOT NULL	Fin de la vigencia comercial de la versión del plan. Debe ser mayor o igual a fecha_inicio.
+4	precio	num decimal		NOT NULL	Precio de contratación de la versión del plan. Debe ser mayor a 0.
+5	plazo_meses	num entero		NOT NULL	Duración contratada en meses. Debe ser mayor que 0.
+6	aplica en	texto	25	CHECK("CONTRATACION", "RENOVACION", "AMBAS")	Tipo de operación en que puede utilizarse la versión.
+7	plan	texto	10	FK, NOT NULL	Plan base al que pertenece la versión.
+8	config_cashback	num entero		FK, UNIQUE	Configuración de cashback asociada a la versión del plan.
+9	config_puntos	num entero		FK, UNIQUE	Configuración de puntos asociada a la versión del plan.
+10	config_descuento	num entero		FK, UNIQUE	Configuración de descuento asociada a la versión del plan.
+11	version_base_de_promo	num entero		FK	Versión regular de la que deriva una versión promocional. Debe apuntar a una versión regular del mismo plan y plazo. Si es NULL es una version regular.
+					
+Tabla: VERSION_RECOMPENSA					
+Objetivo:	Representar una versión temporal de una recompensa, con su costo y disponibilidad.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la versión de recompensa.
+2	fecha_inicio	fecha		NOT NULL	Inicio de disponibilidad de la versión de recompensa.
+3	fecha_final	fecha		NOT NULL	Fin de disponibilidad de la versión de recompensa. Debe ser mayor o igual que fecha_inicio.
+4	costo_puntos	num entero		NOT NULL	Cantidad de puntos necesaria para obtener la recompensa. Debe ser mayor a 0.
+5	limite_canjes	num entero			Cantidad máxima de canjes permitidos por membresia. Si es NULL no tiene limite de canjes.
+6	recompensa	texto	10	FK, NOT NULL	Recompensa base a la que pertenece la versión.
+					
+Tabla: MEMBRESIA					
+Objetivo:	Representar la participación activa o inactiva de un miembro en el programa y su versión de plan actual.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la membresía.
+2	fecha_contratacion	fecha		NOT NULL	Fecha en que el miembro contrató inicialmente la membresía.
+3	estado	texto	15	NOT NULL, CHECK("ACTIVA", "SUSPENDIDA", "CANCELADA")	Indica el estado actual de la membresia.
+4	miembro	num entero		FK, NOT NULL	Miembro titular de la membresía.
+5	version_plan_actual	num entero		FK	Versión de plan que actualmente rige la membresía. Si es NULL no se tiene ningun plan activo, esto sucede cuando no se renovó la membresía, pero tampoco se canceló.
+					
+Tabla: USUARIO					
+Objetivo:	Representar a un usuario administrativo que opera el sistema con un rol asignado.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador del usuario administrativo.
+2	nombre	texto	50	NOT NULL	Nombre del usuario administrativo.
+3	primer_apellido	texto	50	NOT NULL	Primer apellido del usuario administrativo.
+4	segundo_apellido	texto	50		Segundo apellido del usuario administrativo.
+5	telefono	texto	10		Teléfono del usuario administrativo. Incluye lada, no incluye código de país. Es solo el numero sin ningún separador.
+6	correo	texto	150	NOT NULL, UNIQUE	Correo electrónico del usuario administrativo. Se usa para que el usuario acceda a su cuenta en el sistema.
+7	contraseña	texto	255	NOT NULL	Hash de la contraseña del usuario administrativo.
+8	fecha_registro	fecha		NOT NULL	Fecha en que se registró el usuario administrativo.
+9	rol	texto	10	FK, NOT NULL	Rol asignado al usuario administrativo.
+					
+Tabla: RENOVACION					
+Objetivo:	Representar la contratación de un nuevo periodo para una membresía.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la renovación.
+2	fecha_pago	fecha		NOT NULL	Fecha en que se realizó el pago de la renovación.
+3	monto_pagado	num decimal		NOT NULL	Monto pagado por la renovación. Debe ser mayor a 0.
+4	fecha_inicio_periodo	fecha		NOT NULL	Fecha de inicio del periodo contratado mediante la renovación. En renovaciones anticipadas debe considerar el vencimiento anterior.
+5	fecha_fin_periodo	fecha		NOT NULL	Fecha calculada de finalización del periodo contratado. Atributo derivado a partir de fecha_inicio_periodo y VERSION_PLAN.plazo_meses.
+6	membresia	num entero		FK, NOT NULL	Membresía que se renueva.
+7	version_plan_comprado	num entero		FK, NOT NULL	Versión de plan contratada en la renovación.
+					
+Tabla: COMPRA					
+Objetivo:	Representar una compra registrada para una membresía y los beneficios monetarios aplicados en ella.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la compra.
+2	monto_base	num decimal		NOT NULL	Importe de la compra antes de aplicar el descuento. Debe ser mayor a 0.
+3	porcentaje_descuento	num decimal		NOT NULL	Porcentaje de descuento aplicado en la compra. Debe estar entre 0 y 1.
+4	descuento_nominal	num decimal		NOT NULL	Importe monetario descontado de la compra. Atributo calculado a partir de monto_base y porcentaje_descuento.
+5	cashback_aplicado	num decimal		NOT NULL	Importe de cashback utilizado como parte del pago de la compra. No puede superar el saldo disponible.
+6	monto_final	num decimal		NOT NULL	Importe final de la compra después del descuento y del cashback utilizado. Atributo calculado; definir el orden de aplicación de descuento y cashback.
+7	membresia	num entero		FK, NOT NULL	Membresía utilizada para identificar los beneficios de la compra.
+8	usuario	num entero		FK, NOT NULL	Usuario administrativo que registró la compra.
+					
+Tabla: TRANSACCION_PUNTOS					
+Objetivo:	Registrar los movimientos de puntos de una membresía, incluidos acumulaciones, consumos y ajustes.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la transacción de puntos.
+2	movimiento	num entero		NOT NULL	Cantidad de puntos que entra o sale del saldo.
+3	saldo	num entero		NOT NULL	Saldo de puntos después de la transacción. No puede ser negativo.
+4	fecha	fecha		NOT NULL	Fecha de la transacción de puntos.
+5	concepto	texto	255		Descripción del motivo de la transacción de puntos. Es obligatorio cuando se trata de un ajuste diferente de una acumulación por compra o un uso en adquirir una recompensa.
+6	compra	num entero		FK	Compra que originó la transacción de puntos.
+7	version_recompensa	num entero		FK	Versión de recompensa adquirida y que cuya operación originó la transacción de puntos.
+8	membresia	num entero		FK, NOT NULL	Membresía cuyo saldo de puntos se modifica.
+					
+Tabla: TRANSACCION_CASHBACK					
+Objetivo:	Registrar los movimientos monetarios de cashback generados o utilizados por una membresía.				
+Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
+1	num	num entero		PK, AI	Identificador de la transacción de cashback.
+2	monto	num decimal		NOT NULL	Importe de cashback generado o utilizado.
+3	saldo	num decimal		NOT NULL	Saldo de cashback después de la transacción. No puede ser negativo
+4	fecha	fecha		NOT NULL	Fecha de la transacción de cashback.
+5	concepto	texto	255		Descripción del motivo de la transacción de cashback.
+6	compra	num entero		FK	Compra que originó el movimiento de cashback.
+7	membresia	num entero		FK, NOT NULL	Membresía cuyo saldo de cashback se modifica.
