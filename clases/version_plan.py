@@ -9,10 +9,10 @@ class TipoAplicacionPlan(Enum):
 
 
 class ConfigCashback:
-    def __init__(self, num, porcentaje, limite_mensual=None):
+    def __init__(self, num, porcentaje, limite_min_mensual=None):
         self.num = num
         self.porcentaje = porcentaje
-        self.limite_mensual = limite_mensual
+        self.limite_min_mensual = limite_min_mensual
 
 
 class ConfigPuntos:

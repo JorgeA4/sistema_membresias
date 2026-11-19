@@ -64,14 +64,12 @@ plan_basico = Plan(
     codigo="BAS",
     nombre="Básico",
     descripcion="Plan de entrada",
-    periodo_rembolso=None,
 )
 
 plan_premium = Plan(
     codigo="PRE",
     nombre="Premium",
     descripcion="Plan de pago con beneficios extendidos",
-    periodo_rembolso=30,
 )
 
 config_puntos_basico = ConfigPuntos(

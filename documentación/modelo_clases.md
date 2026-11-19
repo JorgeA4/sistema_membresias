@@ -39,7 +39,7 @@ Representa las condiciones de cashback asociadas a una versión de plan.
 class ConfigCashback:
     num: int
     porcentaje: float
-    limite_mensual: float | None
+    limite_min_mensual: float | None
 ```
 
 ### `ConfigPuntos`
@@ -102,7 +102,6 @@ Representa la identidad y las características generales de un plan.
 class Plan:
     codigo: str
     nombre: str
-    periodo_rembolso: int | None
     descripcion: str | None
 ```
 
