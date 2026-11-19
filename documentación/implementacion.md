@@ -106,9 +106,11 @@ Estas decisiones se documentan aquí para resolverlas durante la implementación
   clases y el DD utilizan fechas. Revisar la decisión general de `DATETIME` en
   `base_de_datos.md` si posteriormente se necesitan horas.
 - Usar `Decimal` para todos los importes y porcentajes monetarios.
-- Definir el orden de aplicación de descuento y cashback.
-- Definir la estrategia de redondeo de descuento, cashback y monto final.
-- Definir cómo se calcula el límite mínimo mensual de cashback.
+- En compras, aplicar primero el descuento y después el cashback utilizado.
+- Redondear importes monetarios a dos decimales con `ROUND_HALF_UP`.
+- Calcular puntos con truncamiento a entero y cashback sobre el monto final.
+- El límite mínimo mensual de cashback se calcula con el cashback generado
+  durante el mes actual antes de permitir su uso.
 - Rechazar compras para membresías que no estén activas, salvo que se acuerde
   una excepción explícita.
 - Las renovaciones anticipadas comienzan al día siguiente del último periodo
