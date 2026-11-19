@@ -4,9 +4,11 @@ from decimal import Decimal, InvalidOperation
 import base_de_datos.consultas as bd
 from clases.plan import Plan
 from clases.version_plan import TipoAplicacionPlan, VersionPlan
+from servicios.autorizacion.servicio_autorizacion import requiere_administrador
 
 
-def registrar_plan(datos: dict) -> Plan:
+def registrar_plan(usuario, datos: dict) -> Plan:
+    requiere_administrador(usuario)
     codigo = datos["codigo"].strip()
     nombre = datos["nombre"].strip()
 
@@ -30,7 +32,8 @@ def obtener_planes() -> list[Plan]:
     return bd.obtener_todos_los_planes()
 
 
-def modificar_plan(codigo: str, datos: dict) -> Plan:
+def modificar_plan(usuario, codigo: str, datos: dict) -> Plan:
+    requiere_administrador(usuario)
     plan = consultar_plan(codigo)
     if plan is None:
         raise ValueError("El plan no existe.")
@@ -58,7 +61,8 @@ def modificar_plan(codigo: str, datos: dict) -> Plan:
     return plan
 
 
-def eliminar_plan(codigo: str) -> None:
+def eliminar_plan(usuario, codigo: str) -> None:
+    requiere_administrador(usuario)
     plan = consultar_plan(codigo)
     if plan is None:
         raise ValueError("El plan no existe.")
@@ -67,7 +71,8 @@ def eliminar_plan(codigo: str) -> None:
     bd.eliminar_plan(codigo)
 
 
-def crear_version_plan(datos: dict) -> VersionPlan:
+def crear_version_plan(usuario, datos: dict) -> VersionPlan:
+    requiere_administrador(usuario)
     plan = _obtener_plan(datos)
     fecha_inicio = datos["fecha_inicio"]
     fecha_final = datos["fecha_final"]
@@ -119,7 +124,8 @@ def obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]:
     return bd.obtener_versiones_de_plan(codigo_plan)
 
 
-def finalizar_version_plan(num: int, fecha_final: date) -> VersionPlan:
+def finalizar_version_plan(usuario, num: int, fecha_final: date) -> VersionPlan:
+    requiere_administrador(usuario)
     version = consultar_version_plan(num)
     if version is None:
         raise ValueError("La versión de plan no existe.")

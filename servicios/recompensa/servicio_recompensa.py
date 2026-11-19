@@ -5,9 +5,14 @@ from clases.membresia import Membresia
 from clases.recompensa import Recompensa
 from clases.transaccion_puntos import TransaccionPuntos
 from clases.version_recompensa import VersionRecompensa
+from servicios.autorizacion.servicio_autorizacion import (
+    requiere_administrador,
+    requiere_administrador_o_propietario,
+)
 
 
-def registrar_recompensa(datos: dict) -> Recompensa:
+def registrar_recompensa(usuario, datos: dict) -> Recompensa:
+    requiere_administrador(usuario)
     codigo = datos["codigo"].strip()
     nombre = datos["nombre"].strip()
 
@@ -29,7 +34,8 @@ def obtener_recompensas() -> list[Recompensa]:
     return bd.obtener_todas_las_recompensas()
 
 
-def modificar_recompensa(codigo: str, datos: dict) -> Recompensa:
+def modificar_recompensa(usuario, codigo: str, datos: dict) -> Recompensa:
+    requiere_administrador(usuario)
     recompensa = consultar_recompensa(codigo)
     if recompensa is None:
         raise ValueError("La recompensa no existe.")
@@ -52,7 +58,8 @@ def modificar_recompensa(codigo: str, datos: dict) -> Recompensa:
     return recompensa
 
 
-def eliminar_recompensa(codigo: str) -> None:
+def eliminar_recompensa(usuario, codigo: str) -> None:
+    requiere_administrador(usuario)
     recompensa = consultar_recompensa(codigo)
     if recompensa is None:
         raise ValueError("La recompensa no existe.")
@@ -61,7 +68,8 @@ def eliminar_recompensa(codigo: str) -> None:
     bd.eliminar_recompensa(codigo)
 
 
-def crear_version_recompensa(datos: dict) -> VersionRecompensa:
+def crear_version_recompensa(usuario, datos: dict) -> VersionRecompensa:
+    requiere_administrador(usuario)
     recompensa = _obtener_recompensa(datos)
     fecha_inicio = datos["fecha_inicio"]
     fecha_final = datos["fecha_final"]
@@ -115,7 +123,8 @@ def obtener_versiones_recompensa_vigentes() -> list[VersionRecompensa]:
     ]
 
 
-def finalizar_version_recompensa(num: int, fecha_final: date) -> VersionRecompensa:
+def finalizar_version_recompensa(usuario, num: int, fecha_final: date) -> VersionRecompensa:
+    requiere_administrador(usuario)
     version = consultar_version_recompensa(num)
     if version is None:
         raise ValueError("La versión de recompensa no existe.")
@@ -127,12 +136,14 @@ def finalizar_version_recompensa(num: int, fecha_final: date) -> VersionRecompen
 
 
 def canjear_recompensa(
+    actor,
     num_membresia: int,
     num_version_recompensa: int,
 ) -> TransaccionPuntos:
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
+    requiere_administrador_o_propietario(actor, membresia)
     if membresia.estado != Membresia.Estado.ACTIVA:
         raise ValueError("La membresía no está activa.")
 
@@ -171,10 +182,11 @@ def canjear_recompensa(
     return transaccion
 
 
-def obtener_historial_canjes(num_membresia: int) -> list[TransaccionPuntos]:
+def obtener_historial_canjes(actor, num_membresia: int) -> list[TransaccionPuntos]:
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
+    requiere_administrador_o_propietario(actor, membresia)
 
     transacciones = bd.obtener_transacciones_de_miembro(membresia.miembro.num)
     return sorted(

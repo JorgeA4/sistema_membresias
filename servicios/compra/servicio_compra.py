@@ -7,14 +7,15 @@ from clases.membresia import Membresia
 from clases.transaccion_cashback import TransaccionCashback
 from clases.transaccion_puntos import TransaccionPuntos
 from clases.usuario import Usuario
+from servicios.autorizacion.servicio_autorizacion import requiere_operador_compra
 
 
 _DOS_DECIMALES = Decimal("0.01")
 
 
-def registrar_compra(datos: dict) -> Compra:
+def registrar_compra(usuario: Usuario, datos: dict) -> Compra:
+    requiere_operador_compra(usuario)
     membresia = _obtener_membresia(datos)
-    usuario = _obtener_usuario(datos)
     version = membresia.version_plan_actual
 
     if membresia.estado != Membresia.Estado.ACTIVA:
@@ -109,19 +110,6 @@ def _obtener_membresia(datos: dict) -> Membresia:
     if not isinstance(membresia, Membresia):
         raise ValueError("La membresía no existe.")
     return membresia
-
-
-def _obtener_usuario(datos: dict) -> Usuario:
-    referencia = datos.get("usuario")
-    if isinstance(referencia, int):
-        usuario = bd.buscar_usuario_por_num(referencia)
-    elif referencia is None:
-        usuario = bd.buscar_usuario_por_num(datos.get("num_usuario"))
-    else:
-        usuario = referencia
-    if not isinstance(usuario, Usuario):
-        raise ValueError("El usuario no existe.")
-    return usuario
 
 
 def _verificar_membresia(num_membresia: int) -> Membresia:

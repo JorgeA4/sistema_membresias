@@ -6,6 +6,7 @@ import base_de_datos.consultas as bd
 from clases.membresia import Membresia
 from clases.renovacion import Renovacion
 from clases.version_plan import TipoAplicacionPlan, VersionPlan
+from servicios.autorizacion.servicio_autorizacion import requiere_administrador_o_propietario
 
 
 def consultar_membresia(num: int) -> Membresia | None:
@@ -16,10 +17,11 @@ def consultar_membresia_de_miembro(num_miembro: int) -> Membresia | None:
     return bd.buscar_membresia_de_miembro(num_miembro)
 
 
-def renovar_membresia(num_membresia: int, num_version_plan: int) -> Renovacion:
+def renovar_membresia(actor, num_membresia: int, num_version_plan: int) -> Renovacion:
     membresia = consultar_membresia(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
+    requiere_administrador_o_propietario(actor, membresia)
     if membresia.estado != Membresia.Estado.ACTIVA:
         raise ValueError("La membresía no está activa.")
 
@@ -54,10 +56,11 @@ def renovar_membresia(num_membresia: int, num_version_plan: int) -> Renovacion:
     return renovacion
 
 
-def cancelar_membresia(num_membresia: int) -> Membresia:
+def cancelar_membresia(actor, num_membresia: int) -> Membresia:
     membresia = consultar_membresia(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
+    requiere_administrador_o_propietario(actor, membresia)
     if membresia.estado == Membresia.Estado.CANCELADA:
         raise ValueError("La membresía ya está cancelada.")
 

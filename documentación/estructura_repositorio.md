@@ -9,6 +9,7 @@ sistema_membresias/
 ├── clases/
 ├── servicios/
 │   ├── autenticacion/
+│   ├── autorizacion/
 │   ├── miembro/
 │   ├── usuario/
 │   ├── plan/
@@ -44,6 +45,7 @@ directamente a los diccionarios internos de la base simulada.
 La separación inicial es la siguiente:
 
 - `autenticacion/`: autenticación de miembros y usuarios administrativos.
+- `autorizacion/`: validación de roles y propiedad de membresías.
 - `miembro/`: registro, consulta, modificación y eliminación de miembros.
 - `usuario/`: registro, consulta, modificación y eliminación de usuarios.
 - `plan/`: planes y versiones de planes.

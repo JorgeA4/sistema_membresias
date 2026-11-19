@@ -2,10 +2,12 @@ from datetime import date
 
 import base_de_datos.consultas as bd
 from clases.miembro import Miembro
+from servicios.autorizacion.servicio_autorizacion import requiere_administrador
 from utilidades.seguridad import hashear_contraseña
 
 
-def registrar_miembro(datos: dict) -> Miembro:
+def registrar_miembro(usuario, datos: dict) -> Miembro:
+    requiere_administrador(usuario)
     miembro = Miembro(
         num=None,
         nombre=datos["nombre"],
@@ -28,7 +30,8 @@ def obtener_miembros() -> list[Miembro]:
     return bd.obtener_todos_los_miembros()
 
 
-def modificar_miembro(num: int, datos: dict) -> Miembro:
+def modificar_miembro(usuario, num: int, datos: dict) -> Miembro:
+    requiere_administrador(usuario)
     miembro = consultar_miembro(num)
     if miembro is None:
         raise ValueError("El miembro no existe.")
@@ -51,7 +54,8 @@ def modificar_miembro(num: int, datos: dict) -> Miembro:
     return miembro
 
 
-def eliminar_miembro(num: int) -> None:
+def eliminar_miembro(usuario, num: int) -> None:
+    requiere_administrador(usuario)
     if consultar_miembro(num) is None:
         raise ValueError("El miembro no existe.")
     bd.eliminar_miembro(num)
