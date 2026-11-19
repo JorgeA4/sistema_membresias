@@ -7,7 +7,7 @@ Objetivo:	Definir las condiciones de cashback que ofrece una versión de plan.
 Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
 1	num	num entero		PK, AI	Identificador de la configuración de cashback.
 2	porcentaje	num decimal		NOT NULL	Porcentaje de cashback que se genera en una compra. Debe ser mayor a 0 y menor a 1. Este se calcula sobre el COMPRA.monto_final.
-3	limite mensual	num decimal			Límite mensual de cashback que puede generarse. Si es NULL, no hay limite mensual. Debe ser mayor a 0.
+3	limite min mensual	num decimal			Límite minimo mensual de cashback que debe lograr la membresia para poder hacer uso de su cashback en forma de bonificaciones en compras. Si es NULL, no hay limite mensual. Debe ser mayor a 0.
 					
 Tabla: CONFIG_PUNTOS					
 Objetivo:	Definir las condiciones de acumulación y vigencia de los puntos de una versión de plan.				
@@ -34,7 +34,6 @@ Objetivo:	Representar la identidad y las características generales de un plan d
 Num	Campo	Tipo de dato	Longitud	Restricción	Descripción
 1	codigo	texto	10	PK	Código único del plan base.
 2	nombre	texto	100	NOT NULL, UNIQUE	Nombre comercial del plan.
-3	periodo_rembolso	num entero			Periodo definido por el plan para solicitar un reembolso medido en meses. Si es NULL no hay periodo de rembolso. Debe ser mayor a 0.
 4	descripcion	texto	500		Descripción general del plan base.
 					
 Tabla: MIEMBRO					
