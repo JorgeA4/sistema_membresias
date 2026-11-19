@@ -52,7 +52,7 @@ Los datos recibidos desde formularios se representan inicialmente como un
 
 ```python
 registrar_miembro(identidad: dict, datos: dict) -> Miembro
-consultar_miembro(num: int) -> Miembro | None
+consultar_miembro(identidad: dict, num: int) -> Miembro | None
 obtener_miembros() -> list[Miembro]
 modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro
 eliminar_miembro(identidad: dict, num: int) -> None
@@ -114,8 +114,8 @@ filtrando las transacciones de puntos que tienen esa asociación.
 ### Membresías
 
 ```python
-consultar_membresia(num: int) -> Membresia | None
-consultar_membresia_de_miembro(num_miembro: int) -> Membresia | None
+consultar_membresia(identidad: dict, num: int) -> Membresia | None
+consultar_membresia_de_miembro(identidad: dict, num_miembro: int) -> Membresia | None
 renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion
 contratar_membresia(identidad: dict, num_miembro: int, num_version_plan: int) -> Renovacion
 cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia
@@ -169,6 +169,16 @@ Estas reglas se aplican en la implementación actual:
 - El cashback del mes se puede utilizar cuando el generado en ese mes supera
   el umbral; si el mes termina sin superar el umbral, se registra su expiración
   como movimiento negativo.
+- Los puntos tienen una vigencia global por membresía: se calcula desde la
+  última compra que generó puntos y la `vigencia_meses` de la configuración
+  aplicable. Si la fecha actual supera la fecha calculada, se registra un
+  ajuste negativo por el saldo total. La comprobación ocurre al consultar,
+  comprar o intentar canjear; los puntos se mantienen disponibles durante toda
+  la fecha calculada.
+- Una operación de caja se ejecuta atómicamente en la base simulada. Si falla
+  la venta, el canje o una transacción asociada, se restaura el estado previo.
+- Las solicitudes de renovación, cancelación y canje del miembro son
+  informativas; la operación efectiva se realiza en caja.
 - Rechazar eliminaciones de entidades con registros históricos relacionados;
   no se utilizarán eliminaciones físicas cuando destruyan trazabilidad.
 - Resolver empates de fecha al calcular el saldo mediante un orden estable por
@@ -180,12 +190,10 @@ Estas reglas se aplican en la implementación actual:
 
 ## Trabajo pendiente
 
-- Completar formularios de configuración de versiones con puntos, descuentos y
-  cashback.
 - Añadir eliminación y finalización de todas las entidades desde la interfaz
   administrativa, respetando la trazabilidad histórica.
 - Implementar una transacción atómica para la operación de caja cuando se use
-  MariaDB. Actualmente la base simulada ejecuta la venta y el canje en memoria.
+  MariaDB. La base simulada ya revierte la venta y el canje si falla un paso.
 - Reemplazar la persistencia simulada por el adaptador MariaDB.
 - Crear excepciones de dominio específicas y sustituir gradualmente el uso
   directo de `ValueError` y `PermissionError`.

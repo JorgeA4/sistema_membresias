@@ -30,7 +30,16 @@ def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
     return miembro
 
 
-def consultar_miembro(num: int) -> Miembro | None:
+def consultar_miembro(identidad: dict, num: int) -> Miembro | None:
+    if not isinstance(identidad, dict):
+        raise PermissionError("Se requiere una identidad autenticada.")
+    if identidad.get("tipo") == "usuario":
+        requiere_operador_tienda(identidad)
+    elif identidad.get("tipo") == "miembro":
+        if identidad.get("num") != num:
+            raise PermissionError("No tiene permiso para consultar este miembro.")
+    else:
+        raise PermissionError("Se requiere una identidad autenticada.")
     return bd.buscar_miembro_por_num(num)
 
 
@@ -40,7 +49,7 @@ def obtener_miembros() -> list[Miembro]:
 
 def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
     requiere_administrador(identidad)
-    miembro = consultar_miembro(num)
+    miembro = consultar_miembro(identidad, num)
     if miembro is None:
         raise ValueError("El miembro no existe.")
 
@@ -64,6 +73,6 @@ def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
 
 def eliminar_miembro(identidad: dict, num: int) -> None:
     requiere_administrador(identidad)
-    if consultar_miembro(num) is None:
+    if consultar_miembro(identidad, num) is None:
         raise ValueError("El miembro no existe.")
     bd.eliminar_miembro(num)

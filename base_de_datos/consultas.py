@@ -1,3 +1,4 @@
+from base_de_datos.bd_simulada import transaccion
 from base_de_datos.consultas_simuladas import (
     # Miembro
     buscar_miembro_por_correo, #<

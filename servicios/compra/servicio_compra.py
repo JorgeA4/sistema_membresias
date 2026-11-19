@@ -11,6 +11,7 @@ from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador_o_propietario,
     requiere_operador_compra,
 )
+from servicios.membresia.servicio_membresia import actualizar_estado_membresia
 
 
 _DOS_DECIMALES = Decimal("0.01")
@@ -19,6 +20,8 @@ _DOS_DECIMALES = Decimal("0.01")
 def registrar_compra(identidad: dict, datos: dict) -> Compra:
     usuario = requiere_operador_compra(identidad)
     membresia = _obtener_membresia(datos)
+    actualizar_estado_membresia(membresia)
+    actualizar_vigencia_puntos(membresia)
     version = membresia.version_plan_actual
 
     if membresia.estado != Membresia.Estado.ACTIVA:
@@ -77,6 +80,7 @@ def obtener_transacciones_de_miembro(identidad: dict, num_miembro: int) -> list[
     if membresia is None:
         raise ValueError("El miembro no tiene una membresía.")
     requiere_administrador_o_propietario(identidad, membresia)
+    actualizar_vigencia_puntos(membresia)
     return sorted(
         bd.obtener_transacciones_de_miembro(num_miembro),
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
@@ -88,6 +92,84 @@ def obtener_saldo_de_miembro(identidad: dict, num_miembro: int) -> int:
     if not transacciones:
         return 0
     return transacciones[-1].saldo
+
+
+def obtener_fecha_vencimiento_puntos(identidad: dict, num_miembro: int):
+    if bd.buscar_miembro_por_num(num_miembro) is None:
+        raise ValueError("El miembro no existe.")
+    membresia = bd.buscar_membresia_de_miembro(num_miembro)
+    if membresia is None:
+        raise ValueError("El miembro no tiene una membresía.")
+    requiere_administrador_o_propietario(identidad, membresia)
+    actualizar_vigencia_puntos(membresia)
+    return _calcular_fecha_vencimiento_puntos(membresia)
+
+
+def actualizar_vigencia_puntos(membresia: Membresia, fecha: date | None = None) -> None:
+    """Vence el saldo global después de la fecha calculada para la última compra."""
+    fecha = fecha or date.today()
+    fecha_vencimiento = _calcular_fecha_vencimiento_puntos(membresia)
+    if fecha_vencimiento is None or fecha <= fecha_vencimiento:
+        return
+
+    transacciones = bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+    ultima_compra = _obtener_ultima_compra_con_puntos(transacciones)
+    if ultima_compra is None:
+        return
+    clave_ultima_compra = (ultima_compra.fecha, ultima_compra.num)
+    if any(
+        transaccion.concepto == "Puntos vencidos"
+        and (transaccion.fecha, transaccion.num) > clave_ultima_compra
+        for transaccion in transacciones
+    ):
+        return
+
+    saldo = _obtener_saldo_puntos(transacciones)
+    if saldo <= 0:
+        return
+    bd.guardar_transaccion_puntos(
+        TransaccionPuntos(
+            num=None,
+            movimiento=-saldo,
+            saldo=0,
+            fecha=fecha,
+            concepto="Puntos vencidos",
+            compra=None,
+            version_recompensa=None,
+            membresia=membresia,
+        )
+    )
+
+
+def _calcular_fecha_vencimiento_puntos(membresia: Membresia):
+    version = membresia.version_plan_actual
+    configuracion = None if version is None else version.config_puntos
+    if configuracion is None or configuracion.vigencia_meses is None:
+        return None
+    transacciones = bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+    ultima_compra = _obtener_ultima_compra_con_puntos(transacciones)
+    if ultima_compra is None:
+        return None
+    return _sumar_meses(ultima_compra.fecha, configuracion.vigencia_meses)
+
+
+def _obtener_ultima_compra_con_puntos(transacciones):
+    compras = [
+        transaccion
+        for transaccion in transacciones
+        if transaccion.movimiento > 0 and transaccion.compra is not None
+    ]
+    if not compras:
+        return None
+    return max(compras, key=lambda transaccion: (transaccion.fecha, transaccion.num))
+
+
+def _sumar_meses(fecha: date, meses: int) -> date:
+    indice_mes = fecha.year * 12 + fecha.month - 1 + meses
+    año, mes_indice = divmod(indice_mes, 12)
+    mes = mes_indice + 1
+    dia = min(fecha.day, calendar.monthrange(año, mes)[1])
+    return date(año, mes, dia)
 
 
 def obtener_transacciones_cashback_de_membresia(

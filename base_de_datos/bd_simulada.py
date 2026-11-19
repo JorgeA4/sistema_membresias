@@ -10,6 +10,8 @@ from clases.version_recompensa import VersionRecompensa
 from clases.renovacion import Renovacion
 from clases.rol import Rol
 from clases.usuario import Usuario
+from contextlib import contextmanager
+from copy import deepcopy
 
 # --- Tablas con PK str (codigo) ---
 
@@ -30,6 +32,37 @@ renovaciones: dict[int, Renovacion] = {}
 usuarios: dict[int, Usuario] = {}
 
 _secuencias: dict[str, int] = {}
+
+
+@contextmanager
+def transaccion():
+    """Permite revertir una operación que modifica varias tablas simuladas."""
+    nombres_tablas = (
+        "miembros",
+        "versiones_plan",
+        "membresias",
+        "transacciones_puntos",
+        "transacciones_cashback",
+        "compras",
+        "versiones_recompensa",
+        "renovaciones",
+        "usuarios",
+        "planes",
+        "recompensas",
+        "roles",
+    )
+    respaldo = {nombre: deepcopy(globals()[nombre]) for nombre in nombres_tablas}
+    respaldo_secuencias = deepcopy(_secuencias)
+    try:
+        yield
+    except Exception:
+        for nombre, tabla in respaldo.items():
+            tabla_actual = globals()[nombre]
+            tabla_actual.clear()
+            tabla_actual.update(tabla)
+        _secuencias.clear()
+        _secuencias.update(respaldo_secuencias)
+        raise
 
 
 def siguiente_numero(nombre_tabla: str, tabla: dict[int, object]) -> int:

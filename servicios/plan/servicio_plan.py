@@ -93,6 +93,10 @@ def crear_version_plan(identidad: dict, datos: dict) -> VersionPlan:
     if version_base is not None and version_base.plan.codigo != plan.codigo:
         raise ValueError("La versión base debe pertenecer al mismo plan.")
 
+    _validar_configuracion_puntos(datos.get("config_puntos"))
+    _validar_configuracion_descuento(datos.get("config_descuento"))
+    _validar_configuracion_cashback(datos.get("config_cashback"))
+
     try:
         aplica_en = TipoAplicacionPlan(datos["aplica_en"])
     except (KeyError, ValueError):
@@ -170,3 +174,62 @@ def _convertir_precio(valor) -> Decimal:
         return Decimal(str(valor))
     except (InvalidOperation, TypeError, ValueError):
         raise ValueError("El precio no es válido.") from None
+
+
+def _validar_configuracion_puntos(configuracion) -> None:
+    if configuracion is None:
+        return
+    porcentaje = _convertir_porcentaje(configuracion.porcentaje)
+    if porcentaje == 0:
+        raise ValueError("El porcentaje de puntos debe ser mayor que cero.")
+    vigencia = configuracion.vigencia_meses
+    if vigencia is not None and (
+        isinstance(vigencia, bool) or not isinstance(vigencia, int) or vigencia <= 0
+    ):
+        raise ValueError("La vigencia de puntos debe ser un entero mayor que cero.")
+
+
+def _validar_configuracion_descuento(configuracion) -> None:
+    if configuracion is None:
+        return
+    porcentaje = _convertir_porcentaje(configuracion.porcentaje)
+    if porcentaje == 0:
+        raise ValueError("El porcentaje de descuento debe ser mayor que cero.")
+    if configuracion.monto_minimo is not None:
+        _convertir_monto_no_negativo(configuracion.monto_minimo, "El monto mínimo del descuento")
+    for dia in configuracion.dias_aplicables:
+        if isinstance(dia, bool) or not isinstance(dia, int) or not 1 <= dia <= 7:
+            raise ValueError("Los días aplicables deben estar entre 1 y 7.")
+
+
+def _validar_configuracion_cashback(configuracion) -> None:
+    if configuracion is None:
+        return
+    porcentaje = _convertir_porcentaje(configuracion.porcentaje)
+    if porcentaje == 0:
+        raise ValueError("El porcentaje de cashback debe ser mayor que cero.")
+    if configuracion.limite_min_mensual is not None:
+        _convertir_monto_no_negativo(
+            configuracion.limite_min_mensual,
+            "El umbral mensual de cashback",
+        )
+
+
+def _convertir_porcentaje(valor) -> Decimal:
+    try:
+        porcentaje = Decimal(str(valor))
+    except (InvalidOperation, TypeError, ValueError):
+        raise ValueError("El porcentaje no es válido.") from None
+    if porcentaje < 0 or porcentaje > 1:
+        raise ValueError("El porcentaje debe estar entre cero y uno.")
+    return porcentaje
+
+
+def _convertir_monto_no_negativo(valor, nombre: str) -> Decimal:
+    try:
+        monto = Decimal(str(valor))
+    except (InvalidOperation, TypeError, ValueError):
+        raise ValueError(f"{nombre} no es válido.") from None
+    if monto < 0:
+        raise ValueError(f"{nombre} no puede ser negativo.")
+    return monto

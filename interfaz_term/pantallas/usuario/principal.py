@@ -30,6 +30,7 @@ from servicios.plan.servicio_plan import (
     obtener_planes,
     registrar_plan,
 )
+from clases.version_plan import ConfigCashback, ConfigDescuento, ConfigPuntos
 from servicios.recompensa.servicio_recompensa import (
     crear_version_recompensa,
     modificar_recompensa,
@@ -112,7 +113,7 @@ def mostrar_usuario(sesion: dict) -> tuple:
         elif accion == "Cambiar plan":
             _renovar(identidad, titulo="Cambiar plan mediante renovación")
         elif accion == "Consultar miembro":
-            _consultar_miembro()
+            _consultar_miembro(identidad)
         elif accion == "Consultar planes":
             _consultar_planes(identidad)
         elif accion == "Crear plan":
@@ -263,12 +264,12 @@ def _renovar(identidad: dict, titulo: str = "Renovar membresía") -> None:
         error(str(exc))
 
 
-def _consultar_miembro() -> None:
+def _consultar_miembro(identidad: dict) -> None:
     numero = questionary.text("Número de miembro:").ask()
     if numero is None:
         return
     try:
-        miembro = consultar_miembro(_numero(numero))
+        miembro = consultar_miembro(identidad, _numero(numero))
         if miembro is None:
             raise ValueError("El miembro no existe.")
         mostrar_tabla(
@@ -353,10 +354,78 @@ def _crear_version_plan(identidad: dict) -> None:
         datos["fecha_inicio"] = _fecha(datos["fecha_inicio"])
         datos["fecha_final"] = _fecha(datos["fecha_final"])
         datos["plazo_meses"] = _numero(datos["plazo_meses"])
+        _configurar_beneficios_version(datos)
         version = crear_version_plan(identidad, datos)
         exito(f"Versión {version.num} registrada.")
     except (ValueError, PermissionError) as exc:
         error(str(exc))
+
+
+def _configurar_beneficios_version(datos: dict) -> None:
+    configuradas = set()
+    opciones = {
+        "Configurar puntos": "puntos",
+        "Configurar descuento": "descuento",
+        "Configurar cashback": "cashback",
+    }
+    while True:
+        disponibles = [opcion for opcion, clave in opciones.items() if clave not in configuradas]
+        disponibles.append("Terminar configuración")
+        seleccion = questionary.select(
+            "¿Qué beneficio deseas configurar?",
+            choices=disponibles,
+        ).ask()
+        if seleccion == "Terminar configuración" or seleccion is None:
+            return
+
+        clave = opciones[seleccion]
+        if clave == "puntos":
+            configuracion = pedir_formulario(
+                [
+                    {"clave": "porcentaje", "etiqueta": "Porcentaje de puntos (ej. 0.025)"},
+                    {"clave": "vigencia_meses", "etiqueta": "Vigencia en meses (vacío sin caducidad)", "requerido": False},
+                ]
+            )
+            if configuracion is not None:
+                vigencia = configuracion["vigencia_meses"]
+                datos["config_puntos"] = ConfigPuntos(
+                    num=None,
+                    porcentaje=configuracion["porcentaje"],
+                    vigencia_meses=None if not vigencia else _numero(vigencia),
+                )
+        elif clave == "descuento":
+            configuracion = pedir_formulario(
+                [
+                    {"clave": "porcentaje", "etiqueta": "Porcentaje de descuento (ej. 0.10)"},
+                    {"clave": "monto_minimo", "etiqueta": "Monto mínimo (vacío sin mínimo)", "requerido": False},
+                    {"clave": "dias_aplicables", "etiqueta": "Días ISO separados por coma (vacío todos)", "requerido": False},
+                ]
+            )
+            if configuracion is not None:
+                minimo = configuracion["monto_minimo"]
+                dias = configuracion["dias_aplicables"]
+                datos["config_descuento"] = ConfigDescuento(
+                    num=None,
+                    porcentaje=configuracion["porcentaje"],
+                    monto_minimo=None if not minimo else minimo,
+                    dias_aplicables=[] if not dias else [_numero(dia.strip()) for dia in dias.split(",")],
+                )
+        else:
+            configuracion = pedir_formulario(
+                [
+                    {"clave": "porcentaje", "etiqueta": "Porcentaje de cashback (ej. 0.05)"},
+                    {"clave": "limite_min_mensual", "etiqueta": "Umbral mensual (vacío sin umbral)", "requerido": False},
+                ]
+            )
+            if configuracion is not None:
+                limite = configuracion["limite_min_mensual"]
+                datos["config_cashback"] = ConfigCashback(
+                    num=None,
+                    porcentaje=configuracion["porcentaje"],
+                    limite_min_mensual=None if not limite else limite,
+                )
+        if f"config_{clave}" in datos:
+            configuradas.add(clave)
 
 
 def _finalizar_version_plan(identidad: dict) -> None:
@@ -554,7 +623,7 @@ def _consultar_actividad(identidad: dict) -> None:
     try:
         num_membresia = _numero(numero)
         compras = obtener_compras_de_membresia(identidad, num_membresia)
-        membresia = consultar_membresia(num_membresia)
+        membresia = consultar_membresia(identidad, num_membresia)
         transacciones = obtener_transacciones_de_miembro(identidad, membresia.miembro.num)
         mostrar_tabla(
             "Compras",

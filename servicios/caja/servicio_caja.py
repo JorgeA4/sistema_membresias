@@ -11,27 +11,31 @@ def registrar_operacion_caja(identidad: dict, datos: dict) -> dict:
     codigo_recompensa = datos.get("codigo_recompensa")
     version_recompensa = None
 
+    # La validación previa permite conservar el ajuste de puntos vencidos
+    # aunque el canje sea rechazado por saldo insuficiente.
     if codigo_recompensa:
         version_recompensa = _obtener_version_recompensa_vigente(codigo_recompensa)
         validar_canje(identidad, num_membresia, version_recompensa.num)
 
-    compra = registrar_compra(
-        identidad,
-        {
-            "num_membresia": num_membresia,
-            "monto_base": datos["monto_base"],
-            "cashback_aplicado": datos.get("cashback_aplicado", 0),
-        },
-    )
-    canje = None
-    if version_recompensa is not None:
-        canje = canjear_recompensa(
+    with bd.transaccion():
+
+        compra = registrar_compra(
             identidad,
-            num_membresia,
-            version_recompensa.num,
-            compra=compra,
+            {
+                "num_membresia": num_membresia,
+                "monto_base": datos["monto_base"],
+                "cashback_aplicado": datos.get("cashback_aplicado", 0),
+            },
         )
-    return {"compra": compra, "canje": canje}
+        canje = None
+        if version_recompensa is not None:
+            canje = canjear_recompensa(
+                identidad,
+                num_membresia,
+                version_recompensa.num,
+                compra=compra,
+            )
+        return {"compra": compra, "canje": canje}
 
 
 def _obtener_version_recompensa_vigente(codigo: str):

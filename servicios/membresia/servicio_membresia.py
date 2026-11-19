@@ -6,26 +6,35 @@ import base_de_datos.consultas as bd
 from clases.membresia import Membresia
 from clases.renovacion import Renovacion
 from clases.version_plan import TipoAplicacionPlan, VersionPlan
-from servicios.autorizacion.servicio_autorizacion import requiere_operador_tienda
+from servicios.autorizacion.servicio_autorizacion import (
+    requiere_operador_tienda,
+    requiere_administrador_o_propietario,
+)
 
 
-def consultar_membresia(num: int) -> Membresia | None:
+def consultar_membresia(identidad: dict, num: int) -> Membresia | None:
+    requiere_operador_tienda(identidad)
     membresia = bd.buscar_membresia_por_num(num)
     if membresia is not None:
         actualizar_estado_membresia(membresia)
     return membresia
 
 
-def consultar_membresia_de_miembro(num_miembro: int) -> Membresia | None:
+def consultar_membresia_de_miembro(identidad: dict, num_miembro: int) -> Membresia | None:
+    if not isinstance(identidad, dict):
+        raise PermissionError("Se requiere una identidad autenticada.")
+    if identidad.get("tipo") == "miembro" and identidad.get("num") != num_miembro:
+        raise PermissionError("No tiene permiso para consultar esta membresía.")
     membresia = bd.buscar_membresia_de_miembro(num_miembro)
     if membresia is not None:
+        requiere_administrador_o_propietario(identidad, membresia)
         actualizar_estado_membresia(membresia)
     return membresia
 
 
 def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion:
     requiere_operador_tienda(identidad)
-    membresia = consultar_membresia(num_membresia)
+    membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
     if membresia.estado == Membresia.Estado.CANCELADA:
@@ -112,7 +121,7 @@ def cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia:
     from servicios.autorizacion.servicio_autorizacion import requiere_administrador
 
     requiere_administrador(identidad)
-    membresia = consultar_membresia(num_membresia)
+    membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
     if membresia.estado == Membresia.Estado.CANCELADA:
@@ -127,7 +136,7 @@ def suspender_membresia(identidad: dict, num_membresia: int) -> Membresia:
     from servicios.autorizacion.servicio_autorizacion import requiere_administrador
 
     requiere_administrador(identidad)
-    membresia = consultar_membresia(num_membresia)
+    membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
     if membresia.estado == Membresia.Estado.CANCELADA:

@@ -10,6 +10,8 @@ from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador_o_propietario,
     requiere_operador_tienda,
 )
+from servicios.compra.servicio_compra import actualizar_vigencia_puntos
+from servicios.membresia.servicio_membresia import actualizar_estado_membresia
 
 
 def registrar_recompensa(identidad: dict, datos: dict) -> Recompensa:
@@ -176,6 +178,8 @@ def validar_canje(
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
+    actualizar_estado_membresia(membresia)
+    actualizar_vigencia_puntos(membresia)
     if membresia.estado != Membresia.Estado.ACTIVA:
         raise ValueError("La membresía no está activa.")
 

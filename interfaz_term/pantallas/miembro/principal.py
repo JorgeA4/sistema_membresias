@@ -11,6 +11,7 @@ from interfaz_term.componentes.tabla import mostrar_tabla
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO, COLOR_TITULO
 from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
+    obtener_fecha_vencimiento_puntos,
     obtener_saldo_de_miembro,
     obtener_transacciones_de_miembro,
 )
@@ -35,7 +36,9 @@ def mostrar_miembro(sesion: dict) -> tuple:
         "Historial de compras",
         "Historial de puntos",
         "Historial de canjes",
-        "Solicitar atención en tienda",
+        "Solicitar renovación en tienda",
+        "Solicitar cancelación en tienda",
+        "Solicitar canje en tienda",
         "Cerrar sesión",
     ]
 
@@ -66,8 +69,12 @@ def mostrar_miembro(sesion: dict) -> tuple:
                 _mostrar_historial_puntos(identidad)
             elif accion == "Historial de canjes":
                 _mostrar_historial_canjes(identidad)
-            elif accion == "Solicitar atención en tienda":
-                informacion("Para renovar, canjear o cancelar, solicita atención a un Cajero o Administrador.")
+            elif accion == "Solicitar renovación en tienda":
+                informacion("La renovación debe realizarla un Cajero o Administrador en caja.")
+            elif accion == "Solicitar cancelación en tienda":
+                informacion("La solicitud será atendida en tienda; la cancelación efectiva la realiza un Administrador.")
+            elif accion == "Solicitar canje en tienda":
+                informacion("El canje debe realizarlo un Cajero o Administrador en caja.")
             else:
                 sesion["identidad"] = None
                 return None, 1
@@ -76,7 +83,7 @@ def mostrar_miembro(sesion: dict) -> tuple:
 
 
 def _mostrar_informacion(identidad: dict) -> None:
-    miembro = consultar_miembro(identidad["num"])
+    miembro = consultar_miembro(identidad, identidad["num"])
     if miembro is None:
         raise ValueError("El miembro no existe.")
     mostrar_tabla(
@@ -88,21 +95,43 @@ def _mostrar_informacion(identidad: dict) -> None:
 
 
 def _mostrar_membresia(identidad: dict) -> None:
-    membresia = consultar_membresia_de_miembro(identidad["num"])
+    membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
         raise ValueError("No tienes una membresía registrada.")
     version = membresia.version_plan_actual
+    if version is None:
+        fila = (membresia.num, membresia.estado.value, "Sin plan", "-", "-", "-", "-", "-", "-")
+    else:
+        puntos = version.config_puntos
+        descuento = version.config_descuento
+        cashback = version.config_cashback
+        fila = (
+            membresia.num,
+            membresia.estado.value,
+            version.plan.nombre,
+            version.num,
+            version.precio,
+            version.plazo_meses,
+            "No configurados" if puntos is None else f"{puntos.porcentaje} (vigencia: {puntos.vigencia_meses or 'sin caducidad'} meses)",
+            "No configurado" if descuento is None else descuento.porcentaje,
+            "No configurado" if cashback is None else f"{cashback.porcentaje} (umbral: {cashback.limite_min_mensual or 'sin umbral'})",
+        )
     mostrar_tabla(
-        "Membresía",
-        ["Número", "Estado", "Plan", "Versión"],
-        [(membresia.num, membresia.estado.value, version.plan.nombre if version else "Sin plan", version.num if version else "-")],
+        "Membresía y beneficios",
+        ["Número", "Estado", "Plan", "Versión", "Precio", "Plazo", "Puntos", "Descuento", "Cashback"],
+        [fila],
     )
     _pausa()
 
 
 def _mostrar_puntos(identidad: dict) -> None:
     saldo = obtener_saldo_de_miembro(identidad, identidad["num"])
-    mostrar_tabla("Saldo de puntos", ["Miembro", "Saldo"], [(identidad["num"], saldo)])
+    fecha_vencimiento = obtener_fecha_vencimiento_puntos(identidad, identidad["num"])
+    mostrar_tabla(
+        "Saldo de puntos",
+        ["Miembro", "Saldo", "Válidos hasta"],
+        [(identidad["num"], saldo, fecha_vencimiento or "Sin vencimiento")],
+    )
     _pausa()
 
 
@@ -120,7 +149,7 @@ def _mostrar_recompensas() -> None:
 
 
 def _mostrar_compras(identidad: dict) -> None:
-    membresia = consultar_membresia_de_miembro(identidad["num"])
+    membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
         raise ValueError("No tienes una membresía registrada.")
     compras = obtener_compras_de_membresia(identidad, membresia.num)
@@ -143,7 +172,7 @@ def _mostrar_historial_puntos(identidad: dict) -> None:
 
 
 def _mostrar_historial_canjes(identidad: dict) -> None:
-    membresia = consultar_membresia_de_miembro(identidad["num"])
+    membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
         raise ValueError("No tienes una membresía registrada.")
     canjes = obtener_historial_canjes(identidad, membresia.num)
