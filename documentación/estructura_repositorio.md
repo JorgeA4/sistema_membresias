@@ -15,7 +15,9 @@ sistema_membresias/
 │   ├── plan/
 │   ├── recompensa/
 │   ├── membresia/
-│   └── compra/
+│   ├── compra/
+│   ├── caja/
+│   └── ajuste/
 ├── base_de_datos/
 ├── interfaz_term/
 ├── interfaz_qt/
@@ -53,6 +55,8 @@ La separación inicial es la siguiente:
   canjes.
 - `membresia/`: aplicación de versiones, renovación y cancelación.
 - `compra/`: registro de compras, descuentos, cashback y generación de puntos.
+- `caja/`: operaciones presenciales que coordinan venta y canje.
+- `ajuste/`: ajustes manuales de puntos y cashback exclusivos del Administrador.
 
 No se crearán inicialmente servicios independientes para transacciones de
 puntos ni transacciones de cashback. Esas transacciones se generan desde los

@@ -2,19 +2,27 @@ from datetime import date
 
 import base_de_datos.consultas as bd
 from clases.miembro import Miembro
-from servicios.autorizacion.servicio_autorizacion import requiere_administrador
+from servicios.autorizacion.servicio_autorizacion import (
+    requiere_administrador,
+    requiere_operador_tienda,
+)
 from utilidades.seguridad import hashear_contraseña
 
 
 def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
-    requiere_administrador(identidad)
+    requiere_operador_tienda(identidad)
+    correo = datos["correo"].strip()
+    if not correo:
+        raise ValueError("El correo es obligatorio.")
+    if bd.buscar_miembro_por_correo(correo) is not None:
+        raise ValueError("El correo ya está registrado.")
     miembro = Miembro(
         num=None,
         nombre=datos["nombre"],
         primer_apellido=datos["primer_apellido"],
         segundo_apellido=datos.get("segundo_apellido"),
         telefono=datos["telefono"],
-        correo=datos["correo"],
+        correo=correo,
         contraseña=hashear_contraseña(datos["contraseña"]),
         fecha_registro=datos.get("fecha_registro", date.today()),
     )

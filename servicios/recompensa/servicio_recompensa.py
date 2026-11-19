@@ -8,6 +8,7 @@ from clases.version_recompensa import VersionRecompensa
 from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador,
     requiere_administrador_o_propietario,
+    requiere_operador_tienda,
 )
 
 
@@ -30,7 +31,8 @@ def consultar_recompensa(codigo: str) -> Recompensa | None:
     return bd.buscar_recompensa_por_codigo(codigo)
 
 
-def obtener_recompensas() -> list[Recompensa]:
+def obtener_recompensas(identidad: dict) -> list[Recompensa]:
+    requiere_administrador(identidad)
     return bd.obtener_todas_las_recompensas()
 
 
@@ -80,6 +82,12 @@ def crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa:
         raise ValueError("Las fechas de la versión deben ser fechas válidas.")
     if fecha_final < fecha_inicio:
         raise ValueError("La fecha final no puede ser anterior a la inicial.")
+    if any(
+        version.fecha_inicio <= fecha_final
+        and fecha_inicio <= version.fecha_final
+        for version in bd.obtener_versiones_de_recompensa(recompensa.codigo)
+    ):
+        raise ValueError("Ya existe una versión vigente en ese período.")
     if isinstance(costo_puntos, bool) or not isinstance(costo_puntos, int) or costo_puntos <= 0:
         raise ValueError("El costo debe ser un entero mayor que cero.")
     if (
@@ -117,7 +125,7 @@ def obtener_versiones_de_recompensa(codigo: str) -> list[VersionRecompensa]:
 def obtener_versiones_recompensa_vigentes() -> list[VersionRecompensa]:
     return [
         version
-        for recompensa in obtener_recompensas()
+        for recompensa in bd.obtener_todas_las_recompensas()
         for version in bd.obtener_versiones_de_recompensa(recompensa.codigo)
         if version.esta_vigente()
     ]
@@ -139,11 +147,35 @@ def canjear_recompensa(
     identidad: dict,
     num_membresia: int,
     num_version_recompensa: int,
+    compra=None,
 ) -> TransaccionPuntos:
+    membresia, version, transacciones, saldo = validar_canje(
+        identidad, num_membresia, num_version_recompensa
+    )
+
+    transaccion = TransaccionPuntos(
+        num=None,
+        movimiento=-version.costo_puntos,
+        saldo=saldo - version.costo_puntos,
+        fecha=date.today(),
+        concepto=f"Canje de {version.recompensa.nombre}",
+        compra=compra,
+        version_recompensa=version,
+        membresia=membresia,
+    )
+    bd.guardar_transaccion_puntos(transaccion)
+    return transaccion
+
+
+def validar_canje(
+    identidad: dict,
+    num_membresia: int,
+    num_version_recompensa: int,
+):
+    requiere_operador_tienda(identidad)
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
-    requiere_administrador_o_propietario(identidad, membresia)
     if membresia.estado != Membresia.Estado.ACTIVA:
         raise ValueError("La membresía no está activa.")
 
@@ -167,19 +199,7 @@ def canjear_recompensa(
     saldo = _obtener_saldo(transacciones)
     if saldo < version.costo_puntos:
         raise ValueError("El saldo de puntos es insuficiente.")
-
-    transaccion = TransaccionPuntos(
-        num=None,
-        movimiento=-version.costo_puntos,
-        saldo=saldo - version.costo_puntos,
-        fecha=date.today(),
-        concepto=f"Canje de {version.recompensa.nombre}",
-        compra=None,
-        version_recompensa=version,
-        membresia=membresia,
-    )
-    bd.guardar_transaccion_puntos(transaccion)
-    return transaccion
+    return membresia, version, transacciones, saldo
 
 
 def obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[TransaccionPuntos]:

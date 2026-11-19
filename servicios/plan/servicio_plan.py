@@ -28,7 +28,8 @@ def consultar_plan(codigo: str) -> Plan | None:
     return bd.buscar_plan_por_codigo(codigo)
 
 
-def obtener_planes() -> list[Plan]:
+def obtener_planes(identidad: dict) -> list[Plan]:
+    requiere_administrador(identidad)
     return bd.obtener_todos_los_planes()
 
 

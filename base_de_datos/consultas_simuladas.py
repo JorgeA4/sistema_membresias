@@ -106,10 +106,20 @@ def buscar_membresia_por_num(num: int) -> Membresia | None:
     return bd.membresias.get(num)
 
 def buscar_membresia_de_miembro(num_miembro: int) -> Membresia | None:
-    for membresia in bd.membresias.values():
-        if (membresia.miembro.num == num_miembro
-                and membresia.estado == Membresia.Estado.ACTIVA):
+    membresias = sorted(
+        (
+            membresia
+            for membresia in bd.membresias.values()
+            if membresia.miembro.num == num_miembro
+        ),
+        key=lambda membresia: membresia.num,
+        reverse=True,
+    )
+    for membresia in membresias:
+        if membresia.estado != Membresia.Estado.CANCELADA:
             return membresia
+    if membresias:
+        return membresias[0]
     return None
 
 def guardar_membresia(membresia: Membresia) -> None:

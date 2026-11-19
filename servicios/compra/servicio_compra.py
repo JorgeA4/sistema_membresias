@@ -1,3 +1,4 @@
+import calendar
 from datetime import date
 from decimal import Decimal, InvalidOperation, ROUND_DOWN, ROUND_HALF_UP
 
@@ -6,7 +7,10 @@ from clases.compra import Compra
 from clases.membresia import Membresia
 from clases.transaccion_cashback import TransaccionCashback
 from clases.transaccion_puntos import TransaccionPuntos
-from servicios.autorizacion.servicio_autorizacion import requiere_operador_compra
+from servicios.autorizacion.servicio_autorizacion import (
+    requiere_administrador_o_propietario,
+    requiere_operador_compra,
+)
 
 
 _DOS_DECIMALES = Decimal("0.01")
@@ -60,39 +64,46 @@ def registrar_compra(identidad: dict, datos: dict) -> Compra:
     return compra
 
 
-def obtener_compras_de_membresia(num_membresia: int) -> list[Compra]:
-    _verificar_membresia(num_membresia)
+def obtener_compras_de_membresia(identidad: dict, num_membresia: int) -> list[Compra]:
+    membresia = _verificar_membresia(num_membresia)
+    requiere_administrador_o_propietario(identidad, membresia)
     return bd.obtener_compras_de_membresia(num_membresia)
 
 
-def obtener_transacciones_de_miembro(num_miembro: int) -> list[TransaccionPuntos]:
+def obtener_transacciones_de_miembro(identidad: dict, num_miembro: int) -> list[TransaccionPuntos]:
     if bd.buscar_miembro_por_num(num_miembro) is None:
         raise ValueError("El miembro no existe.")
+    membresia = bd.buscar_membresia_de_miembro(num_miembro)
+    if membresia is None:
+        raise ValueError("El miembro no tiene una membresía.")
+    requiere_administrador_o_propietario(identidad, membresia)
     return sorted(
         bd.obtener_transacciones_de_miembro(num_miembro),
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
     )
 
 
-def obtener_saldo_de_miembro(num_miembro: int) -> int:
-    transacciones = obtener_transacciones_de_miembro(num_miembro)
+def obtener_saldo_de_miembro(identidad: dict, num_miembro: int) -> int:
+    transacciones = obtener_transacciones_de_miembro(identidad, num_miembro)
     if not transacciones:
         return 0
     return transacciones[-1].saldo
 
 
 def obtener_transacciones_cashback_de_membresia(
+    identidad: dict,
     num_membresia: int,
 ) -> list[TransaccionCashback]:
-    _verificar_membresia(num_membresia)
+    membresia = _verificar_membresia(num_membresia)
+    requiere_administrador_o_propietario(identidad, membresia)
     return sorted(
         bd.obtener_transacciones_cashback_de_membresia(num_membresia),
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
     )
 
 
-def obtener_saldo_cashback_de_membresia(num_membresia: int) -> Decimal:
-    transacciones = obtener_transacciones_cashback_de_membresia(num_membresia)
+def obtener_saldo_cashback_de_membresia(identidad: dict, num_membresia: int) -> Decimal:
+    transacciones = obtener_transacciones_cashback_de_membresia(identidad, num_membresia)
     if not transacciones:
         return Decimal("0.00")
     return transacciones[-1].saldo
@@ -158,24 +169,11 @@ def _obtener_cashback_aplicado(
         raise ValueError("El cashback aplicado supera el monto de la compra.")
 
     transacciones = bd.obtener_transacciones_cashback_de_membresia(num_membresia)
-    saldo = _obtener_saldo_cashback(transacciones)
+    _registrar_expiraciones_cashback(transacciones, configuracion, num_membresia, fecha)
+    transacciones = bd.obtener_transacciones_cashback_de_membresia(num_membresia)
+    saldo = _obtener_cashback_disponible(transacciones, configuracion, fecha)
     if cashback > saldo:
         raise ValueError("El saldo de cashback es insuficiente.")
-
-    limite = configuracion.limite_min_mensual
-    if limite is not None:
-        generado = sum(
-            (
-                transaccion.monto
-                for transaccion in transacciones
-                if transaccion.fecha.year == fecha.year
-                and transaccion.fecha.month == fecha.month
-                and transaccion.monto > 0
-            ),
-            Decimal("0"),
-        )
-        if generado < _convertir_importe(limite):
-            raise ValueError("No se alcanzó el límite mínimo mensual de cashback.")
 
     return _cuantificar(cashback)
 
@@ -275,3 +273,87 @@ def _obtener_saldo_cashback(transacciones: list[TransaccionCashback]) -> Decimal
     if not transacciones:
         return Decimal("0.00")
     return max(transacciones, key=lambda transaccion: (transaccion.fecha, transaccion.num)).saldo
+
+
+def _registrar_expiraciones_cashback(
+    transacciones: list[TransaccionCashback],
+    configuracion,
+    num_membresia: int,
+    fecha: date,
+) -> None:
+    limite = configuracion.limite_min_mensual
+    if limite is None:
+        return
+
+    limite = _convertir_importe(limite)
+    meses_expirados = {
+        (transaccion.fecha.year, transaccion.fecha.month)
+        for transaccion in transacciones
+        if transaccion.monto < 0
+        and transaccion.concepto
+        and transaccion.concepto.startswith("Expiración de cashback")
+    }
+    meses = {
+        (transaccion.fecha.year, transaccion.fecha.month)
+        for transaccion in transacciones
+        if transaccion.monto > 0
+        and (transaccion.fecha.year, transaccion.fecha.month) != (fecha.year, fecha.month)
+    }
+    for año, mes in meses:
+        if (año, mes) in meses_expirados:
+            continue
+        generado = sum(
+            (
+                transaccion.monto
+                for transaccion in transacciones
+                if transaccion.monto > 0
+                and transaccion.fecha.year == año
+                and transaccion.fecha.month == mes
+            ),
+            Decimal("0"),
+        )
+        if generado <= limite:
+            saldo = _obtener_saldo_cashback(transacciones) - generado
+            bd.guardar_transaccion_cashback(
+                TransaccionCashback(
+                    num=None,
+                    monto=-generado,
+                    saldo=max(saldo, Decimal("0.00")),
+                    fecha=date(año, mes, calendar.monthrange(año, mes)[1]),
+                    concepto=f"Expiración de cashback {año:04d}-{mes:02d}",
+                    compra=None,
+                    membresia=bd.buscar_membresia_por_num(num_membresia),
+                )
+            )
+
+
+def _obtener_cashback_disponible(
+    transacciones: list[TransaccionCashback],
+    configuracion,
+    fecha: date,
+) -> Decimal:
+    limite = configuracion.limite_min_mensual
+    positivos = [transaccion for transaccion in transacciones if transaccion.monto > 0]
+    disponibles = Decimal("0.00")
+    meses = {(t.fecha.year, t.fecha.month) for t in positivos}
+    limite_decimal = None if limite is None else _convertir_importe(limite)
+    for año, mes in meses:
+        generado = sum(
+            (
+                t.monto for t in positivos
+                if t.fecha.year == año and t.fecha.month == mes
+            ),
+            Decimal("0"),
+        )
+        if limite_decimal is None or generado > limite_decimal:
+            disponibles += generado
+
+    disponibles += sum(
+        (
+            t.monto for t in transacciones
+            if t.monto < 0
+            and not (t.concepto and t.concepto.startswith("Expiración de cashback"))
+        ),
+        Decimal("0"),
+    )
+    return max(disponibles, Decimal("0.00"))

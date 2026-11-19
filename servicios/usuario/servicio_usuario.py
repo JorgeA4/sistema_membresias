@@ -30,17 +30,19 @@ def registrar_usuario(identidad: dict, datos: dict) -> Usuario:
     return nuevo_usuario
 
 
-def consultar_usuario(num: int) -> Usuario | None:
+def consultar_usuario(identidad: dict, num: int) -> Usuario | None:
+    requiere_administrador(identidad)
     return bd.buscar_usuario_por_num(num)
 
 
-def obtener_usuarios() -> list[Usuario]:
+def obtener_usuarios(identidad: dict) -> list[Usuario]:
+    requiere_administrador(identidad)
     return bd.obtener_todos_los_usuarios()
 
 
 def modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario:
     requiere_administrador(identidad)
-    objetivo = consultar_usuario(num)
+    objetivo = bd.buscar_usuario_por_num(num)
     if objetivo is None:
         raise ValueError("El usuario no existe.")
 
@@ -79,7 +81,7 @@ def modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario:
 
 def eliminar_usuario(identidad: dict, num: int) -> None:
     requiere_administrador(identidad)
-    objetivo = consultar_usuario(num)
+    objetivo = bd.buscar_usuario_por_num(num)
     if objetivo is None:
         raise ValueError("El usuario no existe.")
     if objetivo.num == identidad.get("num"):

@@ -18,6 +18,11 @@ def requiere_operador_compra(identidad: dict) -> Usuario:
     return usuario
 
 
+def requiere_operador_tienda(identidad: dict) -> Usuario:
+    """Autoriza operaciones presenciales del administrador o cajero."""
+    return requiere_operador_compra(identidad)
+
+
 def requiere_administrador_o_propietario(
     identidad: dict,
     membresia: Membresia,

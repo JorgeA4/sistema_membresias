@@ -40,8 +40,8 @@ eliminar_miembro(identidad: dict, num: int) -> None
 
 ```python
 registrar_usuario(identidad: dict, datos: dict) -> Usuario
-consultar_usuario(num: int) -> Usuario | None
-obtener_usuarios() -> list[Usuario]
+consultar_usuario(identidad: dict, num: int) -> Usuario | None
+obtener_usuarios(identidad: dict) -> list[Usuario]
 modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario
 eliminar_usuario(identidad: dict, num: int) -> None
 ```
@@ -58,7 +58,7 @@ autenticar_usuario(correo: str, contraseña: str) -> dict | None
 ```python
 registrar_plan(identidad: dict, datos: dict) -> Plan
 consultar_plan(codigo: str) -> Plan | None
-obtener_planes() -> list[Plan]
+obtener_planes(identidad: dict) -> list[Plan]
 modificar_plan(identidad: dict, codigo: str, datos: dict) -> Plan
 eliminar_plan(identidad: dict, codigo: str) -> None
 crear_version_plan(identidad: dict, datos: dict) -> VersionPlan
@@ -72,7 +72,7 @@ finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> VersionP
 ```python
 registrar_recompensa(identidad: dict, datos: dict) -> Recompensa
 consultar_recompensa(codigo: str) -> Recompensa | None
-obtener_recompensas() -> list[Recompensa]
+obtener_recompensas(identidad: dict) -> list[Recompensa]
 modificar_recompensa(identidad: dict, codigo: str, datos: dict) -> Recompensa
 eliminar_recompensa(identidad: dict, codigo: str) -> None
 crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa
@@ -81,6 +81,7 @@ obtener_versiones_de_recompensa(codigo: str) -> list[VersionRecompensa]
 finalizar_version_recompensa(identidad: dict, num: int, fecha_final: date) -> VersionRecompensa
 canjear_recompensa(identidad: dict, num_membresia: int, num_version_recompensa: int) -> TransaccionPuntos
 obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[TransaccionPuntos]
+validar_canje(identidad: dict, num_membresia: int, num_version_recompensa: int)
 ```
 
 Un canje se representa mediante una `TransaccionPuntos` con `movimiento`
@@ -93,16 +94,27 @@ filtrando las transacciones de puntos que tienen esa asociación.
 consultar_membresia(num: int) -> Membresia | None
 consultar_membresia_de_miembro(num_miembro: int) -> Membresia | None
 renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion
+contratar_membresia(identidad: dict, num_miembro: int, num_version_plan: int) -> Renovacion
 cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia
+suspender_membresia(identidad: dict, num_membresia: int) -> Membresia
+actualizar_estado_membresia(membresia: Membresia, fecha: date | None = None) -> Membresia
 ```
 
 ### Compras y actividad
 
 ```python
 registrar_compra(identidad: dict, datos: dict) -> Compra
-obtener_compras_de_membresia(num_membresia: int) -> list[Compra]
-obtener_transacciones_de_miembro(num_miembro: int) -> list[TransaccionPuntos]
-obtener_saldo_de_miembro(num_miembro: int) -> int
+obtener_compras_de_membresia(identidad: dict, num_membresia: int) -> list[Compra]
+obtener_transacciones_de_miembro(identidad: dict, num_miembro: int) -> list[TransaccionPuntos]
+obtener_saldo_de_miembro(identidad: dict, num_miembro: int) -> int
+```
+
+### Caja y ajustes
+
+```python
+registrar_operacion_caja(identidad: dict, datos: dict) -> dict
+ajustar_puntos(identidad: dict, num_membresia: int, movimiento: int, concepto: str)
+ajustar_cashback(identidad: dict, num_membresia: int, movimiento, concepto: str)
 ```
 
 ## Reglas técnicas pendientes
@@ -116,8 +128,8 @@ Estas decisiones se documentan aquí para resolverlas durante la implementación
 - En compras, aplicar primero el descuento y después el cashback utilizado.
 - Redondear importes monetarios a dos decimales con `ROUND_HALF_UP`.
 - Calcular puntos con truncamiento a entero y cashback sobre el monto final.
-- El límite mínimo mensual de cashback se calcula con el cashback generado
-  durante el mes actual antes de permitir su uso.
+- El umbral mensual de cashback se valida en el momento de uso; al superarlo
+  durante el mes se desbloquea todo lo generado en ese mes.
 - Rechazar compras para membresías que no estén activas, salvo que se acuerde
   una excepción explícita.
 - Las renovaciones anticipadas comienzan al día siguiente del último periodo
