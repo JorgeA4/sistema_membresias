@@ -28,6 +28,7 @@ from base_de_datos.consultas_simuladas import (
     buscar_recompensa_por_codigo,
     obtener_todas_las_recompensas,
     guardar_recompensa,
+    eliminar_recompensa,
     obtener_versiones_de_recompensa,
     buscar_version_recompensa_por_num,
     buscar_version_recompensa_vigente,

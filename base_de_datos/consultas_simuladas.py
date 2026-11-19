@@ -130,6 +130,9 @@ def obtener_todas_las_recompensas() -> list[Recompensa]:
 def guardar_recompensa(recompensa: Recompensa) -> None:
     bd.recompensas[recompensa.codigo] = recompensa
 
+def eliminar_recompensa(codigo: str) -> None:
+    bd.recompensas.pop(codigo, None)
+
 def obtener_versiones_de_recompensa(codigo_recompensa: str) -> list[VersionRecompensa]:
     return [v for v in bd.versiones_recompensa.values() if v.recompensa.codigo == codigo_recompensa]
 

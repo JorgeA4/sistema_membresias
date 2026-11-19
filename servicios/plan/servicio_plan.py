@@ -109,6 +109,10 @@ def crear_version_plan(datos: dict) -> VersionPlan:
     return version
 
 
+def consultar_version_plan(num: int) -> VersionPlan | None:
+    return bd.buscar_version_plan_por_num(num)
+
+
 def obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]:
     if consultar_plan(codigo_plan) is None:
         raise ValueError("El plan no existe.")
@@ -116,7 +120,7 @@ def obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]:
 
 
 def finalizar_version_plan(num: int, fecha_final: date) -> VersionPlan:
-    version = bd.buscar_version_plan_por_num(num)
+    version = consultar_version_plan(num)
     if version is None:
         raise ValueError("La versión de plan no existe.")
     if not isinstance(fecha_final, date):

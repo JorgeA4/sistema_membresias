@@ -55,6 +55,7 @@ obtener_planes() -> list[Plan]
 modificar_plan(codigo: str, datos: dict) -> Plan
 eliminar_plan(codigo: str) -> None
 crear_version_plan(datos: dict) -> VersionPlan
+consultar_version_plan(num: int) -> VersionPlan | None
 obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]
 finalizar_version_plan(num: int, fecha_final: date) -> VersionPlan
 ```
@@ -68,6 +69,7 @@ obtener_recompensas() -> list[Recompensa]
 modificar_recompensa(codigo: str, datos: dict) -> Recompensa
 eliminar_recompensa(codigo: str) -> None
 crear_version_recompensa(datos: dict) -> VersionRecompensa
+consultar_version_recompensa(num: int) -> VersionRecompensa | None
 obtener_versiones_de_recompensa(codigo: str) -> list[VersionRecompensa]
 finalizar_version_recompensa(num: int, fecha_final: date) -> VersionRecompensa
 canjear_recompensa(num_membresia: int, num_version_recompensa: int) -> TransaccionPuntos
