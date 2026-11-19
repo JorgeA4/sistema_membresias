@@ -74,6 +74,9 @@ def obtener_todos_los_planes() -> list[Plan]:
 def guardar_plan(plan: Plan) -> None:
     bd.planes[plan.codigo] = plan
 
+def eliminar_plan(codigo: str) -> None:
+    bd.planes.pop(codigo, None)
+
 def obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]:
     return [v for v in bd.versiones_plan.values() if v.plan.codigo == codigo_plan]
 

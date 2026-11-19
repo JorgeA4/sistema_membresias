@@ -15,6 +15,7 @@ from base_de_datos.consultas_simuladas import (
     buscar_plan_por_codigo, #<
     obtener_todos_los_planes, #<
     guardar_plan, #<
+    eliminar_plan,
     obtener_versiones_de_plan,
     buscar_version_plan_por_num,
     buscar_version_plan_vigente,
