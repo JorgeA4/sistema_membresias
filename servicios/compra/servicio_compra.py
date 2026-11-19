@@ -6,15 +6,14 @@ from clases.compra import Compra
 from clases.membresia import Membresia
 from clases.transaccion_cashback import TransaccionCashback
 from clases.transaccion_puntos import TransaccionPuntos
-from clases.usuario import Usuario
 from servicios.autorizacion.servicio_autorizacion import requiere_operador_compra
 
 
 _DOS_DECIMALES = Decimal("0.01")
 
 
-def registrar_compra(usuario: Usuario, datos: dict) -> Compra:
-    requiere_operador_compra(usuario)
+def registrar_compra(identidad: dict, datos: dict) -> Compra:
+    usuario = requiere_operador_compra(identidad)
     membresia = _obtener_membresia(datos)
     version = membresia.version_plan_actual
 

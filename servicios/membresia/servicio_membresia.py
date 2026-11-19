@@ -17,11 +17,11 @@ def consultar_membresia_de_miembro(num_miembro: int) -> Membresia | None:
     return bd.buscar_membresia_de_miembro(num_miembro)
 
 
-def renovar_membresia(actor, num_membresia: int, num_version_plan: int) -> Renovacion:
+def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion:
     membresia = consultar_membresia(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
-    requiere_administrador_o_propietario(actor, membresia)
+    requiere_administrador_o_propietario(identidad, membresia)
     if membresia.estado != Membresia.Estado.ACTIVA:
         raise ValueError("La membresía no está activa.")
 
@@ -56,11 +56,11 @@ def renovar_membresia(actor, num_membresia: int, num_version_plan: int) -> Renov
     return renovacion
 
 
-def cancelar_membresia(actor, num_membresia: int) -> Membresia:
+def cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia:
     membresia = consultar_membresia(num_membresia)
     if membresia is None:
         raise ValueError("La membresía no existe.")
-    requiere_administrador_o_propietario(actor, membresia)
+    requiere_administrador_o_propietario(identidad, membresia)
     if membresia.estado == Membresia.Estado.CANCELADA:
         raise ValueError("La membresía ya está cancelada.")
 

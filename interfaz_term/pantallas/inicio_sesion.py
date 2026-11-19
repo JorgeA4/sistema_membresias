@@ -22,19 +22,19 @@ from interfaz_term.estilos.tema import (
     COLOR_ENCABEZADO,
     COLOR_TITULO,
 )
-from interfaz_term.componentes.mensajes import advertencia, informacion
+from interfaz_term.componentes.mensajes import advertencia, error
+from servicios.autenticacion.servicio_autenticacion import (
+    autenticar_miembro,
+    autenticar_usuario,
+)
 
 _consola = Console()
 
 
-def _mostrar_formulario(tipo: str) -> bool:
+def _mostrar_formulario(tipo: str) -> dict | None:
     """
     Muestra los campos de correo y contraseña y valida que no estén vacíos.
-    Devuelve True si el login fue completado, False nunca (el loop interno
-    garantiza que solo sale con credenciales válidas).
-
-    Por ahora acepta cualquier valor no vacío; aquí se conectará el servicio
-    de autenticación.
+    Devuelve una identidad neutral cuando las credenciales son válidas.
     """
     while True:
         _consola.clear()
@@ -59,9 +59,13 @@ def _mostrar_formulario(tipo: str) -> bool:
             advertencia("Por favor complete el correo y la contraseña.")
             continue
 
-        # Confirmación temporal (sin autenticación real aún)
-        informacion(f"Tipo: {tipo}\nCorreo: {correo}")
-        return True
+        autenticar = autenticar_miembro if tipo == "miembro" else autenticar_usuario
+        identidad = autenticar(correo, contra)
+        if identidad is None:
+            error("El correo o la contraseña no son válidos.")
+            continue
+
+        return identidad
 
 
 def mostrar_login_con_volver(sesion: dict) -> tuple:
@@ -93,8 +97,9 @@ def mostrar_login_con_volver(sesion: dict) -> tuple:
         choices=["Iniciar sesión", "← Volver"],
     ).ask()
 
-    if accion == "← Volver":
+    if accion != "Iniciar sesión":
+        sesion["identidad"] = None
         return tipo, 4
 
-    _mostrar_formulario(tipo)
+    sesion["identidad"] = _mostrar_formulario(tipo)
     return tipo, 3

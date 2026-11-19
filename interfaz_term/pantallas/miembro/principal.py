@@ -24,6 +24,9 @@ def mostrar_miembro(sesion: dict) -> tuple:
     Devuelve:
         (None, 1) — cuando el usuario elige cerrar sesión; vuelve a bienvenida.
     """
+    identidad = sesion.get("identidad") or {}
+    nombre = identidad.get("nombre", "")
+
     while True:
         _consola.clear()
         _consola.print(
@@ -35,7 +38,7 @@ def mostrar_miembro(sesion: dict) -> tuple:
             )
         )
         _consola.print(
-            f"\n[{COLOR_ENCABEZADO}]✓ Bienvenido. Estás en la interfaz de Miembro.[/{COLOR_ENCABEZADO}]\n"
+            f"\n[{COLOR_ENCABEZADO}]Bienvenido, {nombre}. Estás en la interfaz de Miembro.[/{COLOR_ENCABEZADO}]\n"
         )
 
         accion = questionary.select(
@@ -46,4 +49,5 @@ def mostrar_miembro(sesion: dict) -> tuple:
         ).ask()
 
         if accion == "Cerrar sesión":
+            sesion["identidad"] = None
             return None, 1

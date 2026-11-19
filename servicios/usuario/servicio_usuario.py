@@ -7,8 +7,8 @@ from servicios.autorizacion.servicio_autorizacion import requiere_administrador
 from utilidades.seguridad import hashear_contraseña
 
 
-def registrar_usuario(usuario: Usuario, datos: dict) -> Usuario:
-    requiere_administrador(usuario)
+def registrar_usuario(identidad: dict, datos: dict) -> Usuario:
+    requiere_administrador(identidad)
     correo = datos["correo"].strip()
     if not correo:
         raise ValueError("El correo es obligatorio.")
@@ -38,8 +38,8 @@ def obtener_usuarios() -> list[Usuario]:
     return bd.obtener_todos_los_usuarios()
 
 
-def modificar_usuario(usuario: Usuario, num: int, datos: dict) -> Usuario:
-    requiere_administrador(usuario)
+def modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario:
+    requiere_administrador(identidad)
     objetivo = consultar_usuario(num)
     if objetivo is None:
         raise ValueError("El usuario no existe.")
@@ -77,12 +77,12 @@ def modificar_usuario(usuario: Usuario, num: int, datos: dict) -> Usuario:
     return objetivo
 
 
-def eliminar_usuario(usuario: Usuario, num: int) -> None:
-    requiere_administrador(usuario)
+def eliminar_usuario(identidad: dict, num: int) -> None:
+    requiere_administrador(identidad)
     objetivo = consultar_usuario(num)
     if objetivo is None:
         raise ValueError("El usuario no existe.")
-    if objetivo.num == usuario.num:
+    if objetivo.num == identidad.get("num"):
         raise ValueError("No se puede eliminar el usuario autenticado.")
     bd.eliminar_usuario(num)
 

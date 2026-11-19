@@ -1,30 +1,37 @@
+import base_de_datos.consultas as bd
 from clases.membresia import Membresia
-from clases.miembro import Miembro
 from clases.usuario import Usuario
 
 
-def requiere_administrador(usuario: Usuario) -> None:
+def requiere_administrador(identidad: dict) -> None:
+    usuario = _obtener_usuario(identidad)
     _verificar_usuario(usuario)
     if not _tiene_rol(usuario, "ADM", "administrador"):
         raise PermissionError("Se requiere el rol Administrador.")
 
 
-def requiere_operador_compra(usuario: Usuario) -> None:
+def requiere_operador_compra(identidad: dict) -> Usuario:
+    usuario = _obtener_usuario(identidad)
     _verificar_usuario(usuario)
     if not _tiene_rol(usuario, "ADM", "administrador", "CAJ", "cajero"):
         raise PermissionError("El usuario no puede registrar compras.")
+    return usuario
 
 
 def requiere_administrador_o_propietario(
-    actor: Usuario | Miembro,
+    identidad: dict,
     membresia: Membresia,
 ) -> None:
-    if isinstance(actor, Usuario):
-        requiere_administrador(actor)
+    if not isinstance(identidad, dict):
+        raise PermissionError("Se requiere una identidad autenticada.")
+    if identidad.get("tipo") == "usuario":
+        requiere_administrador(identidad)
         return
 
-    if isinstance(actor, Miembro) and actor.num == membresia.miembro.num:
-        return
+    if identidad.get("tipo") == "miembro":
+        miembro = _obtener_miembro(identidad)
+        if miembro.num == membresia.miembro.num:
+            return
 
     raise PermissionError("No tiene permiso para operar sobre esta membresía.")
 
@@ -42,3 +49,25 @@ def _tiene_rol(usuario: Usuario, *roles: str) -> bool:
         usuario.rol.codigo.casefold() in valores
         or usuario.rol.nombre.casefold() in valores
     )
+
+
+def _obtener_usuario(identidad: dict) -> Usuario:
+    if not isinstance(identidad, dict):
+        raise PermissionError("Se requiere una identidad autenticada.")
+    if identidad.get("tipo") != "usuario":
+        raise PermissionError("Se requiere un usuario autenticado.")
+
+    usuario = bd.buscar_usuario_por_num(identidad.get("num"))
+    if not isinstance(usuario, Usuario):
+        raise PermissionError("El usuario autenticado no existe.")
+    return usuario
+
+
+def _obtener_miembro(identidad: dict):
+    if not isinstance(identidad, dict):
+        raise PermissionError("Se requiere una identidad autenticada.")
+
+    miembro = bd.buscar_miembro_por_num(identidad.get("num"))
+    if miembro is None:
+        raise PermissionError("El miembro autenticado no existe.")
+    return miembro

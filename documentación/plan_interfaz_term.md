@@ -93,13 +93,15 @@ entre sí — solo reciben `sesion` y devuelven la tupla.
 ```python
 sesion = {
     "interfaz": None,   # str o None: "miembro" | "usuario" | None
+    "identidad": None,  # dict neutral de la sesión autenticada o None
     "historial": []     # list[int]: pila de números de pantalla visitados
 }
 ```
 
-Todas las funciones de pantalla reciben `sesion` como único argumento y lo
-usan para leer el contexto actual (p. ej. `sesion["interfaz"]` para saber el
-tipo de acceso activo).
+Todas las funciones de pantalla reciben `sesion` como único argumento. Usan
+`sesion["interfaz"]` para resolver el flujo visual y `sesion["identidad"]`
+para mostrar información mínima del usuario autenticado. La identidad es un
+diccionario neutral; la interfaz no almacena entidades de dominio de Python.
 
 ### Números de pantalla
 
@@ -139,7 +141,7 @@ flujo = {
 
 ```text
 mostrar_bienvenida(sesion)       → ("miembro" | "usuario" | None, 2 | 5)
-mostrar_login_con_volver(sesion) → (tipo, 3 | 4)
+mostrar_login_con_volver(sesion) → (tipo, 3 | 4), guardando la identidad
 mostrar_miembro(sesion)          → (None, 1)
 mostrar_usuario(sesion)          → (None, 1)
 volver(sesion)                   → (interfaz, None)   ← función interna del loop
@@ -213,9 +215,9 @@ Debe permitir:
 - Introducir correo o identificador.
 - Introducir contraseña (sin mostrar caracteres).
 - Validar que los campos no estén vacíos.
-- Validar las credenciales. (pendiente — requiere servicio de autenticación)
+- Validar las credenciales mediante el servicio de autenticación.
 - Redirigir según el rol.
-- Mostrar únicamente las opciones permitidas. (pendiente — Fase 3)
+- Mostrar únicamente las opciones permitidas según el rol.
 
 Roles contemplados: `Administrador`, `Cajero`, `Miembro`.
 
@@ -250,8 +252,8 @@ La primera versión incluirá:
 - Historial de puntos.
 - Historial de canjes.
 
-El canje, la renovación y la cancelación se conectarán cuando los servicios
-estén disponibles.
+El canje, la renovación y la cancelación se conectarán a los servicios mediante
+la identidad neutral de la sesión.
 
 ## 6. Fases de implementación
 
@@ -282,9 +284,12 @@ Pulir y completar los componentes comunes:
 - Formulario con resumen y corrección de campos.
 - Confirmaciones con questionary.
 
-### Fase 3: Inicio de sesión y permisos
+### Fase 3: Inicio de sesión y permisos (parcialmente implementada)
 
-Conectar la interfaz con la autenticación y los roles.
+Conectar la interfaz con la autenticación y los roles. El login real, la
+identidad neutral, el logout y la validación de permisos en los servicios ya
+están implementados; faltan los menús funcionales y el filtrado visual de
+opciones.
 
 Pruebas mínimas:
 

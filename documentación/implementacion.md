@@ -9,11 +9,12 @@ Los servicios reciben identificadores y datos de entrada, validan las reglas
 de negocio y delegan la persistencia en `base_de_datos/`. No deben modificar
 directamente los diccionarios de `bd_simulada` ni ejecutar SQL.
 
-Las operaciones de escritura administrativas reciben el `Usuario` autenticado
-como primer argumento. `Administrador` puede gestionar la configuración y los
-registros; `Cajero` únicamente puede registrar compras. Las operaciones de un
-miembro reciben el `Miembro` autenticado y validan que sea propietario de la
-membresía indicada.
+Las operaciones protegidas reciben una identidad neutral como primer argumento,
+con `tipo` y `num`, además de datos mínimos para presentación. Los servicios
+resuelven internamente la entidad autenticada y validan sus permisos.
+`Administrador` puede gestionar la configuración y los registros; `Cajero`
+únicamente puede registrar compras. Las operaciones de un miembro validan que
+sea propietario de la membresía indicada.
 
 Las funciones de consulta devuelven una entidad, una lista de entidades o
 `None` cuando no existe el registro solicitado. Las operaciones de escritura
@@ -28,58 +29,58 @@ Los datos recibidos desde formularios se representan inicialmente como un
 ### Miembros
 
 ```python
-registrar_miembro(usuario: Usuario, datos: dict) -> Miembro
+registrar_miembro(identidad: dict, datos: dict) -> Miembro
 consultar_miembro(num: int) -> Miembro | None
 obtener_miembros() -> list[Miembro]
-modificar_miembro(usuario: Usuario, num: int, datos: dict) -> Miembro
-eliminar_miembro(usuario: Usuario, num: int) -> None
+modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro
+eliminar_miembro(identidad: dict, num: int) -> None
 ```
 
 ### Usuarios
 
 ```python
-registrar_usuario(usuario: Usuario, datos: dict) -> Usuario
+registrar_usuario(identidad: dict, datos: dict) -> Usuario
 consultar_usuario(num: int) -> Usuario | None
 obtener_usuarios() -> list[Usuario]
-modificar_usuario(usuario: Usuario, num: int, datos: dict) -> Usuario
-eliminar_usuario(usuario: Usuario, num: int) -> None
+modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario
+eliminar_usuario(identidad: dict, num: int) -> None
 ```
 
 ### Autenticación
 
 ```python
-autenticar_miembro(correo: str, contraseña: str) -> Miembro | None
-autenticar_usuario(correo: str, contraseña: str) -> Usuario | None
+autenticar_miembro(correo: str, contraseña: str) -> dict | None
+autenticar_usuario(correo: str, contraseña: str) -> dict | None
 ```
 
 ### Planes y versiones
 
 ```python
-registrar_plan(usuario: Usuario, datos: dict) -> Plan
+registrar_plan(identidad: dict, datos: dict) -> Plan
 consultar_plan(codigo: str) -> Plan | None
 obtener_planes() -> list[Plan]
-modificar_plan(usuario: Usuario, codigo: str, datos: dict) -> Plan
-eliminar_plan(usuario: Usuario, codigo: str) -> None
-crear_version_plan(usuario: Usuario, datos: dict) -> VersionPlan
+modificar_plan(identidad: dict, codigo: str, datos: dict) -> Plan
+eliminar_plan(identidad: dict, codigo: str) -> None
+crear_version_plan(identidad: dict, datos: dict) -> VersionPlan
 consultar_version_plan(num: int) -> VersionPlan | None
 obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]
-finalizar_version_plan(usuario: Usuario, num: int, fecha_final: date) -> VersionPlan
+finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> VersionPlan
 ```
 
 ### Recompensas y versiones
 
 ```python
-registrar_recompensa(usuario: Usuario, datos: dict) -> Recompensa
+registrar_recompensa(identidad: dict, datos: dict) -> Recompensa
 consultar_recompensa(codigo: str) -> Recompensa | None
 obtener_recompensas() -> list[Recompensa]
-modificar_recompensa(usuario: Usuario, codigo: str, datos: dict) -> Recompensa
-eliminar_recompensa(usuario: Usuario, codigo: str) -> None
-crear_version_recompensa(usuario: Usuario, datos: dict) -> VersionRecompensa
+modificar_recompensa(identidad: dict, codigo: str, datos: dict) -> Recompensa
+eliminar_recompensa(identidad: dict, codigo: str) -> None
+crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa
 consultar_version_recompensa(num: int) -> VersionRecompensa | None
 obtener_versiones_de_recompensa(codigo: str) -> list[VersionRecompensa]
-finalizar_version_recompensa(usuario: Usuario, num: int, fecha_final: date) -> VersionRecompensa
-canjear_recompensa(actor, num_membresia: int, num_version_recompensa: int) -> TransaccionPuntos
-obtener_historial_canjes(actor, num_membresia: int) -> list[TransaccionPuntos]
+finalizar_version_recompensa(identidad: dict, num: int, fecha_final: date) -> VersionRecompensa
+canjear_recompensa(identidad: dict, num_membresia: int, num_version_recompensa: int) -> TransaccionPuntos
+obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[TransaccionPuntos]
 ```
 
 Un canje se representa mediante una `TransaccionPuntos` con `movimiento`
@@ -91,14 +92,14 @@ filtrando las transacciones de puntos que tienen esa asociación.
 ```python
 consultar_membresia(num: int) -> Membresia | None
 consultar_membresia_de_miembro(num_miembro: int) -> Membresia | None
-renovar_membresia(actor, num_membresia: int, num_version_plan: int) -> Renovacion
-cancelar_membresia(actor, num_membresia: int) -> Membresia
+renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion
+cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia
 ```
 
 ### Compras y actividad
 
 ```python
-registrar_compra(usuario: Usuario, datos: dict) -> Compra
+registrar_compra(identidad: dict, datos: dict) -> Compra
 obtener_compras_de_membresia(num_membresia: int) -> list[Compra]
 obtener_transacciones_de_miembro(num_miembro: int) -> list[TransaccionPuntos]
 obtener_saldo_de_miembro(num_miembro: int) -> int

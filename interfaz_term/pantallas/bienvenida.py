@@ -49,7 +49,9 @@ def mostrar_bienvenida(sesion: dict) -> tuple:
     ).ask()
 
     if eleccion == "Soy miembro":
+        sesion["identidad"] = None
         return "miembro", 2
     if eleccion == "Soy usuario":
+        sesion["identidad"] = None
         return "usuario", 2
     return None, 5

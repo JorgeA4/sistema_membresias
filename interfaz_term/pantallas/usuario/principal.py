@@ -26,21 +26,23 @@ def mostrar_usuario(sesion: dict) -> tuple:
     Devuelve:
         (None, 1) — cuando el usuario elige cerrar sesión; vuelve a bienvenida.
     """
-    rol = sesion["interfaz"]
+    identidad = sesion.get("identidad") or {}
+    rol = identidad.get("rol_nombre", "Usuario")
+    nombre = identidad.get("nombre", "")
 
     while True:
         _consola.clear()
         _consola.print(
             Panel(
                 f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}] — [dim]Interfaz de Usuario[/dim]\n"
-                f"Rol: [{COLOR_ENCABEZADO}]{rol.capitalize()}[/{COLOR_ENCABEZADO}]",
+                f"Rol: [{COLOR_ENCABEZADO}]{rol}[/{COLOR_ENCABEZADO}]",
                 border_style=COLOR_ENCABEZADO,
                 box=rich_box.ROUNDED,
                 padding=(0, 4),
             )
         )
         _consola.print(
-            f"\n[{COLOR_ENCABEZADO}]✓ Bienvenido. Estás en la interfaz de Usuario.[/{COLOR_ENCABEZADO}]\n"
+            f"\n[{COLOR_ENCABEZADO}]Bienvenido, {nombre}. Estás en la interfaz de Usuario.[/{COLOR_ENCABEZADO}]\n"
         )
 
         accion = questionary.select(
@@ -51,4 +53,5 @@ def mostrar_usuario(sesion: dict) -> tuple:
         ).ask()
 
         if accion == "Cerrar sesión":
+            sesion["identidad"] = None
             return None, 1

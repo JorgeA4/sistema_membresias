@@ -2,7 +2,7 @@
 Punto de entrada de la interfaz de terminal de Nexum.
 
 Contiene ejecutar_aplicacion() con el loop principal de navegación.
-Las pantallas devuelven strings que indican la siguiente pantalla;
+Las pantallas devuelven tuplas que indican la siguiente pantalla;
 este módulo decide a cuál llamar según ese valor.
 
 Flujo:
@@ -20,23 +20,23 @@ from interfaz_term.pantallas.usuario.principal import mostrar_usuario
 def ejecutar_aplicacion() -> None:
 
     def volver(sesion):
-        del sesion["historial"][-2:]
+        if len(sesion["historial"]) >= 2:
+            del sesion["historial"][-2:]
         if sesion["historial"][-1] == 1:
-            interfaz = None
-        else:
-            interfaz = sesion["interfaz"]
-        return interfaz, None
+            sesion["interfaz"] = None
+            sesion["identidad"] = None
+        return sesion["interfaz"], None
 
     def ejecutar_menu(sesion):
         interfaz, pantalla = flujo[sesion["interfaz"]][sesion["historial"][-1]](sesion)
         sesion["interfaz"] = interfaz
-        sesion["historial"].append(pantalla)
-        if sesion["historial"][-1] == None:
-            sesion["historial"].pop(-1)
+        if pantalla is not None:
+            sesion["historial"].append(pantalla)
 
     """Loop principal de navegación de la aplicación."""
     sesion = {
         "interfaz": None,
+        "identidad": None,
         "historial": []
     }
 

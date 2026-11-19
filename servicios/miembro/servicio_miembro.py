@@ -6,8 +6,8 @@ from servicios.autorizacion.servicio_autorizacion import requiere_administrador
 from utilidades.seguridad import hashear_contraseña
 
 
-def registrar_miembro(usuario, datos: dict) -> Miembro:
-    requiere_administrador(usuario)
+def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
+    requiere_administrador(identidad)
     miembro = Miembro(
         num=None,
         nombre=datos["nombre"],
@@ -30,8 +30,8 @@ def obtener_miembros() -> list[Miembro]:
     return bd.obtener_todos_los_miembros()
 
 
-def modificar_miembro(usuario, num: int, datos: dict) -> Miembro:
-    requiere_administrador(usuario)
+def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
+    requiere_administrador(identidad)
     miembro = consultar_miembro(num)
     if miembro is None:
         raise ValueError("El miembro no existe.")
@@ -54,8 +54,8 @@ def modificar_miembro(usuario, num: int, datos: dict) -> Miembro:
     return miembro
 
 
-def eliminar_miembro(usuario, num: int) -> None:
-    requiere_administrador(usuario)
+def eliminar_miembro(identidad: dict, num: int) -> None:
+    requiere_administrador(identidad)
     if consultar_miembro(num) is None:
         raise ValueError("El miembro no existe.")
     bd.eliminar_miembro(num)
