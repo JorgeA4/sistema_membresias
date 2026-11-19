@@ -54,6 +54,8 @@ def obtener_todos_los_usuarios() -> list[Usuario]:
     return list(bd.usuarios.values())
 
 def guardar_usuario(usuario: Usuario) -> None:
+    if usuario.num is None:
+        usuario.num = bd.siguiente_numero("usuarios", bd.usuarios)
     bd.usuarios[usuario.num] = usuario
 
 def eliminar_usuario(num: int) -> None:
@@ -82,7 +84,16 @@ def buscar_version_plan_vigente(codigo_plan: str) -> VersionPlan | None:
     return None
 
 def guardar_version_plan(version_plan: VersionPlan) -> None:
+    if version_plan.num is None:
+        object.__setattr__(
+            version_plan,
+            "num",
+            bd.siguiente_numero("versiones_plan", bd.versiones_plan),
+        )
     bd.versiones_plan[version_plan.num] = version_plan
+
+def buscar_version_plan_por_num(num: int) -> VersionPlan | None:
+    return bd.versiones_plan.get(num)
 
 # ---------------------------------------------------------------------------
 # Membresia
@@ -99,6 +110,8 @@ def buscar_membresia_de_miembro(num_miembro: int) -> Membresia | None:
     return None
 
 def guardar_membresia(membresia: Membresia) -> None:
+    if membresia.num is None:
+        membresia.num = bd.siguiente_numero("membresias", bd.membresias)
     bd.membresias[membresia.num] = membresia
 
 # ---------------------------------------------------------------------------
@@ -124,7 +137,16 @@ def buscar_version_recompensa_vigente(codigo_recompensa: str) -> VersionRecompen
     return None
 
 def guardar_version_recompensa(version_recompensa: VersionRecompensa) -> None:
+    if version_recompensa.num is None:
+        object.__setattr__(
+            version_recompensa,
+            "num",
+            bd.siguiente_numero("versiones_recompensa", bd.versiones_recompensa),
+        )
     bd.versiones_recompensa[version_recompensa.num] = version_recompensa
+
+def buscar_version_recompensa_por_num(num: int) -> VersionRecompensa | None:
+    return bd.versiones_recompensa.get(num)
 
 # ---------------------------------------------------------------------------
 # Compra, Renovacion y transacciones
@@ -134,18 +156,26 @@ def buscar_compra_por_num(num: int) -> Compra | None:
     return bd.compras.get(num)
 
 def guardar_compra(compra: Compra) -> None:
+    if compra.num is None:
+        compra.num = bd.siguiente_numero("compras", bd.compras)
     bd.compras[compra.num] = compra
 
 def obtener_compras_de_membresia(num_membresia: int) -> list[Compra]:
     return [c for c in bd.compras.values() if c.membresia.num == num_membresia]
 
 def guardar_renovacion(renovacion: Renovacion) -> None:
+    if renovacion.num is None:
+        renovacion.num = bd.siguiente_numero("renovaciones", bd.renovaciones)
     bd.renovaciones[renovacion.num] = renovacion
 
 def obtener_renovaciones_de_membresia(num_membresia: int) -> list[Renovacion]:
     return [r for r in bd.renovaciones.values() if r.membresia.num == num_membresia]
 
 def guardar_transaccion_puntos(transaccion: TransaccionPuntos) -> None:
+    if transaccion.num is None:
+        transaccion.num = bd.siguiente_numero(
+            "transacciones_puntos", bd.transacciones_puntos
+        )
     bd.transacciones_puntos[transaccion.num] = transaccion
 
 def obtener_transacciones_de_miembro(num_miembro: int) -> list[TransaccionPuntos]:
@@ -161,6 +191,10 @@ def obtener_saldo_de_miembro(num_miembro: int) -> int:
     return max(transacciones, key=lambda t: t.fecha).saldo
 
 def guardar_transaccion_cashback(transaccion: TransaccionCashback) -> None:
+    if transaccion.num is None:
+        transaccion.num = bd.siguiente_numero(
+            "transacciones_cashback", bd.transacciones_cashback
+        )
     bd.transacciones_cashback[transaccion.num] = transaccion
 
 def obtener_transacciones_cashback_de_membresia(

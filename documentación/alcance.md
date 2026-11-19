@@ -27,8 +27,6 @@ separadas en el modelo.
 - Definir si un plan es gratuito por su naturaleza base.
 - Crear versiones regulares o promocionales de planes.
 - Definir las condiciones y vigencia de cada versión de plan.
-- Definir el `limite_canjes` de cada versión de plan por miembro.
-- Registrar y consultar las versiones aplicadas a las membresías.
 - Crear, consultar y modificar recompensas base.
 - Crear versiones disponibles de recompensas.
 - Definir costo, vigencia y límite de canjes de cada versión.
@@ -41,9 +39,14 @@ separadas en el modelo.
 - Consultar el plan base y la versión vigente aplicada a su membresía.
 - Consultar sus puntos acumulados y disponibles.
 - Consultar las versiones de recompensas disponibles.
-- Canjear puntos respetando el límite individual de cada versión.
+- Canjear puntos por versiones de recompensas disponibles.
 - Consultar su historial de canjes.
 - Solicitar la renovación o cancelación de su membresía.
+
+La definición de gratuidad del plan, el límite de canjes de una versión de plan,
+el historial independiente de versiones aplicadas queda fuera del alcance
+inicial porque no forma parte del modelo de datos vigente. Los canjes sí forman
+parte del alcance inicial y se registran mediante `TRANSACCION_PUNTOS`.
 
 ---
 

@@ -16,6 +16,7 @@ from base_de_datos.consultas_simuladas import (
     obtener_todos_los_planes, #<
     guardar_plan, #<
     obtener_versiones_de_plan,
+    buscar_version_plan_por_num,
     buscar_version_plan_vigente,
     guardar_version_plan,
     # Membresia
@@ -27,6 +28,7 @@ from base_de_datos.consultas_simuladas import (
     obtener_todas_las_recompensas,
     guardar_recompensa,
     obtener_versiones_de_recompensa,
+    buscar_version_recompensa_por_num,
     buscar_version_recompensa_vigente,
     guardar_version_recompensa,
     # Compra, Renovacion y transacciones
@@ -46,6 +48,7 @@ from base_de_datos.consultas_simuladas import (
     obtener_todos_los_roles,
 )
 
+"""
 #Funciones de Miembro:
 def buscar_miembro_por_correo(correo, conn):
     cursor = conn.cursor()
@@ -130,12 +133,11 @@ def eliminar_usuario(conn, num):
 #Funciones para Plan y VersionPlan
 def buscar_plan_por_codigo(conn, num):
     cursor = conn.cursor()
-    consulta = """
+    consulta = 
         SELECT id, codigo, nombre, descripcion, precio, duracion_dias
         FROM plan
         WHERE codigo = %s
         LIMIT 1;
-    """
 
     try:
         cursor.execute(consulta, (num,))
@@ -153,3 +155,4 @@ def obtener_todos_los_planes(conn):
     
     lista_planes = cursor.fetchall()
     return lista_planes
+"""

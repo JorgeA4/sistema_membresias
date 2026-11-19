@@ -36,7 +36,7 @@ usuario_1 = Usuario(
     segundo_apellido="Ríos",
     telefono="5512345678",
     correo="carlos.mendoza@nexum.com",
-    contraseña="admin123",
+    contraseña="$2b$12$sh.QrNRpkkCbDpMKWHCsZeq8l.BucvScTtRKv.m6x0Oqu6ea9cb0u",
     rol=rol_administrador,
     fecha_registro=date(2024, 1, 10),
 )
@@ -52,7 +52,7 @@ miembro_1 = Miembro(
     segundo_apellido="López",
     telefono="5598765432",
     correo="ana.garcia@correo.com",
-    contraseña="miembro456",
+    contraseña="$2b$12$/Au7p7/UlbesS7cV3elG.erU30RTr80x.hWLJ5B.EhC.6f1TMWRzu",
     fecha_registro=date(2024, 1, 15),
 )
 

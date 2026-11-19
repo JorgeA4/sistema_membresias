@@ -8,6 +8,13 @@ sistema_membresias/
 ├── main.py
 ├── clases/
 ├── servicios/
+│   ├── autenticacion/
+│   ├── miembro/
+│   ├── usuario/
+│   ├── plan/
+│   ├── recompensa/
+│   ├── membresia/
+│   └── compra/
 ├── base_de_datos/
 ├── interfaz_term/
 ├── interfaz_qt/
@@ -29,9 +36,25 @@ comportamientos que pertenecen naturalmente al objeto.
 
 ## `servicios/`
 
-Contiene la lógica de negocio que coordina varias clases, como registrar
-compras, renovar membresías, aplicar versiones de planes o validar límites de
-uso. Esta carpeta todavía se encuentra en desarrollo.
+Contiene la lógica de negocio que coordina varias clases. Los servicios reciben
+identificadores y datos de entrada, validan las reglas del dominio y utilizan
+`base_de_datos/` para consultar o guardar información. No deben acceder
+directamente a los diccionarios internos de la base simulada.
+
+La separación inicial es la siguiente:
+
+- `autenticacion/`: autenticación de miembros y usuarios administrativos.
+- `miembro/`: registro, consulta, modificación y eliminación de miembros.
+- `usuario/`: registro, consulta, modificación y eliminación de usuarios.
+- `plan/`: planes y versiones de planes.
+- `recompensa/`: recompensas, versiones de recompensas, canjes e historial de
+  canjes.
+- `membresia/`: aplicación de versiones, renovación y cancelación.
+- `compra/`: registro de compras, descuentos, cashback y generación de puntos.
+
+No se crearán inicialmente servicios independientes para transacciones de
+puntos ni transacciones de cashback. Esas transacciones se generan desde los
+servicios de compra y recompensa, según corresponda.
 
 ## `base_de_datos/`
 
@@ -57,7 +80,8 @@ una capa específica.
 ## `documentación/`
 
 Contiene los requisitos, decisiones de diseño, modelos de datos y planes de
-interfaz del proyecto.
+interfaz del proyecto. `implementacion.md` concentra los contratos de servicios
+y las decisiones técnicas pendientes de la primera implementación.
 
 ## `requirements.txt`
 

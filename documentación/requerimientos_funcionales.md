@@ -73,3 +73,19 @@ membresías, puntos y recompensas.
 - **RF-34:** Consultar el costo en puntos de cada versión disponible.
 - **RF-35:** Canjear puntos por versiones de recompensas disponibles.
 - **RF-36:** Consultar su historial de canjes realizados.
+
+---
+
+## Requerimientos fuera del alcance inicial
+
+Los siguientes requisitos se conservan como referencia funcional, pero no se
+implementarán en la primera versión porque dependen de elementos que no forman
+parte del modelo de datos actual:
+
+- **RF-08:** Definir si un plan es gratuito mediante `Plan.es_gratuita`.
+  El atributo no existe en el modelo actual.
+- **RF-12:** Definir el `limite_canjes` de una versión de plan por miembro.
+  El atributo no existe en `VersionPlan`.
+- **RF-23:** Consultar las versiones de plan aplicadas a cada membresía mediante
+  una relación histórica independiente. Esa relación no existe en el modelo
+  actual.
