@@ -111,8 +111,8 @@ Estas decisiones se documentan aquí para resolverlas durante la implementación
 - Definir cómo se calcula el límite mínimo mensual de cashback.
 - Rechazar compras para membresías que no estén activas, salvo que se acuerde
   una excepción explícita.
-- En renovaciones anticipadas, definir si el nuevo periodo comienza al pagar o
-  al terminar el periodo vigente.
+- Las renovaciones anticipadas comienzan al día siguiente del último periodo
+  registrado; si no existe un periodo futuro, comienzan en la fecha de pago.
 - Rechazar eliminaciones de entidades con registros históricos relacionados;
   no se utilizarán eliminaciones físicas cuando destruyan trazabilidad.
 - Resolver empates de fecha al calcular el saldo mediante un orden estable por
