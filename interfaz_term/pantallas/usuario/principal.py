@@ -258,8 +258,8 @@ def _registrar_venta(identidad: dict) -> None:
             {"clave": "monto_base", "etiqueta": "Monto de la compra"},
             {
                 "clave": "cashback_aplicado",
-                "etiqueta": "Cashback a utilizar (0 si no aplica)",
-                "requerido": True,
+                "etiqueta": "Cashback a utilizar (vacío si no aplica)",
+                "requerido": False,
             },
             {
                 "clave": "codigo_recompensa",
@@ -272,6 +272,7 @@ def _registrar_venta(identidad: dict) -> None:
         return
     try:
         datos["num_membresia"] = _numero(datos["num_membresia"])
+        datos["cashback_aplicado"] = datos.get("cashback_aplicado") or 0
         resultado = registrar_operacion_caja(identidad, datos)
         mensaje = f"Compra registrada con número {resultado['compra'].num}."
         if resultado["canje"] is not None:
@@ -289,7 +290,12 @@ def _registrar_nuevo_miembro(identidad: dict) -> None:
             {"clave": "segundo_apellido", "etiqueta": "Segundo apellido", "requerido": False},
             {"clave": "telefono", "etiqueta": "Teléfono"},
             {"clave": "correo", "etiqueta": "Correo electrónico"},
-            {"clave": "contraseña", "etiqueta": "Contraseña", "contrasena": True},
+            {
+                "clave": "contraseña",
+                "etiqueta": "Contraseña",
+                "contrasena": True,
+                "confirmar": True,
+            },
         ]
     )
     if datos is None:
@@ -613,7 +619,12 @@ def _registrar_usuario(identidad: dict) -> None:
             {"clave": "nombre", "etiqueta": "Nombre"},
             {"clave": "primer_apellido", "etiqueta": "Primer apellido"},
             {"clave": "correo", "etiqueta": "Correo electrónico"},
-            {"clave": "contraseña", "etiqueta": "Contraseña", "contrasena": True},
+            {
+                "clave": "contraseña",
+                "etiqueta": "Contraseña",
+                "contrasena": True,
+                "confirmar": True,
+            },
             {"clave": "codigo_rol", "etiqueta": "Rol (ADM o CAJ)"},
         ]
     )

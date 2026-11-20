@@ -7,6 +7,7 @@ from clases.version_plan import TipoAplicacionPlan, VersionPlan
 from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador,
     requiere_administrador_o_gerente,
+    requiere_operador_tienda,
 )
 from utilidades.excepciones import (
     DatosInvalidos,
@@ -136,6 +137,34 @@ def obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]:
     if consultar_plan(codigo_plan) is None:
         raise EntidadNoEncontrada("El plan no existe.")
     return bd.obtener_versiones_de_plan(codigo_plan)
+
+
+def obtener_versiones_plan_para_operacion(
+    identidad: dict,
+    aplica_en: str | None = None,
+) -> list[VersionPlan]:
+    """Obtiene versiones seleccionables para una operación administrativa."""
+    if aplica_en is None:
+        requiere_administrador(identidad)
+    else:
+        requiere_operador_tienda(identidad)
+        try:
+            tipo_aplicacion = TipoAplicacionPlan(aplica_en)
+        except ValueError:
+            raise DatosInvalidos("El tipo de operación de la versión no es válido.") from None
+
+    versiones = []
+    for plan in bd.obtener_todos_los_planes():
+        for version in bd.obtener_versiones_de_plan(plan.codigo):
+            if aplica_en is not None and version.aplica_en not in (
+                tipo_aplicacion,
+                TipoAplicacionPlan.AMBAS,
+            ):
+                continue
+            if aplica_en is not None and not version.esta_vigente():
+                continue
+            versiones.append(version)
+    return sorted(versiones, key=lambda version: (version.plan.codigo, version.num))
 
 
 def finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> VersionPlan:
