@@ -1,5 +1,7 @@
 from datetime import date
 
+from utilidades.excepciones import DatosInvalidos
+
 
 class VersionRecompensa:
     _atributos_inmutables = (
@@ -32,5 +34,5 @@ class VersionRecompensa:
 
     def finalizar_vigencia(self, fecha):
         if fecha < self.fecha_inicio or fecha > self.fecha_final:
-            raise ValueError("La fecha final debe estar dentro de la vigencia actual.")
+            raise DatosInvalidos("La fecha final debe estar dentro de la vigencia actual.")
         object.__setattr__(self, "fecha_final", fecha)

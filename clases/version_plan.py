@@ -1,6 +1,8 @@
 from datetime import date
 from enum import Enum
 
+from utilidades.excepciones import DatosInvalidos
+
 
 class TipoAplicacionPlan(Enum):
     CONTRATACION = "CONTRATACION"
@@ -90,5 +92,5 @@ class VersionPlan:
 
     def finalizar_vigencia(self, fecha):
         if fecha < self.fecha_inicio or fecha > self.fecha_final:
-            raise ValueError("La fecha final debe estar dentro de la vigencia actual.")
+            raise DatosInvalidos("La fecha final debe estar dentro de la vigencia actual.")
         object.__setattr__(self, "fecha_final", fecha)

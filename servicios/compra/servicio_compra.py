@@ -12,6 +12,13 @@ from servicios.autorizacion.servicio_autorizacion import (
     requiere_operador_compra,
 )
 from servicios.membresia.servicio_membresia import actualizar_estado_membresia
+from utilidades.excepciones import (
+    DatosInvalidos,
+    EntidadNoEncontrada,
+    LimiteExcedido,
+    OperacionNoPermitida,
+    SaldoInsuficiente,
+)
 
 
 _DOS_DECIMALES = Decimal("0.01")
@@ -19,52 +26,53 @@ _DOS_DECIMALES = Decimal("0.01")
 
 def registrar_compra(identidad: dict, datos: dict) -> Compra:
     usuario = requiere_operador_compra(identidad)
-    membresia = _obtener_membresia(datos)
-    actualizar_estado_membresia(membresia)
-    actualizar_vigencia_puntos(membresia)
-    version = membresia.version_plan_actual
+    with bd.transaccion():
+        membresia = _obtener_membresia(datos)
+        actualizar_estado_membresia(membresia)
+        actualizar_vigencia_puntos(membresia)
+        version = membresia.version_plan_actual
 
-    if membresia.estado != Membresia.Estado.ACTIVA:
-        raise ValueError("La membresía no está activa.")
-    if version is None:
-        raise ValueError("La membresía no tiene una versión de plan activa.")
+        if membresia.estado != Membresia.Estado.ACTIVA:
+            raise OperacionNoPermitida("La membresía no está activa.")
+        if version is None:
+            raise OperacionNoPermitida("La membresía no tiene una versión de plan activa.")
 
-    monto_base = _convertir_importe(datos["monto_base"])
-    if monto_base <= 0:
-        raise ValueError("El monto base debe ser mayor que cero.")
+        monto_base = _convertir_importe(datos["monto_base"])
+        if monto_base <= 0:
+            raise DatosInvalidos("El monto base debe ser mayor que cero.")
 
-    fecha = date.today()
-    descuento = _calcular_descuento(version.config_descuento, monto_base, fecha)
-    monto_con_descuento = monto_base - descuento["nominal"]
-    cashback_aplicado = _obtener_cashback_aplicado(
-        datos,
-        version.config_cashback,
-        membresia.num,
-        fecha,
-        monto_con_descuento,
-    )
-    monto_final = _cuantificar(monto_con_descuento - cashback_aplicado)
+        fecha = date.today()
+        descuento = _calcular_descuento(version.config_descuento, monto_base, fecha)
+        monto_con_descuento = monto_base - descuento["nominal"]
+        cashback_aplicado = _obtener_cashback_aplicado(
+            datos,
+            version.config_cashback,
+            membresia.num,
+            fecha,
+            monto_con_descuento,
+        )
+        monto_final = _cuantificar(monto_con_descuento - cashback_aplicado)
 
-    compra = Compra(
-        num=None,
-        monto_base=monto_base,
-        porcentaje_descuento=descuento["porcentaje"],
-        descuento_nominal=descuento["nominal"],
-        cashback_aplicado=cashback_aplicado,
-        monto_final=monto_final,
-        membresia=membresia,
-        usuario=usuario,
-    )
-    bd.guardar_compra(compra)
+        compra = Compra(
+            num=None,
+            monto_base=monto_base,
+            porcentaje_descuento=descuento["porcentaje"],
+            descuento_nominal=descuento["nominal"],
+            cashback_aplicado=cashback_aplicado,
+            monto_final=monto_final,
+            membresia=membresia,
+            usuario=usuario,
+        )
+        bd.guardar_compra(compra)
 
-    _registrar_puntos(compra, version.config_puntos)
-    _registrar_cashback(
-        compra,
-        version.config_cashback,
-        cashback_aplicado,
-        fecha,
-    )
-    return compra
+        _registrar_puntos(compra, version.config_puntos)
+        _registrar_cashback(
+            compra,
+            version.config_cashback,
+            cashback_aplicado,
+            fecha,
+        )
+        return compra
 
 
 def obtener_compras_de_membresia(identidad: dict, num_membresia: int) -> list[Compra]:
@@ -75,10 +83,10 @@ def obtener_compras_de_membresia(identidad: dict, num_membresia: int) -> list[Co
 
 def obtener_transacciones_de_miembro(identidad: dict, num_miembro: int) -> list[TransaccionPuntos]:
     if bd.buscar_miembro_por_num(num_miembro) is None:
-        raise ValueError("El miembro no existe.")
+        raise EntidadNoEncontrada("El miembro no existe.")
     membresia = bd.buscar_membresia_de_miembro(num_miembro)
     if membresia is None:
-        raise ValueError("El miembro no tiene una membresía.")
+        raise EntidadNoEncontrada("El miembro no tiene una membresía.")
     requiere_administrador_o_propietario(identidad, membresia)
     actualizar_vigencia_puntos(membresia)
     return sorted(
@@ -96,10 +104,10 @@ def obtener_saldo_de_miembro(identidad: dict, num_miembro: int) -> int:
 
 def obtener_fecha_vencimiento_puntos(identidad: dict, num_miembro: int):
     if bd.buscar_miembro_por_num(num_miembro) is None:
-        raise ValueError("El miembro no existe.")
+        raise EntidadNoEncontrada("El miembro no existe.")
     membresia = bd.buscar_membresia_de_miembro(num_miembro)
     if membresia is None:
-        raise ValueError("El miembro no tiene una membresía.")
+        raise EntidadNoEncontrada("El miembro no tiene una membresía.")
     requiere_administrador_o_propietario(identidad, membresia)
     actualizar_vigencia_puntos(membresia)
     return _calcular_fecha_vencimiento_puntos(membresia)
@@ -200,14 +208,14 @@ def _obtener_membresia(datos: dict) -> Membresia:
     else:
         membresia = referencia
     if not isinstance(membresia, Membresia):
-        raise ValueError("La membresía no existe.")
+        raise EntidadNoEncontrada("La membresía no existe.")
     return membresia
 
 
 def _verificar_membresia(num_membresia: int) -> Membresia:
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if not isinstance(membresia, Membresia):
-        raise ValueError("La membresía no existe.")
+        raise EntidadNoEncontrada("La membresía no existe.")
     return membresia
 
 
@@ -242,20 +250,20 @@ def _obtener_cashback_aplicado(
 ) -> Decimal:
     cashback = _convertir_importe(datos.get("cashback_aplicado", 0))
     if cashback < 0:
-        raise ValueError("El cashback aplicado no puede ser negativo.")
+        raise DatosInvalidos("El cashback aplicado no puede ser negativo.")
     if cashback == 0:
         return Decimal("0.00")
     if configuracion is None:
-        raise ValueError("La membresía no tiene cashback configurado.")
+        raise OperacionNoPermitida("La membresía no tiene cashback configurado.")
     if cashback > monto_disponible:
-        raise ValueError("El cashback aplicado supera el monto de la compra.")
+        raise LimiteExcedido("El cashback aplicado supera el monto de la compra.")
 
     transacciones = bd.obtener_transacciones_cashback_de_membresia(num_membresia)
     _registrar_expiraciones_cashback(transacciones, configuracion, num_membresia, fecha)
     transacciones = bd.obtener_transacciones_cashback_de_membresia(num_membresia)
     saldo = _obtener_cashback_disponible(transacciones, configuracion, fecha)
     if cashback > saldo:
-        raise ValueError("El saldo de cashback es insuficiente.")
+        raise SaldoInsuficiente("El saldo de cashback es insuficiente.")
 
     return _cuantificar(cashback)
 
@@ -328,16 +336,16 @@ def _convertir_importe(valor) -> Decimal:
     try:
         return Decimal(str(valor)).quantize(_DOS_DECIMALES, rounding=ROUND_HALF_UP)
     except (InvalidOperation, TypeError, ValueError):
-        raise ValueError("El importe no es válido.") from None
+        raise DatosInvalidos("El importe no es válido.") from None
 
 
 def _convertir_porcentaje(valor) -> Decimal:
     try:
         porcentaje = Decimal(str(valor))
     except (InvalidOperation, TypeError, ValueError):
-        raise ValueError("El porcentaje no es válido.") from None
+        raise DatosInvalidos("El porcentaje no es válido.") from None
     if porcentaje < 0 or porcentaje > 1:
-        raise ValueError("El porcentaje debe estar entre cero y uno.")
+        raise DatosInvalidos("El porcentaje debe estar entre cero y uno.")
     return porcentaje
 
 

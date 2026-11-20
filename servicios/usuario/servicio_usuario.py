@@ -4,6 +4,11 @@ import base_de_datos.consultas as bd
 from clases.rol import Rol
 from clases.usuario import Usuario
 from servicios.autorizacion.servicio_autorizacion import requiere_administrador
+from utilidades.excepciones import (
+    DatosInvalidos,
+    EntidadNoEncontrada,
+    OperacionNoPermitida,
+)
 from utilidades.seguridad import hashear_contraseña
 
 
@@ -11,9 +16,9 @@ def registrar_usuario(identidad: dict, datos: dict) -> Usuario:
     requiere_administrador(identidad)
     correo = datos["correo"].strip()
     if not correo:
-        raise ValueError("El correo es obligatorio.")
+        raise DatosInvalidos("El correo es obligatorio.")
     if bd.buscar_usuario_por_correo(correo) is not None:
-        raise ValueError("El correo ya está registrado.")
+        raise DatosInvalidos("El correo ya está registrado.")
 
     nuevo_usuario = Usuario(
         num=None,
@@ -44,7 +49,7 @@ def modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario:
     requiere_administrador(identidad)
     objetivo = bd.buscar_usuario_por_num(num)
     if objetivo is None:
-        raise ValueError("El usuario no existe.")
+        raise EntidadNoEncontrada("El usuario no existe.")
 
     atributos_permitidos = {
         "nombre",
@@ -57,13 +62,13 @@ def modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario:
         "codigo_rol",
     }
     if set(datos) - atributos_permitidos:
-        raise ValueError("Los datos contienen atributos no modificables.")
+        raise DatosInvalidos("Los datos contienen atributos no modificables.")
 
     if "correo" in datos:
         correo = datos["correo"].strip()
         existente = bd.buscar_usuario_por_correo(correo)
         if existente is not None and existente.num != num:
-            raise ValueError("El correo ya está registrado.")
+            raise DatosInvalidos("El correo ya está registrado.")
         objetivo.correo = correo
 
     for atributo in ("nombre", "primer_apellido", "segundo_apellido", "telefono"):
@@ -83,9 +88,11 @@ def eliminar_usuario(identidad: dict, num: int) -> None:
     requiere_administrador(identidad)
     objetivo = bd.buscar_usuario_por_num(num)
     if objetivo is None:
-        raise ValueError("El usuario no existe.")
+        raise EntidadNoEncontrada("El usuario no existe.")
     if objetivo.num == identidad.get("num"):
-        raise ValueError("No se puede eliminar el usuario autenticado.")
+        raise OperacionNoPermitida("No se puede eliminar el usuario autenticado.")
+    if bd.tiene_historial_usuario(num):
+        raise OperacionNoPermitida("No se puede eliminar un usuario con historial.")
     bd.eliminar_usuario(num)
 
 
@@ -98,5 +105,5 @@ def _obtener_rol(datos: dict) -> Rol:
     else:
         rol = referencia
     if not isinstance(rol, Rol):
-        raise ValueError("El rol no existe.")
+        raise EntidadNoEncontrada("El rol no existe.")
     return rol

@@ -5,6 +5,12 @@ import base_de_datos.consultas as bd
 from clases.plan import Plan
 from clases.version_plan import TipoAplicacionPlan, VersionPlan
 from servicios.autorizacion.servicio_autorizacion import requiere_administrador
+from utilidades.excepciones import (
+    DatosInvalidos,
+    EntidadNoEncontrada,
+    OperacionNoPermitida,
+    VersionNoVigente,
+)
 
 
 def registrar_plan(identidad: dict, datos: dict) -> Plan:
@@ -13,11 +19,11 @@ def registrar_plan(identidad: dict, datos: dict) -> Plan:
     nombre = datos["nombre"].strip()
 
     if not codigo or not nombre:
-        raise ValueError("El código y el nombre del plan son obligatorios.")
+        raise DatosInvalidos("El código y el nombre del plan son obligatorios.")
     if bd.buscar_plan_por_codigo(codigo) is not None:
-        raise ValueError("El código del plan ya existe.")
+        raise DatosInvalidos("El código del plan ya existe.")
     if any(plan.nombre == nombre for plan in bd.obtener_todos_los_planes()):
-        raise ValueError("El nombre del plan ya existe.")
+        raise DatosInvalidos("El nombre del plan ya existe.")
 
     plan = Plan(codigo, nombre, datos.get("descripcion"))
     bd.guardar_plan(plan)
@@ -37,22 +43,22 @@ def modificar_plan(identidad: dict, codigo: str, datos: dict) -> Plan:
     requiere_administrador(identidad)
     plan = consultar_plan(codigo)
     if plan is None:
-        raise ValueError("El plan no existe.")
+        raise EntidadNoEncontrada("El plan no existe.")
 
     atributos_permitidos = {"nombre", "descripcion"}
     atributos_invalidos = set(datos) - atributos_permitidos
     if atributos_invalidos:
-        raise ValueError("Los datos contienen atributos no modificables.")
+        raise DatosInvalidos("Los datos contienen atributos no modificables.")
 
     if "nombre" in datos:
         nombre = datos["nombre"].strip()
         if not nombre:
-            raise ValueError("El nombre del plan es obligatorio.")
+            raise DatosInvalidos("El nombre del plan es obligatorio.")
         if any(
             otro.nombre == nombre and otro.codigo != codigo
             for otro in bd.obtener_todos_los_planes()
         ):
-            raise ValueError("El nombre del plan ya existe.")
+            raise DatosInvalidos("El nombre del plan ya existe.")
         plan.nombre = nombre
 
     if "descripcion" in datos:
@@ -66,9 +72,9 @@ def eliminar_plan(identidad: dict, codigo: str) -> None:
     requiere_administrador(identidad)
     plan = consultar_plan(codigo)
     if plan is None:
-        raise ValueError("El plan no existe.")
+        raise EntidadNoEncontrada("El plan no existe.")
     if bd.obtener_versiones_de_plan(codigo):
-        raise ValueError("No se puede eliminar un plan con versiones registradas.")
+        raise OperacionNoPermitida("No se puede eliminar un plan con versiones registradas.")
     bd.eliminar_plan(codigo)
 
 
@@ -81,17 +87,17 @@ def crear_version_plan(identidad: dict, datos: dict) -> VersionPlan:
     plazo_meses = datos["plazo_meses"]
 
     if not isinstance(fecha_inicio, date) or not isinstance(fecha_final, date):
-        raise ValueError("Las fechas de la versión deben ser fechas válidas.")
+        raise DatosInvalidos("Las fechas de la versión deben ser fechas válidas.")
     if fecha_final < fecha_inicio:
-        raise ValueError("La fecha final no puede ser anterior a la inicial.")
+        raise DatosInvalidos("La fecha final no puede ser anterior a la inicial.")
     if precio <= 0:
-        raise ValueError("El precio debe ser mayor que cero.")
+        raise DatosInvalidos("El precio debe ser mayor que cero.")
     if isinstance(plazo_meses, bool) or not isinstance(plazo_meses, int) or plazo_meses <= 0:
-        raise ValueError("El plazo debe ser un número entero mayor que cero.")
+        raise DatosInvalidos("El plazo debe ser un número entero mayor que cero.")
 
     version_base = _obtener_version_base(datos)
     if version_base is not None and version_base.plan.codigo != plan.codigo:
-        raise ValueError("La versión base debe pertenecer al mismo plan.")
+        raise DatosInvalidos("La versión base debe pertenecer al mismo plan.")
 
     _validar_configuracion_puntos(datos.get("config_puntos"))
     _validar_configuracion_descuento(datos.get("config_descuento"))
@@ -100,7 +106,7 @@ def crear_version_plan(identidad: dict, datos: dict) -> VersionPlan:
     try:
         aplica_en = TipoAplicacionPlan(datos["aplica_en"])
     except (KeyError, ValueError):
-        raise ValueError("La aplicación de la versión no es válida.") from None
+        raise DatosInvalidos("La aplicación de la versión no es válida.") from None
 
     version = VersionPlan(
         num=datos.get("num"),
@@ -125,7 +131,7 @@ def consultar_version_plan(num: int) -> VersionPlan | None:
 
 def obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]:
     if consultar_plan(codigo_plan) is None:
-        raise ValueError("El plan no existe.")
+        raise EntidadNoEncontrada("El plan no existe.")
     return bd.obtener_versiones_de_plan(codigo_plan)
 
 
@@ -133,11 +139,12 @@ def finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> Vers
     requiere_administrador(identidad)
     version = consultar_version_plan(num)
     if version is None:
-        raise ValueError("La versión de plan no existe.")
+        raise EntidadNoEncontrada("La versión de plan no existe.")
     if not isinstance(fecha_final, date):
-        raise ValueError("La fecha final no es válida.")
+        raise DatosInvalidos("La fecha final no es válida.")
 
     version.finalizar_vigencia(fecha_final)
+    bd.guardar_version_plan(version)
     return version
 
 
@@ -151,7 +158,7 @@ def _obtener_plan(datos: dict) -> Plan:
         plan = referencia
 
     if not isinstance(plan, Plan):
-        raise ValueError("El plan no existe.")
+        raise EntidadNoEncontrada("El plan no existe.")
     return plan
 
 
@@ -160,12 +167,12 @@ def _obtener_version_base(datos: dict) -> VersionPlan | None:
     if isinstance(referencia, int):
         version_base = bd.buscar_version_plan_por_num(referencia)
         if version_base is None:
-            raise ValueError("La versión base de promoción no existe.")
+            raise EntidadNoEncontrada("La versión base de promoción no existe.")
     else:
         version_base = referencia
 
     if version_base is not None and not isinstance(version_base, VersionPlan):
-        raise ValueError("La versión base de promoción no es válida.")
+        raise DatosInvalidos("La versión base de promoción no es válida.")
     return version_base
 
 
@@ -173,7 +180,7 @@ def _convertir_precio(valor) -> Decimal:
     try:
         return Decimal(str(valor))
     except (InvalidOperation, TypeError, ValueError):
-        raise ValueError("El precio no es válido.") from None
+        raise DatosInvalidos("El precio no es válido.") from None
 
 
 def _validar_configuracion_puntos(configuracion) -> None:
@@ -181,12 +188,12 @@ def _validar_configuracion_puntos(configuracion) -> None:
         return
     porcentaje = _convertir_porcentaje(configuracion.porcentaje)
     if porcentaje == 0:
-        raise ValueError("El porcentaje de puntos debe ser mayor que cero.")
+        raise DatosInvalidos("El porcentaje de puntos debe ser mayor que cero.")
     vigencia = configuracion.vigencia_meses
     if vigencia is not None and (
         isinstance(vigencia, bool) or not isinstance(vigencia, int) or vigencia <= 0
     ):
-        raise ValueError("La vigencia de puntos debe ser un entero mayor que cero.")
+            raise DatosInvalidos("La vigencia de puntos debe ser un entero mayor que cero.")
 
 
 def _validar_configuracion_descuento(configuracion) -> None:
@@ -194,12 +201,12 @@ def _validar_configuracion_descuento(configuracion) -> None:
         return
     porcentaje = _convertir_porcentaje(configuracion.porcentaje)
     if porcentaje == 0:
-        raise ValueError("El porcentaje de descuento debe ser mayor que cero.")
+        raise DatosInvalidos("El porcentaje de descuento debe ser mayor que cero.")
     if configuracion.monto_minimo is not None:
         _convertir_monto_no_negativo(configuracion.monto_minimo, "El monto mínimo del descuento")
     for dia in configuracion.dias_aplicables:
         if isinstance(dia, bool) or not isinstance(dia, int) or not 1 <= dia <= 7:
-            raise ValueError("Los días aplicables deben estar entre 1 y 7.")
+            raise DatosInvalidos("Los días aplicables deben estar entre 1 y 7.")
 
 
 def _validar_configuracion_cashback(configuracion) -> None:
@@ -207,7 +214,7 @@ def _validar_configuracion_cashback(configuracion) -> None:
         return
     porcentaje = _convertir_porcentaje(configuracion.porcentaje)
     if porcentaje == 0:
-        raise ValueError("El porcentaje de cashback debe ser mayor que cero.")
+        raise DatosInvalidos("El porcentaje de cashback debe ser mayor que cero.")
     if configuracion.limite_min_mensual is not None:
         _convertir_monto_no_negativo(
             configuracion.limite_min_mensual,
@@ -219,9 +226,9 @@ def _convertir_porcentaje(valor) -> Decimal:
     try:
         porcentaje = Decimal(str(valor))
     except (InvalidOperation, TypeError, ValueError):
-        raise ValueError("El porcentaje no es válido.") from None
+        raise DatosInvalidos("El porcentaje no es válido.") from None
     if porcentaje < 0 or porcentaje > 1:
-        raise ValueError("El porcentaje debe estar entre cero y uno.")
+        raise DatosInvalidos("El porcentaje debe estar entre cero y uno.")
     return porcentaje
 
 
@@ -229,7 +236,7 @@ def _convertir_monto_no_negativo(valor, nombre: str) -> Decimal:
     try:
         monto = Decimal(str(valor))
     except (InvalidOperation, TypeError, ValueError):
-        raise ValueError(f"{nombre} no es válido.") from None
+        raise DatosInvalidos(f"{nombre} no es válido.") from None
     if monto < 0:
-        raise ValueError(f"{nombre} no puede ser negativo.")
+        raise DatosInvalidos(f"{nombre} no puede ser negativo.")
     return monto

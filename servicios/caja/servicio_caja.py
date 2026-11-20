@@ -2,6 +2,7 @@ import base_de_datos.consultas as bd
 from servicios.autorizacion.servicio_autorizacion import requiere_operador_tienda
 from servicios.compra.servicio_compra import registrar_compra
 from servicios.recompensa.servicio_recompensa import canjear_recompensa, validar_canje
+from utilidades.excepciones import EntidadNoEncontrada, VersionNoVigente
 
 
 def registrar_operacion_caja(identidad: dict, datos: dict) -> dict:
@@ -41,12 +42,12 @@ def registrar_operacion_caja(identidad: dict, datos: dict) -> dict:
 def _obtener_version_recompensa_vigente(codigo: str):
     recompensa = bd.buscar_recompensa_por_codigo(codigo.strip())
     if recompensa is None:
-        raise ValueError("La recompensa no existe.")
+        raise EntidadNoEncontrada("La recompensa no existe.")
     versiones = [
         version
         for version in bd.obtener_versiones_de_recompensa(codigo)
         if version.esta_vigente()
     ]
     if len(versiones) != 1:
-        raise ValueError("La recompensa no tiene una única versión vigente.")
+        raise VersionNoVigente("La recompensa no tiene una única versión vigente.")
     return versiones[0]

@@ -21,6 +21,7 @@ from servicios.recompensa.servicio_recompensa import (
     obtener_historial_canjes,
     obtener_versiones_recompensa_vigentes,
 )
+from utilidades.excepciones import EntidadNoEncontrada
 
 _consola = Console()
 
@@ -85,7 +86,7 @@ def mostrar_miembro(sesion: dict) -> tuple:
 def _mostrar_informacion(identidad: dict) -> None:
     miembro = consultar_miembro(identidad, identidad["num"])
     if miembro is None:
-        raise ValueError("El miembro no existe.")
+        raise EntidadNoEncontrada("El miembro no existe.")
     mostrar_tabla(
         "Información personal",
         ["Número", "Nombre", "Correo", "Teléfono"],
@@ -97,7 +98,7 @@ def _mostrar_informacion(identidad: dict) -> None:
 def _mostrar_membresia(identidad: dict) -> None:
     membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
-        raise ValueError("No tienes una membresía registrada.")
+        raise EntidadNoEncontrada("No tienes una membresía registrada.")
     version = membresia.version_plan_actual
     if version is None:
         fila = (membresia.num, membresia.estado.value, "Sin plan", "-", "-", "-", "-", "-", "-")
@@ -151,7 +152,7 @@ def _mostrar_recompensas() -> None:
 def _mostrar_compras(identidad: dict) -> None:
     membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
-        raise ValueError("No tienes una membresía registrada.")
+        raise EntidadNoEncontrada("No tienes una membresía registrada.")
     compras = obtener_compras_de_membresia(identidad, membresia.num)
     mostrar_tabla(
         "Historial de compras",
@@ -174,7 +175,7 @@ def _mostrar_historial_puntos(identidad: dict) -> None:
 def _mostrar_historial_canjes(identidad: dict) -> None:
     membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
-        raise ValueError("No tienes una membresía registrada.")
+        raise EntidadNoEncontrada("No tienes una membresía registrada.")
     canjes = obtener_historial_canjes(identidad, membresia.num)
     mostrar_tabla(
         "Historial de canjes",

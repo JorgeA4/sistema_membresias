@@ -12,6 +12,14 @@ from servicios.autorizacion.servicio_autorizacion import (
 )
 from servicios.compra.servicio_compra import actualizar_vigencia_puntos
 from servicios.membresia.servicio_membresia import actualizar_estado_membresia
+from utilidades.excepciones import (
+    DatosInvalidos,
+    EntidadNoEncontrada,
+    LimiteExcedido,
+    OperacionNoPermitida,
+    SaldoInsuficiente,
+    VersionNoVigente,
+)
 
 
 def registrar_recompensa(identidad: dict, datos: dict) -> Recompensa:
@@ -20,9 +28,9 @@ def registrar_recompensa(identidad: dict, datos: dict) -> Recompensa:
     nombre = datos["nombre"].strip()
 
     if not codigo or not nombre:
-        raise ValueError("El código y el nombre de la recompensa son obligatorios.")
+        raise DatosInvalidos("El código y el nombre de la recompensa son obligatorios.")
     if bd.buscar_recompensa_por_codigo(codigo) is not None:
-        raise ValueError("El código de la recompensa ya existe.")
+        raise DatosInvalidos("El código de la recompensa ya existe.")
 
     recompensa = Recompensa(codigo, nombre, datos.get("descripcion"))
     bd.guardar_recompensa(recompensa)
@@ -42,17 +50,17 @@ def modificar_recompensa(identidad: dict, codigo: str, datos: dict) -> Recompens
     requiere_administrador(identidad)
     recompensa = consultar_recompensa(codigo)
     if recompensa is None:
-        raise ValueError("La recompensa no existe.")
+        raise EntidadNoEncontrada("La recompensa no existe.")
 
     atributos_permitidos = {"nombre", "descripcion"}
     atributos_invalidos = set(datos) - atributos_permitidos
     if atributos_invalidos:
-        raise ValueError("Los datos contienen atributos no modificables.")
+        raise DatosInvalidos("Los datos contienen atributos no modificables.")
 
     if "nombre" in datos:
         nombre = datos["nombre"].strip()
         if not nombre:
-            raise ValueError("El nombre de la recompensa es obligatorio.")
+            raise DatosInvalidos("El nombre de la recompensa es obligatorio.")
         recompensa.nombre = nombre
 
     if "descripcion" in datos:
@@ -66,9 +74,9 @@ def eliminar_recompensa(identidad: dict, codigo: str) -> None:
     requiere_administrador(identidad)
     recompensa = consultar_recompensa(codigo)
     if recompensa is None:
-        raise ValueError("La recompensa no existe.")
+        raise EntidadNoEncontrada("La recompensa no existe.")
     if bd.obtener_versiones_de_recompensa(codigo):
-        raise ValueError("No se puede eliminar una recompensa con versiones registradas.")
+        raise OperacionNoPermitida("No se puede eliminar una recompensa con versiones registradas.")
     bd.eliminar_recompensa(codigo)
 
 
@@ -81,17 +89,17 @@ def crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa:
     limite_canjes = datos.get("limite_canjes")
 
     if not isinstance(fecha_inicio, date) or not isinstance(fecha_final, date):
-        raise ValueError("Las fechas de la versión deben ser fechas válidas.")
+        raise DatosInvalidos("Las fechas de la versión deben ser fechas válidas.")
     if fecha_final < fecha_inicio:
-        raise ValueError("La fecha final no puede ser anterior a la inicial.")
+        raise DatosInvalidos("La fecha final no puede ser anterior a la inicial.")
     if any(
         version.fecha_inicio <= fecha_final
         and fecha_inicio <= version.fecha_final
         for version in bd.obtener_versiones_de_recompensa(recompensa.codigo)
     ):
-        raise ValueError("Ya existe una versión vigente en ese período.")
+        raise OperacionNoPermitida("Ya existe una versión vigente en ese período.")
     if isinstance(costo_puntos, bool) or not isinstance(costo_puntos, int) or costo_puntos <= 0:
-        raise ValueError("El costo debe ser un entero mayor que cero.")
+        raise DatosInvalidos("El costo debe ser un entero mayor que cero.")
     if (
         limite_canjes is not None
         and (
@@ -100,7 +108,7 @@ def crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa:
             or limite_canjes <= 0
         )
     ):
-        raise ValueError("El límite de canjes debe ser un entero mayor que cero.")
+        raise DatosInvalidos("El límite de canjes debe ser un entero mayor que cero.")
 
     version = VersionRecompensa(
         num=datos.get("num"),
@@ -120,7 +128,7 @@ def consultar_version_recompensa(num: int) -> VersionRecompensa | None:
 
 def obtener_versiones_de_recompensa(codigo: str) -> list[VersionRecompensa]:
     if consultar_recompensa(codigo) is None:
-        raise ValueError("La recompensa no existe.")
+        raise EntidadNoEncontrada("La recompensa no existe.")
     return bd.obtener_versiones_de_recompensa(codigo)
 
 
@@ -137,11 +145,12 @@ def finalizar_version_recompensa(identidad: dict, num: int, fecha_final: date) -
     requiere_administrador(identidad)
     version = consultar_version_recompensa(num)
     if version is None:
-        raise ValueError("La versión de recompensa no existe.")
+        raise EntidadNoEncontrada("La versión de recompensa no existe.")
     if not isinstance(fecha_final, date):
-        raise ValueError("La fecha final no es válida.")
+        raise DatosInvalidos("La fecha final no es válida.")
 
     version.finalizar_vigencia(fecha_final)
+    bd.guardar_version_recompensa(version)
     return version
 
 
@@ -177,17 +186,17 @@ def validar_canje(
     requiere_operador_tienda(identidad)
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if membresia is None:
-        raise ValueError("La membresía no existe.")
+        raise EntidadNoEncontrada("La membresía no existe.")
     actualizar_estado_membresia(membresia)
     actualizar_vigencia_puntos(membresia)
     if membresia.estado != Membresia.Estado.ACTIVA:
-        raise ValueError("La membresía no está activa.")
+        raise OperacionNoPermitida("La membresía no está activa.")
 
     version = consultar_version_recompensa(num_version_recompensa)
     if version is None:
-        raise ValueError("La versión de recompensa no existe.")
+        raise EntidadNoEncontrada("La versión de recompensa no existe.")
     if not version.esta_vigente():
-        raise ValueError("La versión de recompensa no está vigente.")
+        raise VersionNoVigente("La versión de recompensa no está vigente.")
 
     transacciones = bd.obtener_transacciones_de_miembro(membresia.miembro.num)
     canjes = [
@@ -198,18 +207,18 @@ def validar_canje(
         and transaccion.movimiento < 0
     ]
     if version.limite_canjes is not None and len(canjes) >= version.limite_canjes:
-        raise ValueError("Se alcanzó el límite de canjes de la recompensa.")
+        raise LimiteExcedido("Se alcanzó el límite de canjes de la recompensa.")
 
     saldo = _obtener_saldo(transacciones)
     if saldo < version.costo_puntos:
-        raise ValueError("El saldo de puntos es insuficiente.")
+        raise SaldoInsuficiente("El saldo de puntos es insuficiente.")
     return membresia, version, transacciones, saldo
 
 
 def obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[TransaccionPuntos]:
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if membresia is None:
-        raise ValueError("La membresía no existe.")
+        raise EntidadNoEncontrada("La membresía no existe.")
     requiere_administrador_o_propietario(identidad, membresia)
 
     transacciones = bd.obtener_transacciones_de_miembro(membresia.miembro.num)
@@ -234,7 +243,7 @@ def _obtener_recompensa(datos: dict) -> Recompensa:
         recompensa = referencia
 
     if not isinstance(recompensa, Recompensa):
-        raise ValueError("La recompensa no existe.")
+        raise EntidadNoEncontrada("La recompensa no existe.")
     return recompensa
 
 

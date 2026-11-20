@@ -6,6 +6,11 @@ from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador,
     requiere_operador_tienda,
 )
+from utilidades.excepciones import (
+    DatosInvalidos,
+    EntidadNoEncontrada,
+    OperacionNoPermitida,
+)
 from utilidades.seguridad import hashear_contraseña
 
 
@@ -13,9 +18,9 @@ def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
     requiere_operador_tienda(identidad)
     correo = datos["correo"].strip()
     if not correo:
-        raise ValueError("El correo es obligatorio.")
+        raise DatosInvalidos("El correo es obligatorio.")
     if bd.buscar_miembro_por_correo(correo) is not None:
-        raise ValueError("El correo ya está registrado.")
+        raise DatosInvalidos("El correo ya está registrado.")
     miembro = Miembro(
         num=None,
         nombre=datos["nombre"],
@@ -32,14 +37,14 @@ def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
 
 def consultar_miembro(identidad: dict, num: int) -> Miembro | None:
     if not isinstance(identidad, dict):
-        raise PermissionError("Se requiere una identidad autenticada.")
+        raise OperacionNoPermitida("Se requiere una identidad autenticada.")
     if identidad.get("tipo") == "usuario":
         requiere_operador_tienda(identidad)
     elif identidad.get("tipo") == "miembro":
         if identidad.get("num") != num:
-            raise PermissionError("No tiene permiso para consultar este miembro.")
+            raise OperacionNoPermitida("No tiene permiso para consultar este miembro.")
     else:
-        raise PermissionError("Se requiere una identidad autenticada.")
+        raise OperacionNoPermitida("Se requiere una identidad autenticada.")
     return bd.buscar_miembro_por_num(num)
 
 
@@ -51,7 +56,7 @@ def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
     requiere_administrador(identidad)
     miembro = consultar_miembro(identidad, num)
     if miembro is None:
-        raise ValueError("El miembro no existe.")
+        raise EntidadNoEncontrada("El miembro no existe.")
 
     atributos_permitidos = {
         "nombre",
@@ -74,5 +79,7 @@ def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
 def eliminar_miembro(identidad: dict, num: int) -> None:
     requiere_administrador(identidad)
     if consultar_miembro(identidad, num) is None:
-        raise ValueError("El miembro no existe.")
+        raise EntidadNoEncontrada("El miembro no existe.")
+    if bd.tiene_historial_miembro(num):
+        raise OperacionNoPermitida("No se puede eliminar un miembro con historial.")
     bd.eliminar_miembro(num)

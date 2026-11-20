@@ -5,19 +5,24 @@ import base_de_datos.consultas as bd
 from clases.transaccion_cashback import TransaccionCashback
 from clases.transaccion_puntos import TransaccionPuntos
 from servicios.autorizacion.servicio_autorizacion import requiere_administrador
+from utilidades.excepciones import (
+    DatosInvalidos,
+    EntidadNoEncontrada,
+    SaldoInsuficiente,
+)
 
 
 def ajustar_puntos(identidad: dict, num_membresia: int, movimiento: int, concepto: str):
     requiere_administrador(identidad)
     membresia = _obtener_membresia(num_membresia)
     if not isinstance(movimiento, int) or isinstance(movimiento, bool) or movimiento == 0:
-        raise ValueError("El ajuste de puntos debe ser un entero distinto de cero.")
+        raise DatosInvalidos("El ajuste de puntos debe ser un entero distinto de cero.")
     if not concepto or not concepto.strip():
-        raise ValueError("El concepto del ajuste es obligatorio.")
+        raise DatosInvalidos("El concepto del ajuste es obligatorio.")
     saldo = _saldo_puntos(membresia.miembro.num)
     nuevo_saldo = saldo + movimiento
     if nuevo_saldo < 0:
-        raise ValueError("El ajuste dejaría el saldo de puntos en negativo.")
+        raise SaldoInsuficiente("El ajuste dejaría el saldo de puntos en negativo.")
     transaccion = TransaccionPuntos(
         num=None,
         movimiento=movimiento,
@@ -38,15 +43,15 @@ def ajustar_cashback(identidad: dict, num_membresia: int, movimiento, concepto: 
     try:
         movimiento_decimal = Decimal(str(movimiento)).quantize(Decimal("0.01"))
     except (InvalidOperation, TypeError, ValueError):
-        raise ValueError("El ajuste de cashback no es válido.") from None
+        raise DatosInvalidos("El ajuste de cashback no es válido.") from None
     if movimiento_decimal == 0:
-        raise ValueError("El ajuste de cashback debe ser distinto de cero.")
+        raise DatosInvalidos("El ajuste de cashback debe ser distinto de cero.")
     if not concepto or not concepto.strip():
-        raise ValueError("El concepto del ajuste es obligatorio.")
+        raise DatosInvalidos("El concepto del ajuste es obligatorio.")
     saldo = _saldo_cashback(membresia.num)
     nuevo_saldo = saldo + movimiento_decimal
     if nuevo_saldo < 0:
-        raise ValueError("El ajuste dejaría el saldo de cashback en negativo.")
+        raise SaldoInsuficiente("El ajuste dejaría el saldo de cashback en negativo.")
     transaccion = TransaccionCashback(
         num=None,
         monto=movimiento_decimal,
@@ -63,7 +68,7 @@ def ajustar_cashback(identidad: dict, num_membresia: int, movimiento, concepto: 
 def _obtener_membresia(num_membresia: int):
     membresia = bd.buscar_membresia_por_num(num_membresia)
     if membresia is None:
-        raise ValueError("La membresía no existe.")
+        raise EntidadNoEncontrada("La membresía no existe.")
     return membresia
 
 

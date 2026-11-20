@@ -10,6 +10,12 @@ from servicios.autorizacion.servicio_autorizacion import (
     requiere_operador_tienda,
     requiere_administrador_o_propietario,
 )
+from utilidades.excepciones import (
+    DatosInvalidos,
+    EntidadNoEncontrada,
+    OperacionNoPermitida,
+    VersionNoVigente,
+)
 
 
 def consultar_membresia(identidad: dict, num: int) -> Membresia | None:
@@ -22,9 +28,9 @@ def consultar_membresia(identidad: dict, num: int) -> Membresia | None:
 
 def consultar_membresia_de_miembro(identidad: dict, num_miembro: int) -> Membresia | None:
     if not isinstance(identidad, dict):
-        raise PermissionError("Se requiere una identidad autenticada.")
+        raise OperacionNoPermitida("Se requiere una identidad autenticada.")
     if identidad.get("tipo") == "miembro" and identidad.get("num") != num_miembro:
-        raise PermissionError("No tiene permiso para consultar esta membresía.")
+        raise OperacionNoPermitida("No tiene permiso para consultar esta membresía.")
     membresia = bd.buscar_membresia_de_miembro(num_miembro)
     if membresia is not None:
         requiere_administrador_o_propietario(identidad, membresia)
@@ -34,43 +40,44 @@ def consultar_membresia_de_miembro(identidad: dict, num_miembro: int) -> Membres
 
 def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion:
     requiere_operador_tienda(identidad)
-    membresia = consultar_membresia(identidad, num_membresia)
-    if membresia is None:
-        raise ValueError("La membresía no existe.")
-    if membresia.estado == Membresia.Estado.CANCELADA:
-        raise ValueError("La membresía está cancelada y requiere una nueva contratación.")
+    with bd.transaccion():
+        membresia = consultar_membresia(identidad, num_membresia)
+        if membresia is None:
+            raise EntidadNoEncontrada("La membresía no existe.")
+        if membresia.estado == Membresia.Estado.CANCELADA:
+            raise OperacionNoPermitida("La membresía está cancelada y requiere una nueva contratación.")
 
-    version = bd.buscar_version_plan_por_num(num_version_plan)
-    if version is None:
-        raise ValueError("La versión de plan no existe.")
-    if not version.esta_vigente():
-        raise ValueError("La versión de plan no está vigente.")
-    if version.aplica_en not in (
-        TipoAplicacionPlan.RENOVACION,
-        TipoAplicacionPlan.AMBAS,
-    ):
-        raise ValueError("La versión de plan no permite renovaciones.")
+        version = bd.buscar_version_plan_por_num(num_version_plan)
+        if version is None:
+            raise EntidadNoEncontrada("La versión de plan no existe.")
+        if not version.esta_vigente():
+            raise VersionNoVigente("La versión de plan no está vigente.")
+        if version.aplica_en not in (
+            TipoAplicacionPlan.RENOVACION,
+            TipoAplicacionPlan.AMBAS,
+        ):
+            raise OperacionNoPermitida("La versión de plan no permite renovaciones.")
 
-    fecha_pago = date.today()
-    fecha_inicio = _obtener_inicio_renovacion(membresia, fecha_pago)
-    fecha_fin = _sumar_meses(fecha_inicio, version.plazo_meses) - timedelta(days=1)
-    monto_pagado = Decimal(str(version.precio))
+        fecha_pago = date.today()
+        fecha_inicio = _obtener_inicio_renovacion(membresia, fecha_pago)
+        fecha_fin = _sumar_meses(fecha_inicio, version.plazo_meses) - timedelta(days=1)
+        monto_pagado = Decimal(str(version.precio))
 
-    renovacion = Renovacion(
-        num=None,
-        fecha_pago=fecha_pago,
-        monto_pagado=monto_pagado,
-        fecha_inicio_periodo=fecha_inicio,
-        fecha_fin_periodo=fecha_fin,
-        membresia=membresia,
-        version_plan_comprado=version,
-    )
-    if fecha_inicio <= fecha_pago:
-        membresia.version_plan_actual = version
-        membresia.estado = Membresia.Estado.ACTIVA
-    bd.guardar_renovacion(renovacion)
-    bd.guardar_membresia(membresia)
-    return renovacion
+        renovacion = Renovacion(
+            num=None,
+            fecha_pago=fecha_pago,
+            monto_pagado=monto_pagado,
+            fecha_inicio_periodo=fecha_inicio,
+            fecha_fin_periodo=fecha_fin,
+            membresia=membresia,
+            version_plan_comprado=version,
+        )
+        if fecha_inicio <= fecha_pago:
+            membresia.version_plan_actual = version
+            membresia.estado = Membresia.Estado.ACTIVA
+        bd.guardar_renovacion(renovacion)
+        bd.guardar_membresia(membresia)
+        return renovacion
 
 
 def contratar_membresia(
@@ -79,42 +86,43 @@ def contratar_membresia(
     num_version_plan: int,
 ) -> Renovacion:
     requiere_operador_tienda(identidad)
-    miembro = bd.buscar_miembro_por_num(num_miembro)
-    if miembro is None:
-        raise ValueError("El miembro no existe.")
+    with bd.transaccion():
+        miembro = bd.buscar_miembro_por_num(num_miembro)
+        if miembro is None:
+            raise EntidadNoEncontrada("El miembro no existe.")
 
-    version = bd.buscar_version_plan_por_num(num_version_plan)
-    if version is None:
-        raise ValueError("La versión de plan no existe.")
-    if not version.esta_vigente():
-        raise ValueError("La versión de plan no está vigente.")
-    if version.aplica_en not in (TipoAplicacionPlan.CONTRATACION, TipoAplicacionPlan.AMBAS):
-        raise ValueError("La versión de plan no permite contrataciones.")
-    existente = bd.buscar_membresia_de_miembro(num_miembro)
-    if existente is not None:
-        actualizar_estado_membresia(existente)
-        if existente.estado != Membresia.Estado.CANCELADA:
-            raise ValueError("El miembro ya tiene una membresía no cancelada.")
+        version = bd.buscar_version_plan_por_num(num_version_plan)
+        if version is None:
+            raise EntidadNoEncontrada("La versión de plan no existe.")
+        if not version.esta_vigente():
+            raise VersionNoVigente("La versión de plan no está vigente.")
+        if version.aplica_en not in (TipoAplicacionPlan.CONTRATACION, TipoAplicacionPlan.AMBAS):
+            raise OperacionNoPermitida("La versión de plan no permite contrataciones.")
+        existente = bd.buscar_membresia_de_miembro(num_miembro)
+        if existente is not None:
+            actualizar_estado_membresia(existente)
+            if existente.estado != Membresia.Estado.CANCELADA:
+                raise OperacionNoPermitida("El miembro ya tiene una membresía no cancelada.")
 
-    membresia = Membresia(
-        num=None,
-        fecha_contratacion=date.today(),
-        estado=Membresia.Estado.ACTIVA,
-        miembro=miembro,
-        version_plan_actual=version,
-    )
-    bd.guardar_membresia(membresia)
-    renovacion = Renovacion(
-        num=None,
-        fecha_pago=date.today(),
-        monto_pagado=Decimal(str(version.precio)),
-        fecha_inicio_periodo=date.today(),
-        fecha_fin_periodo=_sumar_meses(date.today(), version.plazo_meses) - timedelta(days=1),
-        membresia=membresia,
-        version_plan_comprado=version,
-    )
-    bd.guardar_renovacion(renovacion)
-    return renovacion
+        membresia = Membresia(
+            num=None,
+            fecha_contratacion=date.today(),
+            estado=Membresia.Estado.ACTIVA,
+            miembro=miembro,
+            version_plan_actual=version,
+        )
+        bd.guardar_membresia(membresia)
+        renovacion = Renovacion(
+            num=None,
+            fecha_pago=date.today(),
+            monto_pagado=Decimal(str(version.precio)),
+            fecha_inicio_periodo=date.today(),
+            fecha_fin_periodo=_sumar_meses(date.today(), version.plazo_meses) - timedelta(days=1),
+            membresia=membresia,
+            version_plan_comprado=version,
+        )
+        bd.guardar_renovacion(renovacion)
+        return renovacion
 
 
 def cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia:
@@ -123,9 +131,9 @@ def cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia:
     requiere_administrador(identidad)
     membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
-        raise ValueError("La membresía no existe.")
+        raise EntidadNoEncontrada("La membresía no existe.")
     if membresia.estado == Membresia.Estado.CANCELADA:
-        raise ValueError("La membresía ya está cancelada.")
+        raise OperacionNoPermitida("La membresía ya está cancelada.")
 
     membresia.estado = Membresia.Estado.CANCELADA
     bd.guardar_membresia(membresia)
@@ -138,9 +146,9 @@ def suspender_membresia(identidad: dict, num_membresia: int) -> Membresia:
     requiere_administrador(identidad)
     membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
-        raise ValueError("La membresía no existe.")
+        raise EntidadNoEncontrada("La membresía no existe.")
     if membresia.estado == Membresia.Estado.CANCELADA:
-        raise ValueError("La membresía está cancelada.")
+        raise OperacionNoPermitida("La membresía está cancelada.")
     membresia.estado = Membresia.Estado.SUSPENDIDA
     bd.guardar_membresia(membresia)
     return membresia
@@ -157,10 +165,17 @@ def actualizar_estado_membresia(membresia: Membresia, fecha: date | None = None)
 
     fecha_inicio, fecha_final, version = periodo
     if fecha <= fecha_final:
+        cambio = False
         if membresia.estado == Membresia.Estado.SUSPENDIDA:
             membresia.estado = Membresia.Estado.ACTIVA
+            cambio = True
         if fecha >= fecha_inicio:
-            membresia.version_plan_actual = version
+            version_actual = membresia.version_plan_actual
+            if version_actual is None or version_actual.num != version.num:
+                membresia.version_plan_actual = version
+                cambio = True
+        if cambio:
+            bd.guardar_membresia(membresia)
         return membresia
 
     if fecha <= _sumar_meses(fecha_final + timedelta(days=1), 1) - timedelta(days=1):

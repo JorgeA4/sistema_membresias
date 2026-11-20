@@ -44,6 +44,7 @@ from servicios.usuario.servicio_usuario import (
 )
 from servicios.miembro.servicio_miembro import consultar_miembro
 from servicios.membresia.servicio_membresia import consultar_membresia
+from utilidades.excepciones import EntidadNoEncontrada
 
 _consola = Console()
 
@@ -271,7 +272,7 @@ def _consultar_miembro(identidad: dict) -> None:
     try:
         miembro = consultar_miembro(identidad, _numero(numero))
         if miembro is None:
-            raise ValueError("El miembro no existe.")
+            raise EntidadNoEncontrada("El miembro no existe.")
         mostrar_tabla(
             "Miembro",
             ["Número", "Nombre", "Correo", "Teléfono"],

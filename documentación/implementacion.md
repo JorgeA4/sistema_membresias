@@ -6,7 +6,8 @@ el modelo de datos actual sin agregar entidades ni atributos.
 
 ## Estado actual
 
-Implementado sobre la base de datos simulada:
+Implementado sobre la base de datos MariaDB mediante el adaptador de
+`base_de_datos/`:
 
 - Identidad neutral para la sesión y autorización por rol.
 - Login, logout y navegación de las interfaces de miembro y usuario.
@@ -175,8 +176,8 @@ Estas reglas se aplican en la implementación actual:
   ajuste negativo por el saldo total. La comprobación ocurre al consultar,
   comprar o intentar canjear; los puntos se mantienen disponibles durante toda
   la fecha calculada.
-- Una operación de caja se ejecuta atómicamente en la base simulada. Si falla
-  la venta, el canje o una transacción asociada, se restaura el estado previo.
+- Una operación de caja se ejecuta atómicamente en MariaDB. Si falla la venta,
+  el canje o una transacción asociada, se revierte toda la operación.
 - Las solicitudes de renovación, cancelación y canje del miembro son
   informativas; la operación efectiva se realiza en caja.
 - Rechazar eliminaciones de entidades con registros históricos relacionados;
@@ -184,17 +185,16 @@ Estas reglas se aplican en la implementación actual:
 - Resolver empates de fecha al calcular el saldo mediante un orden estable por
   número de transacción.
 - Validar unicidad de correos, nombres de planes y demás restricciones del DD
-  también en la base simulada.
+  también en MariaDB.
 - Mantener las operaciones que escriben varias entidades dentro de una única
-  operación atómica cuando la persistencia MariaDB esté disponible.
+  operación atómica.
 
 ## Trabajo pendiente
 
 - Añadir eliminación y finalización de todas las entidades desde la interfaz
   administrativa, respetando la trazabilidad histórica.
-- Implementar una transacción atómica para la operación de caja cuando se use
-  MariaDB. La base simulada ya revierte la venta y el canje si falla un paso.
-- Reemplazar la persistencia simulada por el adaptador MariaDB.
+- Revisar y completar la atomicidad de todas las operaciones que escriben
+  varias entidades, incluyendo contratación y renovación de membresías.
 - Crear excepciones de dominio específicas y sustituir gradualmente el uso
   directo de `ValueError` y `PermissionError`.
 - Completar pruebas automatizadas de servicios, estados, cashback, caja y
@@ -202,8 +202,8 @@ Estas reglas se aplican en la implementación actual:
 
 ## Errores de dominio
 
-Los servicios deberán utilizar excepciones específicas en lugar de devolver
-`True` o `False` ambiguos. Como contrato inicial se reservan estos nombres:
+Los servicios utilizan excepciones específicas en lugar de devolver `True` o
+`False` ambiguos. Se definen en `utilidades/excepciones.py`:
 
 ```text
 EntidadNoEncontrada
@@ -214,8 +214,12 @@ SaldoInsuficiente
 LimiteExcedido
 ```
 
-La jerarquía y los mensajes concretos se definirán al implementar el primer
-flujo vertical.
+`DatosInvalidos` conserva compatibilidad con `ValueError` y
+`OperacionNoPermitida` con `PermissionError`. `EntidadNoEncontrada` deriva de
+`DatosInvalidos`; `VersionNoVigente` también representa una validación de
+vigencia, mientras que `SaldoInsuficiente` y `LimiteExcedido` representan
+operaciones rechazadas por reglas de negocio. Los errores técnicos no
+expuestos por MariaDB se encapsulan como `ErrorPersistencia`.
 
 ## Fuera del alcance inicial
 
