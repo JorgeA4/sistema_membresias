@@ -145,6 +145,7 @@ actualizar_estado_membresia(membresia: Membresia, fecha: date | None = None) -> 
 registrar_compra(identidad: dict, datos: dict) -> Compra
 obtener_compras_de_membresia(identidad: dict, num_membresia: int) -> list[Compra]
 obtener_transacciones_de_miembro(identidad: dict, num_miembro: int) -> list[TransaccionPuntos]
+obtener_transacciones_de_membresia(identidad: dict, num_membresia: int) -> list[TransaccionPuntos]
 obtener_saldo_de_miembro(identidad: dict, num_miembro: int) -> int
 obtener_transacciones_cashback_de_membresia(identidad: dict, num_membresia: int) -> list[TransaccionCashback]
 obtener_saldo_cashback_de_membresia(identidad: dict, num_membresia: int) -> Decimal

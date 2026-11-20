@@ -709,7 +709,15 @@ def eliminar_version_recompensa(num):
 # Compras, renovaciones y transacciones
 def _consulta_compra(conexion, num):
     consulta = """
-        SELECT c.* FROM compra c WHERE c.num = %s
+        SELECT c.*,
+               (
+                   SELECT MIN(tp.fecha)
+                   FROM transaccion_puntos tp
+                   WHERE tp.compra = c.num
+                     AND tp.movimiento > 0
+                     AND tp.version_recompensa IS NULL
+               ) AS fecha
+        FROM compra c WHERE c.num = %s
     """
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (num,))

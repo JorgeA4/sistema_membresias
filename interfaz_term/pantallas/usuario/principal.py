@@ -13,6 +13,7 @@ from interfaz_term.estilos.tema import COLOR_ENCABEZADO, COLOR_TITULO
 from servicios.caja.servicio_caja import registrar_operacion_caja
 from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
+    obtener_transacciones_de_membresia,
     obtener_transacciones_de_miembro,
 )
 from servicios.ajuste.servicio_ajuste import ajustar_cashback, ajustar_puntos
@@ -111,7 +112,7 @@ def mostrar_menu_usuario(sesion: dict) -> tuple:
             [
                 ("Planes", PLANES),
                 ("Recompensas", RECOMPENSAS),
-                ("Actividad y ajustes", ACTIVIDAD_AJUSTES),
+                ("Ajustes", ACTIVIDAD_AJUSTES),
             ]
         )
     if _rol(sesion) == "ADM":
@@ -275,10 +276,11 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
             )],
         )
 
-    opciones = ["← Volver"]
+    opciones = ["Consultar actividad", "← Volver"] if membresia is not None else ["← Volver"]
     if _rol(sesion) in {"ADM", "GER"}:
         opciones = ["Modificar miembro"]
         if membresia is not None:
+            opciones.append("Consultar actividad")
             if membresia.estado.value == "ACTIVA":
                 opciones.append("Suspender membresía")
                 opciones.append("Cancelar membresía")
@@ -295,6 +297,9 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
         return "usuario", None
     if accion == "Reactivar membresía":
         _cambiar_estado_membresia_seleccionada(identidad, num_miembro, reactivar_membresia, "activa")
+        return "usuario", None
+    if accion == "Consultar actividad":
+        _mostrar_actividad_membresia(identidad, membresia.num)
         return "usuario", None
     if accion == "Cancelar membresía":
         _cambiar_estado_membresia_seleccionada(identidad, num_miembro, cancelar_membresia, "cancelada")
@@ -399,12 +404,10 @@ def mostrar_usuarios_administrativos(sesion: dict) -> tuple:
 
 def mostrar_actividad_ajustes(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
-    opciones = ["Consultar actividad", "Ajustar puntos", "Ajustar cashback", "← Volver"]
-    accion = questionary.select("Actividad y ajustes", choices=opciones).ask()
+    opciones = ["Ajustar puntos", "Ajustar cashback", "← Volver"]
+    accion = questionary.select("Ajustes", choices=opciones).ask()
     identidad = sesion["identidad"]
-    if accion == "Consultar actividad":
-        _consultar_actividad(identidad)
-    elif accion == "Ajustar puntos":
+    if accion == "Ajustar puntos":
         _ajustar_puntos(identidad)
     elif accion == "Ajustar cashback":
         _ajustar_cashback(identidad)
@@ -974,9 +977,10 @@ def _mostrar_actividad_usuario(identidad: dict, usuario) -> None:
     compras = obtener_actividad_usuario(identidad, usuario.num)
     mostrar_tabla(
         "Actividad del usuario",
-        ["Compra", "Membresía", "Miembro", "Monto base", "Descuento", "Cashback", "Monto final"],
+        ["Compra", "Fecha", "Membresía", "Miembro", "Monto base", "Descuento", "Cashback", "Monto final"],
         [(
             compra.num,
+            compra.fecha or "Sin fecha",
             compra.membresia.num,
             f"{compra.membresia.miembro.nombre} {compra.membresia.miembro.primer_apellido}",
             compra.monto_base,
@@ -1100,25 +1104,40 @@ def _consultar_actividad(identidad: dict) -> None:
         return
     try:
         num_membresia = _numero(numero)
-        compras = obtener_compras_de_membresia(identidad, num_membresia)
-        membresia = consultar_membresia(identidad, num_membresia)
-        transacciones = obtener_transacciones_de_miembro(identidad, membresia.miembro.num)
-        mostrar_tabla(
-            "Compras",
-            ["Número", "Fecha", "Monto base", "Monto final", "Usuario"],
-            [
-                (compra.num, "-", compra.monto_base, compra.monto_final, compra.usuario.num)
-                for compra in compras
-            ],
-        )
-        mostrar_tabla(
-            "Movimientos de puntos",
-            ["Número", "Movimiento", "Saldo", "Concepto"],
-            [(t.num, t.movimiento, t.saldo, t.concepto or "") for t in transacciones],
-        )
-        input("Presiona Enter para continuar.")
+        _mostrar_actividad_membresia(identidad, num_membresia)
     except (ValueError, PermissionError) as exc:
         error(str(exc))
+
+
+def _mostrar_actividad_membresia(identidad: dict, num_membresia: int) -> None:
+    compras = obtener_compras_de_membresia(identidad, num_membresia)
+    transacciones = obtener_transacciones_de_membresia(identidad, num_membresia)
+    mostrar_tabla(
+        "Compras de la membresía",
+        ["Número", "Fecha", "Monto base", "Descuento", "Cashback", "Monto final", "Usuario"],
+        [
+            (
+                compra.num,
+                compra.fecha or "Sin fecha",
+                compra.monto_base,
+                compra.descuento_nominal,
+                compra.cashback_aplicado,
+                compra.monto_final,
+                compra.usuario.num,
+            )
+            for compra in compras
+        ],
+    )
+    mostrar_tabla(
+        "Movimientos de puntos de la membresía",
+        ["Fecha", "Número", "Movimiento", "Saldo", "Concepto"],
+        [
+            (transaccion.fecha, transaccion.num, transaccion.movimiento,
+             transaccion.saldo, transaccion.concepto or "")
+            for transaccion in transacciones
+        ],
+    )
+    input("Presiona Enter para continuar.")
 
 
 def _numero(valor: str) -> int:

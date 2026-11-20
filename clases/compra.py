@@ -1,5 +1,5 @@
 class Compra:
-    def __init__(self, num, monto_base, porcentaje_descuento, descuento_nominal, cashback_aplicado, monto_final, membresia, usuario):
+    def __init__(self, num, monto_base, porcentaje_descuento, descuento_nominal, cashback_aplicado, monto_final, membresia, usuario, fecha=None):
         self.num = num
         self.monto_base = monto_base
         self.porcentaje_descuento = porcentaje_descuento
@@ -8,3 +8,4 @@ class Compra:
         self.monto_final = monto_final
         self.membresia = membresia
         self.usuario = usuario
+        self.fecha = fecha

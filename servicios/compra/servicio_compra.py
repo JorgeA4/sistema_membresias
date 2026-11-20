@@ -62,6 +62,7 @@ def registrar_compra(identidad: dict, datos: dict) -> Compra:
             monto_final=monto_final,
             membresia=membresia,
             usuario=usuario,
+            fecha=fecha,
         )
         bd.guardar_compra(compra)
 
@@ -91,6 +92,22 @@ def obtener_transacciones_de_miembro(identidad: dict, num_miembro: int) -> list[
     actualizar_vigencia_puntos(membresia)
     return sorted(
         bd.obtener_transacciones_de_miembro(num_miembro),
+        key=lambda transaccion: (transaccion.fecha, transaccion.num),
+    )
+
+
+def obtener_transacciones_de_membresia(
+    identidad: dict, num_membresia: int
+) -> list[TransaccionPuntos]:
+    membresia = _verificar_membresia(num_membresia)
+    requiere_administrador_o_propietario(identidad, membresia)
+    actualizar_vigencia_puntos(membresia)
+    return sorted(
+        (
+            transaccion for transaccion in bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+            if transaccion.membresia is not None
+            and transaccion.membresia.num == num_membresia
+        ),
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
     )
 

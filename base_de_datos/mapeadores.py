@@ -128,7 +128,7 @@ def mapear_compra(fila, membresia, usuario):
     return Compra(
         fila["num"], fila["monto_base"], fila["porcentaje_descuento"],
         fila["descuento_nominal"], fila["cashback_aplicado"],
-        fila["monto_final"], membresia, usuario,
+        fila["monto_final"], membresia, usuario, fila.get("fecha"),
     )
 
 

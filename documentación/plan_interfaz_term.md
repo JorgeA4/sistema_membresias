@@ -238,7 +238,7 @@ El menú principal se organizará en:
 - Planes.
 - Recompensas.
 - Usuarios y permisos.
-- Actividad y ajustes.
+- Ajustes.
 
 Cada categoría tendrá una pantalla propia y una opción `Volver`. Las opciones
 se mostrarán únicamente cuando correspondan al rol autenticado.
@@ -285,6 +285,10 @@ El menú se organizará en estas pantallas:
 - `Historial`: compras, puntos y canjes.
 - `Solicitudes en tienda`: renovación, cancelación y canje.
 - `Cerrar sesión`.
+
+La actividad de una membresía se consulta desde el detalle del miembro e
+incluye compras y movimientos de puntos con sus fechas. El menú administrativo
+`Ajustes` queda reservado para ajustes de puntos y cashback.
 
 Cada submenú tendrá una opción `Volver` y será gestionado por el orquestador
 de `ventana_inicio.py`.

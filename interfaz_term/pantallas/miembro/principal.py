@@ -21,7 +21,7 @@ from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
     obtener_fecha_vencimiento_puntos,
     obtener_saldo_de_miembro,
-    obtener_transacciones_de_miembro,
+    obtener_transacciones_de_membresia,
 )
 from servicios.membresia.servicio_membresia import consultar_membresia_de_miembro
 from servicios.miembro.servicio_miembro import consultar_miembro
@@ -229,18 +229,21 @@ def _mostrar_compras(identidad: dict) -> None:
     compras = obtener_compras_de_membresia(identidad, membresia.num)
     mostrar_tabla(
         "Historial de compras",
-        ["Número", "Monto base", "Descuento", "Monto final"],
-        [(c.num, c.monto_base, c.descuento_nominal, c.monto_final) for c in compras],
+        ["Número", "Fecha", "Monto base", "Descuento", "Monto final"],
+        [(c.num, c.fecha or "Sin fecha", c.monto_base, c.descuento_nominal, c.monto_final) for c in compras],
     )
     _pausa()
 
 
 def _mostrar_historial_puntos(identidad: dict) -> None:
-    transacciones = obtener_transacciones_de_miembro(identidad, identidad["num"])
+    membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
+    if membresia is None:
+        raise EntidadNoEncontrada("No tienes una membresía registrada.")
+    transacciones = obtener_transacciones_de_membresia(identidad, membresia.num)
     mostrar_tabla(
         "Historial de puntos",
-        ["Número", "Movimiento", "Saldo", "Concepto"],
-        [(t.num, t.movimiento, t.saldo, t.concepto or "") for t in transacciones],
+        ["Fecha", "Número", "Movimiento", "Saldo", "Concepto"],
+        [(t.fecha, t.num, t.movimiento, t.saldo, t.concepto or "") for t in transacciones],
     )
     _pausa()
 
@@ -252,9 +255,9 @@ def _mostrar_historial_canjes(identidad: dict) -> None:
     canjes = obtener_historial_canjes(identidad, membresia.num)
     mostrar_tabla(
         "Historial de canjes",
-        ["Número", "Movimiento", "Saldo", "Recompensa"],
+        ["Fecha", "Número", "Movimiento", "Saldo", "Recompensa"],
         [
-            (t.num, t.movimiento, t.saldo, t.version_recompensa.recompensa.nombre)
+            (t.fecha, t.num, t.movimiento, t.saldo, t.version_recompensa.recompensa.nombre)
             for t in canjes
         ],
     )
