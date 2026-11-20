@@ -14,7 +14,15 @@ def requiere_administrador(identidad: dict) -> None:
 def requiere_operador_compra(identidad: dict) -> Usuario:
     usuario = _obtener_usuario(identidad)
     _verificar_usuario(usuario)
-    if not _tiene_rol(usuario, "ADM", "administrador", "CAJ", "cajero"):
+    if not _tiene_rol(
+        usuario,
+        "ADM",
+        "administrador",
+        "CAJ",
+        "cajero",
+        "GER",
+        "gerente de sucursal",
+    ):
         raise OperacionNoPermitida("El usuario no puede registrar compras.")
     return usuario
 
@@ -31,7 +39,7 @@ def requiere_administrador_o_propietario(
     if not isinstance(identidad, dict):
         raise OperacionNoPermitida("Se requiere una identidad autenticada.")
     if identidad.get("tipo") == "usuario":
-        requiere_administrador(identidad)
+        requiere_administrador_o_gerente(identidad)
         return
 
     if identidad.get("tipo") == "miembro":
@@ -40,6 +48,23 @@ def requiere_administrador_o_propietario(
             return
 
     raise OperacionNoPermitida("No tiene permiso para operar sobre esta membresía.")
+
+
+def requiere_administrador_o_gerente(identidad: dict) -> Usuario:
+    """Autoriza consultas y supervisión de Administrador o Gerente."""
+    usuario = _obtener_usuario(identidad)
+    _verificar_usuario(usuario)
+    if not _tiene_rol(
+        usuario,
+        "ADM",
+        "administrador",
+        "GER",
+        "gerente de sucursal",
+    ):
+        raise OperacionNoPermitida(
+            "Se requiere el rol Administrador o Gerente de Sucursal."
+        )
+    return usuario
 
 
 def _verificar_usuario(usuario: Usuario) -> None:

@@ -7,6 +7,7 @@ from clases.membresia import Membresia
 from clases.renovacion import Renovacion
 from clases.version_plan import TipoAplicacionPlan, VersionPlan
 from servicios.autorizacion.servicio_autorizacion import (
+    requiere_administrador_o_gerente,
     requiere_operador_tienda,
     requiere_administrador_o_propietario,
 )
@@ -126,9 +127,7 @@ def contratar_membresia(
 
 
 def cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia:
-    from servicios.autorizacion.servicio_autorizacion import requiere_administrador
-
-    requiere_administrador(identidad)
+    requiere_administrador_o_gerente(identidad)
     membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
         raise EntidadNoEncontrada("La membresía no existe.")
@@ -141,9 +140,7 @@ def cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia:
 
 
 def suspender_membresia(identidad: dict, num_membresia: int) -> Membresia:
-    from servicios.autorizacion.servicio_autorizacion import requiere_administrador
-
-    requiere_administrador(identidad)
+    requiere_administrador_o_gerente(identidad)
     membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
         raise EntidadNoEncontrada("La membresía no existe.")

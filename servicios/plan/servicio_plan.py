@@ -4,7 +4,10 @@ from decimal import Decimal, InvalidOperation
 import base_de_datos.consultas as bd
 from clases.plan import Plan
 from clases.version_plan import TipoAplicacionPlan, VersionPlan
-from servicios.autorizacion.servicio_autorizacion import requiere_administrador
+from servicios.autorizacion.servicio_autorizacion import (
+    requiere_administrador,
+    requiere_administrador_o_gerente,
+)
 from utilidades.excepciones import (
     DatosInvalidos,
     EntidadNoEncontrada,
@@ -35,7 +38,7 @@ def consultar_plan(codigo: str) -> Plan | None:
 
 
 def obtener_planes(identidad: dict) -> list[Plan]:
-    requiere_administrador(identidad)
+    requiere_administrador_o_gerente(identidad)
     return bd.obtener_todos_los_planes()
 
 

@@ -4,6 +4,7 @@ import base_de_datos.consultas as bd
 from clases.miembro import Miembro
 from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador,
+    requiere_administrador_o_gerente,
     requiere_operador_tienda,
 )
 from utilidades.excepciones import (
@@ -53,7 +54,7 @@ def obtener_miembros() -> list[Miembro]:
 
 
 def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
-    requiere_administrador(identidad)
+    requiere_administrador_o_gerente(identidad)
     miembro = consultar_miembro(identidad, num)
     if miembro is None:
         raise EntidadNoEncontrada("El miembro no existe.")

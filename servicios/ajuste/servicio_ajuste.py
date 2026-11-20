@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 import base_de_datos.consultas as bd
 from clases.transaccion_cashback import TransaccionCashback
 from clases.transaccion_puntos import TransaccionPuntos
-from servicios.autorizacion.servicio_autorizacion import requiere_administrador
+from servicios.autorizacion.servicio_autorizacion import requiere_administrador_o_gerente
 from utilidades.excepciones import (
     DatosInvalidos,
     EntidadNoEncontrada,
@@ -13,7 +13,7 @@ from utilidades.excepciones import (
 
 
 def ajustar_puntos(identidad: dict, num_membresia: int, movimiento: int, concepto: str):
-    requiere_administrador(identidad)
+    requiere_administrador_o_gerente(identidad)
     membresia = _obtener_membresia(num_membresia)
     if not isinstance(movimiento, int) or isinstance(movimiento, bool) or movimiento == 0:
         raise DatosInvalidos("El ajuste de puntos debe ser un entero distinto de cero.")
@@ -38,7 +38,7 @@ def ajustar_puntos(identidad: dict, num_membresia: int, movimiento: int, concept
 
 
 def ajustar_cashback(identidad: dict, num_membresia: int, movimiento, concepto: str):
-    requiere_administrador(identidad)
+    requiere_administrador_o_gerente(identidad)
     membresia = _obtener_membresia(num_membresia)
     try:
         movimiento_decimal = Decimal(str(movimiento)).quantize(Decimal("0.01"))

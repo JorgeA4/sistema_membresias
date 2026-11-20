@@ -44,114 +44,211 @@ from servicios.usuario.servicio_usuario import (
 )
 from servicios.miembro.servicio_miembro import consultar_miembro
 from servicios.membresia.servicio_membresia import consultar_membresia
+from interfaz_term.navegacion import (
+    ACTIVIDAD_AJUSTES,
+    CERRAR_SESION,
+    MIEMBROS_MEMBRESIAS,
+    OPERACIONES_TIENDA,
+    PLANES,
+    RECOMPENSAS,
+    USUARIOS_ADMINISTRATIVOS,
+    VOLVER,
+)
 from utilidades.excepciones import EntidadNoEncontrada
 
 _consola = Console()
 
 
-def mostrar_usuario(sesion: dict) -> tuple:
+def _mostrar_encabezado(sesion: dict) -> None:
     identidad = sesion.get("identidad") or {}
-    rol = identidad.get("rol", "")
     nombre_rol = identidad.get("rol_nombre", "Usuario")
     nombre = identidad.get("nombre", "")
-
-    while True:
-        _consola.clear()
-        _consola.print(
-            Panel(
-                f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}] — [dim]Interfaz administrativa[/dim]\n"
-                f"Usuario: {nombre} | Rol: [{COLOR_ENCABEZADO}]{nombre_rol}[/{COLOR_ENCABEZADO}]",
-                border_style=COLOR_ENCABEZADO,
-                box=rich_box.ROUNDED,
-                padding=(0, 4),
-            )
+    _consola.clear()
+    _consola.print(
+        Panel(
+            f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}] — [dim]Interfaz administrativa[/dim]\n"
+            f"Usuario: {nombre} | Rol: [{COLOR_ENCABEZADO}]{nombre_rol}[/{COLOR_ENCABEZADO}]",
+            border_style=COLOR_ENCABEZADO,
+            box=rich_box.ROUNDED,
+            padding=(0, 4),
         )
+    )
 
-        opciones = [
-            "Registrar venta",
-            "Registrar miembro",
-            "Contratar membresía",
-            "Renovar membresía",
-            "Cambiar plan",
-            "Consultar miembro",
-        ]
-        if rol == "ADM":
-            opciones.extend(
-                [
-                    "Consultar planes",
-                    "Crear plan",
-                    "Modificar miembro",
-                    "Modificar plan",
-                    "Crear versión de plan",
-                    "Finalizar versión de plan",
-                    "Consultar recompensas",
-                    "Crear recompensa",
-                    "Modificar recompensa",
-                    "Crear versión de recompensa",
-                    "Registrar usuario administrativo",
-                    "Modificar usuario administrativo",
-                    "Consultar usuarios",
-                    "Consultar actividad",
-                    "Suspender membresía",
-                    "Cancelar membresía",
-                    "Ajustar puntos",
-                    "Ajustar cashback",
-                ]
-            )
-        opciones.append("Cerrar sesión")
 
-        accion = questionary.select("¿Qué deseas hacer?", choices=opciones).ask()
-        if accion == "Registrar venta":
-            _registrar_venta(identidad)
-        elif accion == "Registrar miembro":
-            _registrar_nuevo_miembro(identidad)
-        elif accion == "Modificar miembro":
-            _modificar_miembro(identidad)
-        elif accion == "Contratar membresía":
-            _contratar(identidad)
-        elif accion == "Renovar membresía":
-            _renovar(identidad)
-        elif accion == "Cambiar plan":
-            _renovar(identidad, titulo="Cambiar plan mediante renovación")
-        elif accion == "Consultar miembro":
-            _consultar_miembro(identidad)
-        elif accion == "Consultar planes":
-            _consultar_planes(identidad)
-        elif accion == "Crear plan":
-            _crear_plan(identidad)
-        elif accion == "Modificar plan":
-            _modificar_plan(identidad)
-        elif accion == "Crear versión de plan":
-            _crear_version_plan(identidad)
-        elif accion == "Finalizar versión de plan":
-            _finalizar_version_plan(identidad)
-        elif accion == "Consultar recompensas":
-            _consultar_recompensas(identidad)
-        elif accion == "Crear recompensa":
-            _crear_recompensa(identidad)
-        elif accion == "Modificar recompensa":
-            _modificar_recompensa(identidad)
-        elif accion == "Crear versión de recompensa":
-            _crear_version_recompensa(identidad)
-        elif accion == "Registrar usuario administrativo":
-            _registrar_usuario(identidad)
-        elif accion == "Modificar usuario administrativo":
-            _modificar_usuario(identidad)
-        elif accion == "Consultar usuarios":
-            _consultar_usuarios(identidad)
-        elif accion == "Consultar actividad":
-            _consultar_actividad(identidad)
-        elif accion == "Suspender membresía":
-            _cambiar_estado_membresia(identidad, suspender_membresia, "suspendida")
-        elif accion == "Cancelar membresía":
-            _cambiar_estado_membresia(identidad, cancelar_membresia, "cancelada")
-        elif accion == "Ajustar puntos":
-            _ajustar_puntos(identidad)
-        elif accion == "Ajustar cashback":
-            _ajustar_cashback(identidad)
-        else:
-            sesion["identidad"] = None
-            return None, 1
+def _rol(sesion: dict) -> str:
+    return (sesion.get("identidad") or {}).get("rol", "").upper()
+
+
+def mostrar_menu_usuario(sesion: dict) -> tuple:
+    opciones = [
+        ("Operaciones de tienda", OPERACIONES_TIENDA),
+        ("Miembros y membresías", MIEMBROS_MEMBRESIAS),
+    ]
+    if _rol(sesion) in {"ADM", "GER"}:
+        opciones.extend(
+            [
+                ("Planes", PLANES),
+                ("Recompensas", RECOMPENSAS),
+                ("Actividad y ajustes", ACTIVIDAD_AJUSTES),
+            ]
+        )
+    if _rol(sesion) == "ADM":
+        opciones.append(("Usuarios administrativos", USUARIOS_ADMINISTRATIVOS))
+    opciones.append(("Cerrar sesión", CERRAR_SESION))
+    _mostrar_encabezado(sesion)
+    seleccion = questionary.select(
+        "¿Qué deseas hacer?",
+        choices=[opcion[0] for opcion in opciones],
+    ).ask()
+    for nombre, pantalla in opciones:
+        if seleccion == nombre:
+            return None if pantalla == CERRAR_SESION else "usuario", pantalla
+    return "usuario", CERRAR_SESION
+
+
+def mostrar_operaciones_tienda(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    opciones = [
+        "Registrar venta",
+        "Registrar miembro",
+        "Contratar membresía",
+        "Renovar membresía",
+        "Cambiar plan",
+        "← Volver",
+    ]
+    accion = questionary.select("Operaciones de tienda", choices=opciones).ask()
+    identidad = sesion["identidad"]
+    if accion == "Registrar venta":
+        _registrar_venta(identidad)
+    elif accion == "Registrar miembro":
+        _registrar_nuevo_miembro(identidad)
+    elif accion == "Contratar membresía":
+        _contratar(identidad)
+    elif accion == "Renovar membresía":
+        _renovar(identidad)
+    elif accion == "Cambiar plan":
+        _renovar(identidad, titulo="Cambiar plan mediante renovación")
+    elif accion == "← Volver":
+        return "usuario", VOLVER
+    return "usuario", None
+
+
+def mostrar_miembros_membresias(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    opciones = ["Consultar miembro"]
+    if _rol(sesion) in {"ADM", "GER"}:
+        opciones.extend(
+            ["Modificar miembro", "Suspender membresía", "Cancelar membresía"]
+        )
+    opciones.append("← Volver")
+    accion = questionary.select("Miembros y membresías", choices=opciones).ask()
+    identidad = sesion["identidad"]
+    if accion == "Consultar miembro":
+        _consultar_miembro(identidad)
+    elif accion == "Modificar miembro":
+        _modificar_miembro(identidad)
+    elif accion == "Suspender membresía":
+        _cambiar_estado_membresia(identidad, suspender_membresia, "suspendida")
+    elif accion == "Cancelar membresía":
+        _cambiar_estado_membresia(identidad, cancelar_membresia, "cancelada")
+    elif accion == "← Volver":
+        return "usuario", VOLVER
+    return "usuario", None
+
+
+def mostrar_planes(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    opciones = ["Consultar planes"]
+    if _rol(sesion) == "ADM":
+        opciones.extend(
+            [
+                "Crear plan",
+                "Modificar plan",
+                "Crear versión de plan",
+                "Finalizar versión de plan",
+            ]
+        )
+    opciones.append("← Volver")
+    accion = questionary.select("Planes", choices=opciones).ask()
+    identidad = sesion["identidad"]
+    if accion == "Consultar planes":
+        _consultar_planes(identidad)
+    elif accion == "Crear plan":
+        _crear_plan(identidad)
+    elif accion == "Modificar plan":
+        _modificar_plan(identidad)
+    elif accion == "Crear versión de plan":
+        _crear_version_plan(identidad)
+    elif accion == "Finalizar versión de plan":
+        _finalizar_version_plan(identidad)
+    elif accion == "← Volver":
+        return "usuario", VOLVER
+    return "usuario", None
+
+
+def mostrar_recompensas(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    opciones = ["Consultar recompensas"]
+    if _rol(sesion) == "ADM":
+        opciones.extend(
+            ["Crear recompensa", "Modificar recompensa", "Crear versión de recompensa"]
+        )
+    opciones.append("← Volver")
+    accion = questionary.select("Recompensas", choices=opciones).ask()
+    identidad = sesion["identidad"]
+    if accion == "Consultar recompensas":
+        _consultar_recompensas(identidad)
+    elif accion == "Crear recompensa":
+        _crear_recompensa(identidad)
+    elif accion == "Modificar recompensa":
+        _modificar_recompensa(identidad)
+    elif accion == "Crear versión de recompensa":
+        _crear_version_recompensa(identidad)
+    elif accion == "← Volver":
+        return "usuario", VOLVER
+    return "usuario", None
+
+
+def mostrar_usuarios_administrativos(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    opciones = [
+        "Registrar usuario administrativo",
+        "Modificar usuario administrativo",
+        "Consultar usuarios",
+        "← Volver",
+    ]
+    accion = questionary.select("Usuarios administrativos", choices=opciones).ask()
+    identidad = sesion["identidad"]
+    if accion == "Registrar usuario administrativo":
+        _registrar_usuario(identidad)
+    elif accion == "Modificar usuario administrativo":
+        _modificar_usuario(identidad)
+    elif accion == "Consultar usuarios":
+        _consultar_usuarios(identidad)
+    elif accion == "← Volver":
+        return "usuario", VOLVER
+    return "usuario", None
+
+
+def mostrar_actividad_ajustes(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    opciones = ["Consultar actividad", "Ajustar puntos", "Ajustar cashback", "← Volver"]
+    accion = questionary.select("Actividad y ajustes", choices=opciones).ask()
+    identidad = sesion["identidad"]
+    if accion == "Consultar actividad":
+        _consultar_actividad(identidad)
+    elif accion == "Ajustar puntos":
+        _ajustar_puntos(identidad)
+    elif accion == "Ajustar cashback":
+        _ajustar_cashback(identidad)
+    elif accion == "← Volver":
+        return "usuario", VOLVER
+    return "usuario", None
+
+
+def mostrar_usuario(sesion: dict) -> tuple:
+    """Compatibilidad para llamadas existentes al menú administrativo."""
+    return mostrar_menu_usuario(sesion)
 
 
 def _registrar_venta(identidad: dict) -> None:

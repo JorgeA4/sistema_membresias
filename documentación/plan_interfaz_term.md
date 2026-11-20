@@ -219,26 +219,29 @@ Debe permitir:
 - Redirigir según el rol.
 - Mostrar únicamente las opciones permitidas según el rol.
 
-Roles contemplados: `Administrador`, `Cajero`, `Miembro`.
+Roles contemplados: `Administrador`, `Cajero`, `Gerente de Sucursal`, `Miembro`.
 
-### 5.2 Usuarios (Administrador y Cajero)
+### 5.2 Usuarios administrativos
 
-Cajero y Administrador comparten la interfaz en `usuario/`. La diferenciación
-de opciones visibles según rol se implementa en la Fase 3.
+Administrador, Cajero y Gerente de Sucursal comparten la interfaz en
+`usuario/`. La diferenciación de opciones visibles se realiza por categoría:
 
-La primera versión incluirá:
+- `Administrador`: acceso completo.
+- `Cajero`: operaciones de tienda y consulta de miembros y membresías.
+- `Gerente de Sucursal`: operaciones de tienda, miembros y membresías,
+  actividad y ajustes; solo consulta de planes y recompensas.
 
-- Menú principal con opciones numeradas.
-- Miembros (tabla + alta + consulta + modificación).
+El menú principal se organizará en:
+
+- Operaciones de tienda.
+- Miembros y membresías.
 - Planes.
-- Versiones de planes.
 - Recompensas.
-- Versiones de recompensas.
-- Compras.
-- Actividad.
-- Usuarios y roles, si el tiempo lo permite.
+- Usuarios administrativos.
+- Actividad y ajustes.
 
-El cajero verá únicamente compras; el administrador verá todo.
+Cada categoría tendrá una pantalla propia y una opción `Volver`. Las opciones
+se mostrarán únicamente cuando correspondan al rol autenticado.
 
 ### 5.3 Miembro
 

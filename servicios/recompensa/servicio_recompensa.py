@@ -7,6 +7,7 @@ from clases.transaccion_puntos import TransaccionPuntos
 from clases.version_recompensa import VersionRecompensa
 from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador,
+    requiere_administrador_o_gerente,
     requiere_administrador_o_propietario,
     requiere_operador_tienda,
 )
@@ -42,7 +43,7 @@ def consultar_recompensa(codigo: str) -> Recompensa | None:
 
 
 def obtener_recompensas(identidad: dict) -> list[Recompensa]:
-    requiere_administrador(identidad)
+    requiere_administrador_o_gerente(identidad)
     return bd.obtener_todas_las_recompensas()
 
 

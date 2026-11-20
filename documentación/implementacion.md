@@ -34,10 +34,13 @@ interfaz no almacena entidades del dominio.
 `Administrador` puede gestionar la configuración, los registros, las
 operaciones de tienda, los informes y los ajustes. `Cajero` puede registrar
 miembros y realizar operaciones presenciales: ventas, cashback, canjes,
-contrataciones, renovaciones y cambios de plan. No puede configurar el sistema,
-administrar usuarios, realizar ajustes ni consultar informes administrativos.
-Las operaciones de consulta de un miembro validan que sea propietario de la
-membresía indicada.
+contrataciones, renovaciones y cambios de plan. `Gerente de Sucursal` tiene
+acceso completo a las operaciones de tienda, miembros y membresías, actividad
+y ajustes; solo puede consultar planes y recompensas, y no puede administrar
+usuarios ni configurar planes o recompensas. `Cajero` no puede configurar el
+sistema, administrar usuarios, realizar ajustes ni consultar informes
+administrativos. Las operaciones de consulta de un miembro validan que sea
+propietario cuando la identidad corresponde a un miembro.
 
 Las funciones de consulta devuelven una entidad, una lista de entidades o
 `None` cuando no existe el registro solicitado. Las operaciones de escritura
