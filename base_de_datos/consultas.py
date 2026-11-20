@@ -289,6 +289,7 @@ def buscar_miembros(filtros):
             ORDER BY (m2.estado = 'CANCELADA'), m2.num DESC
             LIMIT 1
         )
+        LEFT JOIN version_plan vp ON vp.num = me.version_plan_actual
         WHERE 1 = 1
     """
     parametros = []
@@ -307,7 +308,10 @@ def buscar_miembros(filtros):
     if filtros.get("estado"):
         consulta += " AND me.estado = %s"
         parametros.append(filtros["estado"])
-    if filtros.get("version_plan_actual") is not None:
+    if filtros.get("plan"):
+        consulta += " AND vp.plan = %s"
+        parametros.append(filtros["plan"])
+    elif filtros.get("version_plan_actual"):
         consulta += " AND me.version_plan_actual = %s"
         parametros.append(filtros["version_plan_actual"])
     consulta += " ORDER BY mi.num"

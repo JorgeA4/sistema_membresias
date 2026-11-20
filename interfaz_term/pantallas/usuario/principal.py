@@ -19,6 +19,7 @@ from servicios.ajuste.servicio_ajuste import ajustar_cashback, ajustar_puntos
 from servicios.membresia.servicio_membresia import (
     contratar_membresia,
     cancelar_membresia,
+    reactivar_membresia,
     renovar_membresia,
     suspender_membresia,
 )
@@ -190,7 +191,7 @@ def _filtrar_miembros(sesion: dict) -> tuple:
             {"clave": "correo", "etiqueta": "Correo", "requerido": False},
             {"clave": "telefono", "etiqueta": "Teléfono", "requerido": False},
             {"clave": "estado", "etiqueta": "Estado (ACTIVA, SUSPENDIDA o CANCELADA)", "requerido": False},
-            {"clave": "version_plan_actual", "etiqueta": "Plan activo", "requerido": False},
+            {"clave": "plan", "etiqueta": "Código del plan activo", "requerido": False},
         ]
     )
     if datos is None:
@@ -198,8 +199,6 @@ def _filtrar_miembros(sesion: dict) -> tuple:
     try:
         if datos["estado"]:
             datos["estado"] = datos["estado"].upper()
-        if datos["version_plan_actual"]:
-            datos["version_plan_actual"] = _numero(datos["version_plan_actual"])
         miembros = buscar_miembros(sesion["identidad"], datos)
         if not miembros:
             error("No se encontraron miembros con esos filtros.")
@@ -275,14 +274,17 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
             )],
         )
 
-    opciones = ["Volver a resultados", "← Volver"]
+    opciones = ["← Volver"]
     if _rol(sesion) in {"ADM", "GER"}:
-        opciones = [
-            "Modificar miembro",
-            "Suspender membresía",
-            "Cancelar membresía",
-            *opciones,
-        ]
+        opciones = ["Modificar miembro"]
+        if membresia is not None:
+            if membresia.estado.value == "ACTIVA":
+                opciones.append("Suspender membresía")
+                opciones.append("Cancelar membresía")
+            elif membresia.estado.value == "SUSPENDIDA":
+                opciones.append("Reactivar membresía")
+                opciones.append("Cancelar membresía")
+        opciones.append("← Volver")
     accion = questionary.select("¿Qué deseas hacer?", choices=opciones).ask()
     if accion == "Modificar miembro":
         _modificar_miembro_seleccionado(identidad, num_miembro)
@@ -290,22 +292,28 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
     if accion == "Suspender membresía":
         _cambiar_estado_membresia_seleccionada(identidad, num_miembro, suspender_membresia, "suspendida")
         return "usuario", None
+    if accion == "Reactivar membresía":
+        _cambiar_estado_membresia_seleccionada(identidad, num_miembro, reactivar_membresia, "activa")
+        return "usuario", None
     if accion == "Cancelar membresía":
         _cambiar_estado_membresia_seleccionada(identidad, num_miembro, cancelar_membresia, "cancelada")
         return "usuario", None
-    if accion == "Volver a resultados":
-        return "usuario", RESULTADOS_MIEMBROS
     return "usuario", VOLVER
 
 
 def _modificar_miembro_seleccionado(identidad: dict, num_miembro: int) -> None:
+    miembro = consultar_miembro(identidad, num_miembro)
+    if miembro is None:
+        error("El miembro no existe.")
+        return
     datos = pedir_formulario(
         [
-            {"clave": "nombre", "etiqueta": "Nombre"},
-            {"clave": "primer_apellido", "etiqueta": "Primer apellido"},
-            {"clave": "segundo_apellido", "etiqueta": "Segundo apellido", "requerido": False},
-            {"clave": "telefono", "etiqueta": "Teléfono"},
-            {"clave": "correo", "etiqueta": "Correo electrónico"},
+            {"clave": "nombre", "etiqueta": "Nombre actual", "valor_inicial": miembro.nombre},
+            {"clave": "primer_apellido", "etiqueta": "Primer apellido actual", "valor_inicial": miembro.primer_apellido},
+            {"clave": "segundo_apellido", "etiqueta": "Segundo apellido actual", "requerido": False,
+             "valor_inicial": miembro.segundo_apellido or ""},
+            {"clave": "telefono", "etiqueta": "Teléfono actual", "valor_inicial": miembro.telefono},
+            {"clave": "correo", "etiqueta": "Correo actual", "valor_inicial": miembro.correo},
         ]
     )
     if datos is None:
@@ -922,6 +930,10 @@ def _navegar_usuarios(identidad: dict) -> None:
 
 def _mostrar_detalle_usuario(identidad: dict, usuario) -> None:
     while True:
+        _mostrar_encabezado({"identidad": {
+            "nombre": usuario.nombre,
+            "rol_nombre": usuario.rol.nombre,
+        }})
         accion = questionary.select(
             f"Usuario {usuario.num} - {usuario.nombre} {usuario.primer_apellido}",
             choices=["Consultar información", "Modificar", "← Volver"],
@@ -1115,6 +1127,7 @@ def _navegar_planes(identidad: dict, rol: str) -> None:
 
 def _mostrar_detalle_plan(identidad: dict, plan, rol: str) -> None:
     while True:
+        _mostrar_encabezado({"identidad": identidad})
         _mostrar_condiciones_plan(plan.codigo)
         opciones = ["Historial de condiciones", "Promociones"]
         if rol == "ADM":
@@ -1302,7 +1315,14 @@ def _editar_fecha_promocion(identidad: dict, promocion) -> None:
 
 
 def _pedir_condiciones(titulo: str, incluye_aplica: bool, anterior=None) -> dict | None:
+    from datetime import date, timedelta
+
     def valor(nombre, defecto=""):
+        if anterior is not None and nombre == "fecha_inicio":
+            return max(date.today(), anterior.fecha_inicio + timedelta(days=1))
+        if anterior is not None and nombre == "fecha_final":
+            inicio = max(date.today(), anterior.fecha_inicio + timedelta(days=1))
+            return max(anterior.fecha_final, inicio)
         return getattr(anterior, nombre, defecto) if anterior is not None else defecto
 
     campos = [
@@ -1357,6 +1377,7 @@ def _navegar_recompensas(identidad: dict, rol: str) -> None:
 
 def _mostrar_detalle_recompensa(identidad: dict, recompensa, rol: str) -> None:
     while True:
+        _mostrar_encabezado({"identidad": identidad})
         condiciones = obtener_versiones_de_recompensa(recompensa.codigo)
         vigentes = [condicion for condicion in condiciones if condicion.esta_vigente()]
         actual = max(vigentes, key=lambda condicion: (condicion.fecha_inicio, condicion.num), default=None)
@@ -1499,11 +1520,14 @@ def _reactivar_recompensa(identidad: dict, recompensa, condiciones) -> None:
 def _pedir_condiciones_recompensa(anterior=None, reactivacion=False) -> dict | None:
     from datetime import date
 
-    inicio = date.today() if reactivacion else getattr(anterior, "fecha_inicio", "")
-    final = (
-        max(getattr(anterior, "fecha_final", date.today()), date.today())
-        if reactivacion else getattr(anterior, "fecha_final", "")
-    )
+    if reactivacion:
+        inicio = date.today()
+    elif anterior is not None:
+        from datetime import timedelta
+        inicio = max(date.today(), anterior.fecha_inicio + timedelta(days=1))
+    else:
+        inicio = ""
+    final = max(getattr(anterior, "fecha_final", date.today()), inicio or date.today()) if anterior is not None else ""
     campos = [
         {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (AAAA-MM-DD)", "valor_inicial": inicio},
         {"clave": "fecha_final", "etiqueta": "Fecha final (AAAA-MM-DD)", "valor_inicial": final},

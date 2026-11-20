@@ -154,6 +154,23 @@ def suspender_membresia(identidad: dict, num_membresia: int) -> Membresia:
     return membresia
 
 
+def reactivar_membresia(identidad: dict, num_membresia: int) -> Membresia:
+    requiere_administrador_o_gerente(identidad)
+    membresia = consultar_membresia(identidad, num_membresia)
+    if membresia is None:
+        raise EntidadNoEncontrada("La membresía no existe.")
+    if membresia.estado == Membresia.Estado.CANCELADA:
+        raise OperacionNoPermitida("La membresía está cancelada y no puede reactivarse.")
+    if membresia.estado != Membresia.Estado.SUSPENDIDA:
+        raise OperacionNoPermitida("La membresía no está suspendida.")
+    periodo = _obtener_periodo_actual(membresia, date.today())
+    if periodo is None or date.today() > periodo[1]:
+        raise OperacionNoPermitida("El periodo de la membresía ya terminó; debe renovarse.")
+    membresia.estado = Membresia.Estado.ACTIVA
+    bd.guardar_membresia(membresia)
+    return membresia
+
+
 def actualizar_estado_membresia(membresia: Membresia, fecha: date | None = None) -> Membresia:
     fecha = fecha or date.today()
     if membresia.estado == Membresia.Estado.CANCELADA:
@@ -166,9 +183,6 @@ def actualizar_estado_membresia(membresia: Membresia, fecha: date | None = None)
     fecha_inicio, fecha_final, version = periodo
     if fecha <= fecha_final:
         cambio = False
-        if membresia.estado == Membresia.Estado.SUSPENDIDA:
-            membresia.estado = Membresia.Estado.ACTIVA
-            cambio = True
         if fecha >= fecha_inicio:
             version_actual = membresia.version_plan_actual
             if version_actual is None or version_actual.num != version.num:

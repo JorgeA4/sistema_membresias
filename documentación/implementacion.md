@@ -134,6 +134,7 @@ renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) ->
 contratar_membresia(identidad: dict, num_miembro: int, num_version_plan: int) -> Renovacion
 cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia
 suspender_membresia(identidad: dict, num_membresia: int) -> Membresia
+reactivar_membresia(identidad: dict, num_membresia: int) -> Membresia
 actualizar_estado_membresia(membresia: Membresia, fecha: date | None = None) -> Membresia
 ```
 
