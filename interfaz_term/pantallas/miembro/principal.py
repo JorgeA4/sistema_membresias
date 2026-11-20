@@ -9,6 +9,14 @@ import questionary
 from interfaz_term.componentes.mensajes import error, informacion
 from interfaz_term.componentes.tabla import mostrar_tabla
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO, COLOR_TITULO
+from interfaz_term.navegacion import (
+    BENEFICIOS,
+    CERRAR_SESION,
+    HISTORIAL,
+    MI_CUENTA,
+    SOLICITUDES_TIENDA,
+    VOLVER,
+)
 from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
     obtener_fecha_vencimiento_puntos,
@@ -26,61 +34,126 @@ from utilidades.excepciones import EntidadNoEncontrada
 _consola = Console()
 
 
-def mostrar_miembro(sesion: dict) -> tuple:
+def _mostrar_encabezado(sesion: dict) -> None:
     identidad = sesion.get("identidad") or {}
     nombre = identidad.get("nombre", "")
-    opciones = [
-        "Mi información",
-        "Mi membresía",
-        "Mis puntos",
-        "Recompensas disponibles",
-        "Historial de compras",
-        "Historial de puntos",
-        "Historial de canjes",
-        "Solicitar renovación en tienda",
-        "Solicitar cancelación en tienda",
-        "Solicitar canje en tienda",
-        "Cerrar sesión",
-    ]
-
-    while True:
-        _consola.clear()
-        _consola.print(
-            Panel(
-                f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}] — [dim]Interfaz de Miembro[/dim]\n"
-                f"Miembro: [{COLOR_ENCABEZADO}]{nombre}[/{COLOR_ENCABEZADO}]",
-                border_style=COLOR_ENCABEZADO,
-                box=rich_box.ROUNDED,
-                padding=(0, 4),
-            )
+    _consola.clear()
+    _consola.print(
+        Panel(
+            f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}] — [dim]Interfaz de Miembro[/dim]\n"
+            f"Miembro: [{COLOR_ENCABEZADO}]{nombre}[/{COLOR_ENCABEZADO}]",
+            border_style=COLOR_ENCABEZADO,
+            box=rich_box.ROUNDED,
+            padding=(0, 4),
         )
-        accion = questionary.select("¿Qué deseas consultar?", choices=opciones).ask()
-        try:
-            if accion == "Mi información":
-                _mostrar_informacion(identidad)
-            elif accion == "Mi membresía":
-                _mostrar_membresia(identidad)
-            elif accion == "Mis puntos":
-                _mostrar_puntos(identidad)
-            elif accion == "Recompensas disponibles":
-                _mostrar_recompensas()
-            elif accion == "Historial de compras":
-                _mostrar_compras(identidad)
-            elif accion == "Historial de puntos":
-                _mostrar_historial_puntos(identidad)
-            elif accion == "Historial de canjes":
-                _mostrar_historial_canjes(identidad)
-            elif accion == "Solicitar renovación en tienda":
-                informacion("La renovación debe realizarla un Cajero o Administrador en caja.")
-            elif accion == "Solicitar cancelación en tienda":
-                informacion("La solicitud será atendida en tienda; la cancelación efectiva la realiza un Administrador.")
-            elif accion == "Solicitar canje en tienda":
-                informacion("El canje debe realizarlo un Cajero o Administrador en caja.")
-            else:
-                sesion["identidad"] = None
-                return None, 1
-        except (ValueError, PermissionError) as exc:
-            error(str(exc))
+    )
+
+
+def mostrar_miembro(sesion: dict) -> tuple:
+    opciones = [
+        ("Mi cuenta", MI_CUENTA),
+        ("Beneficios", BENEFICIOS),
+        ("Historial", HISTORIAL),
+        ("Solicitudes en tienda", SOLICITUDES_TIENDA),
+        ("Cerrar sesión", CERRAR_SESION),
+    ]
+    _mostrar_encabezado(sesion)
+    seleccion = questionary.select(
+        "¿Qué deseas hacer?",
+        choices=[opcion[0] for opcion in opciones],
+    ).ask()
+    for nombre, pantalla in opciones:
+        if seleccion == nombre:
+            return None if pantalla == CERRAR_SESION else "miembro", pantalla
+    return None, CERRAR_SESION
+
+
+def mostrar_mi_cuenta(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    accion = questionary.select(
+        "Mi cuenta",
+        choices=["Mi información", "Mi membresía", "← Volver"],
+    ).ask()
+    identidad = sesion["identidad"]
+    try:
+        if accion == "Mi información":
+            _mostrar_informacion(identidad)
+        elif accion == "Mi membresía":
+            _mostrar_membresia(identidad)
+        elif accion == "← Volver":
+            return "miembro", VOLVER
+    except (ValueError, PermissionError) as exc:
+        error(str(exc))
+    return "miembro", None
+
+
+def mostrar_beneficios(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    accion = questionary.select(
+        "Beneficios",
+        choices=["Mis puntos", "Recompensas disponibles", "← Volver"],
+    ).ask()
+    identidad = sesion["identidad"]
+    try:
+        if accion == "Mis puntos":
+            _mostrar_puntos(identidad)
+        elif accion == "Recompensas disponibles":
+            _mostrar_recompensas()
+        elif accion == "← Volver":
+            return "miembro", VOLVER
+    except (ValueError, PermissionError) as exc:
+        error(str(exc))
+    return "miembro", None
+
+
+def mostrar_historial(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    accion = questionary.select(
+        "Historial",
+        choices=[
+            "Historial de compras",
+            "Historial de puntos",
+            "Historial de canjes",
+            "← Volver",
+        ],
+    ).ask()
+    identidad = sesion["identidad"]
+    try:
+        if accion == "Historial de compras":
+            _mostrar_compras(identidad)
+        elif accion == "Historial de puntos":
+            _mostrar_historial_puntos(identidad)
+        elif accion == "Historial de canjes":
+            _mostrar_historial_canjes(identidad)
+        elif accion == "← Volver":
+            return "miembro", VOLVER
+    except (ValueError, PermissionError) as exc:
+        error(str(exc))
+    return "miembro", None
+
+
+def mostrar_solicitudes_tienda(sesion: dict) -> tuple:
+    _mostrar_encabezado(sesion)
+    accion = questionary.select(
+        "Solicitudes en tienda",
+        choices=[
+            "Solicitar renovación",
+            "Solicitar cancelación",
+            "Solicitar canje",
+            "← Volver",
+        ],
+    ).ask()
+    if accion == "Solicitar renovación":
+        informacion("La renovación debe realizarla un Cajero o Administrador en caja.")
+    elif accion == "Solicitar cancelación":
+        informacion(
+            "La solicitud será atendida en tienda; la cancelación efectiva la realiza un Administrador."
+        )
+    elif accion == "Solicitar canje":
+        informacion("El canje debe realizarlo un Cajero o Administrador en caja.")
+    elif accion == "← Volver":
+        return "miembro", VOLVER
+    return "miembro", None
 
 
 def _mostrar_informacion(identidad: dict) -> None:

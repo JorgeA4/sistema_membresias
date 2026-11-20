@@ -245,6 +245,17 @@ se mostrarán únicamente cuando correspondan al rol autenticado.
 
 ### 5.3 Miembro
 
+El menú se organizará en estas pantallas:
+
+- `Mi cuenta`: información personal y membresía.
+- `Beneficios`: puntos y recompensas disponibles.
+- `Historial`: compras, puntos y canjes.
+- `Solicitudes en tienda`: renovación, cancelación y canje.
+- `Cerrar sesión`.
+
+Cada submenú tendrá una opción `Volver` y será gestionado por el orquestador
+de `ventana_inicio.py`.
+
 La primera versión incluirá:
 
 - Resumen de membresía.
@@ -255,8 +266,9 @@ La primera versión incluirá:
 - Historial de puntos.
 - Historial de canjes.
 
-El canje, la renovación y la cancelación se conectarán a los servicios mediante
-la identidad neutral de la sesión.
+Las solicitudes de canje, renovación y cancelación serán informativas; la
+operación efectiva se realizará en tienda mediante los servicios y la
+identidad neutral de la sesión.
 
 ## 6. Fases de implementación
 

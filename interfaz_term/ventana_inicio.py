@@ -14,7 +14,13 @@ Flujo:
 
 from interfaz_term.pantallas.bienvenida import mostrar_bienvenida
 from interfaz_term.pantallas.inicio_sesion import mostrar_login_con_volver
-from interfaz_term.pantallas.miembro.principal import mostrar_miembro
+from interfaz_term.pantallas.miembro.principal import (
+    mostrar_beneficios,
+    mostrar_historial,
+    mostrar_mi_cuenta,
+    mostrar_miembro,
+    mostrar_solicitudes_tienda,
+)
 from interfaz_term.pantallas.usuario.principal import (
     mostrar_actividad_ajustes,
     mostrar_menu_usuario,
@@ -29,12 +35,16 @@ from interfaz_term.navegacion import (
     BIENVENIDA,
     CERRAR_SESION,
     INICIO_SESION,
+    BENEFICIOS,
+    HISTORIAL,
     MENU_MIEMBRO,
     MENU_USUARIO,
+    MI_CUENTA,
     MIEMBROS_MEMBRESIAS,
     OPERACIONES_TIENDA,
     PLANES,
     RECOMPENSAS,
+    SOLICITUDES_TIENDA,
     USUARIOS_ADMINISTRATIVOS,
     VOLVER,
 )
@@ -80,9 +90,13 @@ def ejecutar_aplicacion() -> None:
         None:{
             BIENVENIDA:mostrar_bienvenida
         },
-        "miembro": {
+    "miembro": {
             INICIO_SESION:mostrar_login_con_volver,
             MENU_MIEMBRO:mostrar_miembro,
+            MI_CUENTA:mostrar_mi_cuenta,
+            BENEFICIOS:mostrar_beneficios,
+            HISTORIAL:mostrar_historial,
+            SOLICITUDES_TIENDA:mostrar_solicitudes_tienda,
             VOLVER:volver,
         },
         "usuario": {
