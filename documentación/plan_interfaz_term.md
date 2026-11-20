@@ -221,7 +221,7 @@ Debe permitir:
 
 Roles contemplados: `Administrador`, `Cajero`, `Gerente de Sucursal`, `Miembro`.
 
-### 5.2 Usuarios administrativos
+### 5.2 Usuarios y permisos
 
 Administrador, Cajero y Gerente de Sucursal comparten la interfaz en
 `usuario/`. La diferenciación de opciones visibles se realiza por categoría:
@@ -237,11 +237,44 @@ El menú principal se organizará en:
 - Miembros y membresías.
 - Planes.
 - Recompensas.
-- Usuarios administrativos.
+- Usuarios y permisos.
 - Actividad y ajustes.
 
 Cada categoría tendrá una pantalla propia y una opción `Volver`. Las opciones
 se mostrarán únicamente cuando correspondan al rol autenticado.
+
+El menú `Planes` ocultará la separación interna entre planes y sus condiciones:
+
+- `Planes`: lista los planes y permite seleccionar uno para consultar su detalle.
+- `Crear plan`: crea el plan y sus condiciones regulares iniciales en una sola operación.
+- `Modificar plan`: conserva el historial y crea nuevas condiciones regulares desde la fecha indicada.
+- `Historial de condiciones`: muestra condiciones regulares anteriores y promociones vencidas.
+- `Promociones`: muestra promociones no vencidas y permite crear promociones o cambiar su fecha final.
+
+Las condiciones regulares aplican siempre a contratación y renovación. Las
+promociones pueden aplicar solo a contratación, solo a renovación o a ambas.
+Para una operación, una promoción específica tiene prioridad sobre una
+promoción aplicable a ambas operaciones; si no existe una promoción aplicable,
+se utiliza la condición regular.
+
+El menú `Recompensas` también oculta sus condiciones internas:
+
+- `Recompensas`: lista las recompensas y permite consultar su detalle.
+- `Crear recompensa`: crea la recompensa y sus condiciones iniciales.
+- `Modificar recompensa`: muestra los datos actuales como valores iniciales y crea nuevas condiciones desde la fecha indicada.
+- `Historial de condiciones`: muestra condiciones vencidas y futuras; las futuras pueden borrarse si comienzan a partir de mañana.
+- `Reactivar recompensa`: aparece cuando no hay una condición vigente y crea una nueva condición con los datos anteriores como valores iniciales.
+
+En `Usuarios y permisos`, `Usuarios` muestra una lista seleccionable. El
+detalle permite consultar la información pública del usuario o modificarla
+mediante un formulario prellenado. La contraseña nunca se muestra en la
+consulta y solo puede cambiarse desde el formulario de modificación.
+
+En `Miembros y membresías` se podrá buscar directamente por número de
+membresía o filtrar miembros mediante nombre, primer apellido, correo,
+teléfono, estado de membresía y versión de plan activa. Todos los filtros son
+opcionales; si se dejan vacíos se muestran todos los miembros. La selección
+lleva a una pantalla de detalle con las operaciones permitidas para el rol.
 
 ### 5.3 Miembro
 

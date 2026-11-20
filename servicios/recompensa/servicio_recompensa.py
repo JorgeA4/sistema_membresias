@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import base_de_datos.consultas as bd
 from clases.membresia import Membresia
@@ -36,6 +36,18 @@ def registrar_recompensa(identidad: dict, datos: dict) -> Recompensa:
     recompensa = Recompensa(codigo, nombre, datos.get("descripcion"))
     bd.guardar_recompensa(recompensa)
     return recompensa
+
+
+def registrar_recompensa_con_condiciones(
+    identidad: dict, datos_recompensa: dict, datos_condiciones: dict
+) -> Recompensa:
+    requiere_administrador(identidad)
+    with bd.transaccion():
+        recompensa = registrar_recompensa(identidad, datos_recompensa)
+        condiciones = dict(datos_condiciones)
+        condiciones["recompensa"] = recompensa
+        crear_version_recompensa(identidad, condiciones)
+        return recompensa
 
 
 def consultar_recompensa(codigo: str) -> Recompensa | None:
@@ -121,6 +133,57 @@ def crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa:
     )
     bd.guardar_version_recompensa(version)
     return version
+
+
+def modificar_recompensa_con_condiciones(
+    identidad: dict,
+    codigo: str,
+    datos_recompensa: dict,
+    datos_condiciones: dict,
+) -> tuple[Recompensa, VersionRecompensa]:
+    requiere_administrador(identidad)
+    recompensa = consultar_recompensa(codigo)
+    if recompensa is None:
+        raise EntidadNoEncontrada("La recompensa no existe.")
+    versiones = obtener_versiones_de_recompensa(codigo)
+    actual = _seleccionar_condicion_vigente(versiones)
+    fecha_inicio = datos_condiciones["fecha_inicio"]
+    if actual is not None and fecha_inicio <= actual.fecha_inicio:
+        raise DatosInvalidos("La nueva fecha inicial debe ser posterior a la condición actual.")
+    with bd.transaccion():
+        recompensa = modificar_recompensa(identidad, codigo, datos_recompensa)
+        if actual is not None and fecha_inicio - timedelta(days=1) < actual.fecha_final:
+            actual.finalizar_vigencia(fecha_inicio - timedelta(days=1))
+            bd.guardar_version_recompensa(actual)
+        condiciones = dict(datos_condiciones)
+        condiciones["recompensa"] = codigo
+        return recompensa, crear_version_recompensa(identidad, condiciones)
+
+
+def reactivar_recompensa(
+    identidad: dict, codigo: str, datos_condiciones: dict
+) -> VersionRecompensa:
+    requiere_administrador(identidad)
+    recompensa = consultar_recompensa(codigo)
+    if recompensa is None:
+        raise EntidadNoEncontrada("La recompensa no existe.")
+    if any(version.esta_vigente() for version in obtener_versiones_de_recompensa(codigo)):
+        raise OperacionNoPermitida("La recompensa ya tiene condiciones vigentes.")
+    if datos_condiciones["fecha_inicio"] < date.today():
+        raise DatosInvalidos("La reactivación debe comenzar hoy o en una fecha futura.")
+    condiciones = dict(datos_condiciones)
+    condiciones["recompensa"] = codigo
+    return crear_version_recompensa(identidad, condiciones)
+
+
+def eliminar_condicion_futura_recompensa(identidad: dict, num: int) -> None:
+    requiere_administrador(identidad)
+    version = consultar_version_recompensa(num)
+    if version is None:
+        raise EntidadNoEncontrada("La condición de recompensa no existe.")
+    if version.fecha_inicio < date.today() + timedelta(days=1):
+        raise OperacionNoPermitida("Solo se pueden borrar condiciones que comiencen a partir de mañana.")
+    bd.eliminar_version_recompensa(num)
 
 
 def consultar_version_recompensa(num: int) -> VersionRecompensa | None:
@@ -246,6 +309,13 @@ def _obtener_recompensa(datos: dict) -> Recompensa:
     if not isinstance(recompensa, Recompensa):
         raise EntidadNoEncontrada("La recompensa no existe.")
     return recompensa
+
+
+def _seleccionar_condicion_vigente(versiones: list[VersionRecompensa]):
+    vigentes = [version for version in versiones if version.esta_vigente()]
+    if vigentes:
+        return max(vigentes, key=lambda version: (version.fecha_inicio, version.num))
+    return None
 
 
 def _obtener_saldo(transacciones: list[TransaccionPuntos]) -> int:

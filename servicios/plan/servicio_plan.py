@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
 import base_de_datos.consultas as bd
@@ -32,6 +32,19 @@ def registrar_plan(identidad: dict, datos: dict) -> Plan:
     plan = Plan(codigo, nombre, datos.get("descripcion"))
     bd.guardar_plan(plan)
     return plan
+
+
+def registrar_plan_con_condiciones(identidad: dict, datos_plan: dict, datos_condiciones: dict) -> Plan:
+    """Crea un plan y sus condiciones regulares en una sola operación."""
+    requiere_administrador(identidad)
+    with bd.transaccion():
+        plan = registrar_plan(identidad, datos_plan)
+        condiciones = dict(datos_condiciones)
+        condiciones["plan"] = plan
+        condiciones["aplica_en"] = TipoAplicacionPlan.AMBAS.value
+        condiciones["version_base_de_promo"] = None
+        crear_version_plan(identidad, condiciones)
+        return plan
 
 
 def consultar_plan(codigo: str) -> Plan | None:
@@ -103,14 +116,35 @@ def crear_version_plan(identidad: dict, datos: dict) -> VersionPlan:
     if version_base is not None and version_base.plan.codigo != plan.codigo:
         raise DatosInvalidos("La versión base debe pertenecer al mismo plan.")
 
-    _validar_configuracion_puntos(datos.get("config_puntos"))
-    _validar_configuracion_descuento(datos.get("config_descuento"))
-    _validar_configuracion_cashback(datos.get("config_cashback"))
-
     try:
         aplica_en = TipoAplicacionPlan(datos["aplica_en"])
     except (KeyError, ValueError):
-        raise DatosInvalidos("La aplicación de la versión no es válida.") from None
+        raise DatosInvalidos("La aplicación de la condición no es válida.") from None
+
+    versiones = bd.obtener_versiones_de_plan(plan.codigo)
+    if version_base is None:
+        if aplica_en is not TipoAplicacionPlan.AMBAS:
+            raise DatosInvalidos("Las condiciones regulares siempre aplican a contratación y renovación.")
+        if any(not version.version_base_de_promo and _se_solapan(
+            fecha_inicio, fecha_final, version.fecha_inicio, version.fecha_final
+        ) for version in versiones):
+            raise DatosInvalidos("Las condiciones regulares no pueden solaparse.")
+    else:
+        if version_base.version_base_de_promo is not None:
+            raise DatosInvalidos("Una promoción debe basarse en condiciones regulares.")
+        if fecha_inicio < version_base.fecha_inicio or fecha_final > version_base.fecha_final:
+            raise DatosInvalidos("La promoción debe permanecer dentro de las condiciones regulares.")
+        if any(
+            version.version_base_de_promo is not None
+            and version.aplica_en is aplica_en
+            and _se_solapan(fecha_inicio, fecha_final, version.fecha_inicio, version.fecha_final)
+            for version in versiones
+        ):
+            raise DatosInvalidos("Ya existe una promoción solapada para ese tipo de operación.")
+
+    _validar_configuracion_puntos(datos.get("config_puntos"))
+    _validar_configuracion_descuento(datos.get("config_descuento"))
+    _validar_configuracion_cashback(datos.get("config_cashback"))
 
     version = VersionPlan(
         num=datos.get("num"),
@@ -164,7 +198,13 @@ def obtener_versiones_plan_para_operacion(
             if aplica_en is not None and not version.esta_vigente():
                 continue
             versiones.append(version)
-    return sorted(versiones, key=lambda version: (version.plan.codigo, version.num))
+    return sorted(versiones, key=lambda version: (
+        version.plan.codigo,
+        0 if version.version_base_de_promo is not None and aplica_en is not None
+        and version.aplica_en.value == aplica_en else
+        1 if version.version_base_de_promo is not None else 2,
+        version.num,
+    ))
 
 
 def finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> VersionPlan:
@@ -175,9 +215,43 @@ def finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> Vers
     if not isinstance(fecha_final, date):
         raise DatosInvalidos("La fecha final no es válida.")
 
+    if version.version_base_de_promo is None:
+        for otra in bd.obtener_versiones_de_plan(version.plan.codigo):
+            if otra.num != version.num and otra.version_base_de_promo is None and _se_solapan(
+                version.fecha_inicio, fecha_final, otra.fecha_inicio, otra.fecha_final
+            ):
+                raise DatosInvalidos("La nueva vigencia se solapa con otras condiciones regulares.")
+    else:
+        if fecha_final > version.version_base_de_promo.fecha_final:
+            raise DatosInvalidos("La promoción no puede superar la vigencia de sus condiciones regulares.")
+        if any(
+            otra.num != version.num
+            and otra.version_base_de_promo is not None
+            and otra.aplica_en is version.aplica_en
+            and _se_solapan(version.fecha_inicio, fecha_final, otra.fecha_inicio, otra.fecha_final)
+            for otra in bd.obtener_versiones_de_plan(version.plan.codigo)
+        ):
+            raise DatosInvalidos("La nueva vigencia se solapa con otra promoción del mismo tipo.")
+
     version.finalizar_vigencia(fecha_final)
     bd.guardar_version_plan(version)
     return version
+
+
+def eliminar_condicion_futura_plan(identidad: dict, num: int) -> None:
+    requiere_administrador(identidad)
+    version = consultar_version_plan(num)
+    if version is None:
+        raise EntidadNoEncontrada("La condición del plan no existe.")
+    if version.fecha_inicio < date.today() + timedelta(days=1):
+        raise OperacionNoPermitida("Solo se pueden borrar condiciones que comiencen a partir de mañana.")
+    if any(
+        otra.version_base_de_promo is not None
+        and otra.version_base_de_promo.num == num
+        for otra in bd.obtener_versiones_de_plan(version.plan.codigo)
+    ):
+        raise OperacionNoPermitida("No se puede borrar una condición con promociones relacionadas.")
+    bd.eliminar_version_plan(num)
 
 
 def _obtener_plan(datos: dict) -> Plan:
@@ -206,6 +280,75 @@ def _obtener_version_base(datos: dict) -> VersionPlan | None:
     if version_base is not None and not isinstance(version_base, VersionPlan):
         raise DatosInvalidos("La versión base de promoción no es válida.")
     return version_base
+
+
+def _se_solapan(inicio_a, final_a, inicio_b, final_b) -> bool:
+    return inicio_a <= final_b and inicio_b <= final_a
+
+
+def obtener_condiciones_regulares(codigo_plan: str) -> list[VersionPlan]:
+    return [
+        version for version in obtener_versiones_de_plan(codigo_plan)
+        if version.version_base_de_promo is None
+    ]
+
+
+def obtener_promociones(codigo_plan: str, solo_vigentes: bool = False) -> list[VersionPlan]:
+    promociones = [
+        version for version in obtener_versiones_de_plan(codigo_plan)
+        if version.version_base_de_promo is not None
+    ]
+    if solo_vigentes:
+        promociones = [version for version in promociones if version.esta_vigente()]
+    return sorted(promociones, key=lambda version: (version.fecha_inicio, version.num))
+
+
+def crear_promocion(identidad: dict, codigo_plan: str, datos: dict) -> VersionPlan:
+    requiere_administrador(identidad)
+    regulares = obtener_condiciones_regulares(codigo_plan)
+    vigentes = [version for version in regulares if version.esta_vigente()]
+    if not vigentes:
+        raise DatosInvalidos("El plan no tiene condiciones regulares vigentes.")
+    if datos["fecha_inicio"] < date.today():
+        raise DatosInvalidos("La promoción no puede iniciar antes de hoy.")
+    base = max(vigentes, key=lambda version: (version.fecha_inicio, version.num))
+    datos_promocion = dict(datos)
+    datos_promocion["plan"] = codigo_plan
+    datos_promocion["version_base_de_promo"] = base
+    return crear_version_plan(identidad, datos_promocion)
+
+
+def modificar_condiciones_plan(identidad: dict, codigo_plan: str, datos: dict) -> VersionPlan:
+    requiere_administrador(identidad)
+    regulares = obtener_condiciones_regulares(codigo_plan)
+    if not regulares:
+        raise EntidadNoEncontrada("El plan no tiene condiciones regulares.")
+    vigentes = [version for version in regulares if version.esta_vigente()]
+    anterior = max(
+        vigentes or regulares,
+        key=lambda version: (version.fecha_inicio, version.num),
+    )
+    fecha_inicio = datos["fecha_inicio"]
+    if fecha_inicio <= anterior.fecha_inicio:
+        raise DatosInvalidos("La nueva fecha inicial debe ser posterior a la condición actual.")
+    with bd.transaccion():
+        nueva_fecha_final = fecha_inicio - timedelta(days=1)
+        if nueva_fecha_final < anterior.fecha_final:
+            anterior.finalizar_vigencia(nueva_fecha_final)
+            bd.guardar_version_plan(anterior)
+        nuevos = dict(datos)
+        nuevos.update({"plan": codigo_plan, "aplica_en": TipoAplicacionPlan.AMBAS.value})
+        return crear_version_plan(identidad, nuevos)
+
+
+def modificar_plan_con_condiciones(
+    identidad: dict, codigo_plan: str, datos_plan: dict, datos_condiciones: dict
+) -> tuple[Plan, VersionPlan]:
+    requiere_administrador(identidad)
+    with bd.transaccion():
+        plan = modificar_plan(identidad, codigo_plan, datos_plan)
+        version = modificar_condiciones_plan(identidad, codigo_plan, datos_condiciones)
+        return plan, version
 
 
 def _convertir_precio(valor) -> Decimal:

@@ -49,8 +49,14 @@ def consultar_miembro(identidad: dict, num: int) -> Miembro | None:
     return bd.buscar_miembro_por_num(num)
 
 
-def obtener_miembros() -> list[Miembro]:
+def obtener_miembros(identidad: dict) -> list[Miembro]:
+    requiere_operador_tienda(identidad)
     return bd.obtener_todos_los_miembros()
+
+
+def buscar_miembros(identidad: dict, filtros: dict) -> list[Miembro]:
+    requiere_operador_tienda(identidad)
+    return bd.buscar_miembros(filtros)
 
 
 def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:

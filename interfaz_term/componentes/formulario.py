@@ -81,7 +81,11 @@ def pedir_formulario(campos: list[dict]) -> dict | None:
             {"clave": "contra",  "etiqueta": "Contraseña", "contrasena": True},
         ])
     """
-    valores: dict = {}
+    valores: dict = {
+        campo["clave"]: campo["valor_inicial"]
+        for campo in campos
+        if "valor_inicial" in campo
+    }
 
     # Paso 1: recoger todos los campos
     for campo in campos:
@@ -156,6 +160,8 @@ def _pedir_valor_campo(
         valor = pedir_campo(etiqueta, requerido=requerido, contrasena=contrasena)
         if valor is None:
             return None
+        if not valor and "valor_inicial" in campo:
+            return str(campo["valor_inicial"])
         if not valor and not requerido:
             return valor
         if requerido and not valor:
@@ -214,6 +220,7 @@ def _validar_valor(clave: str, valor: str, etiqueta: str) -> str | None:
         "vigencia_meses",
         "costo_puntos",
         "limite_canjes",
+        "version_plan_actual",
     } or (clave == "movimiento" and "puntos" in etiqueta):
         try:
             numero = int(valor)
@@ -264,6 +271,9 @@ def _validar_valor(clave: str, valor: str, etiqueta: str) -> str | None:
 
     if clave == "aplica_en" and valor.upper() not in {"CONTRATACION", "RENOVACION", "AMBAS"}:
         return "Usa CONTRATACION, RENOVACION o AMBAS."
+
+    if clave == "estado" and valor.upper() not in {"ACTIVA", "SUSPENDIDA", "CANCELADA"}:
+        return "Usa ACTIVA, SUSPENDIDA o CANCELADA."
 
     if clave == "dias_aplicables":
         try:

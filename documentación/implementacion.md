@@ -83,11 +83,17 @@ autenticar_usuario(correo: str, contraseña: str) -> dict | None
 
 ```python
 registrar_plan(identidad: dict, datos: dict) -> Plan
+registrar_plan_con_condiciones(identidad: dict, datos_plan: dict, datos_condiciones: dict) -> Plan
 consultar_plan(codigo: str) -> Plan | None
 obtener_planes(identidad: dict) -> list[Plan]
 modificar_plan(identidad: dict, codigo: str, datos: dict) -> Plan
+modificar_plan_con_condiciones(identidad: dict, codigo: str, datos_plan: dict, datos_condiciones: dict) -> tuple[Plan, VersionPlan]
 eliminar_plan(identidad: dict, codigo: str) -> None
 crear_version_plan(identidad: dict, datos: dict) -> VersionPlan
+crear_promocion(identidad: dict, codigo_plan: str, datos: dict) -> VersionPlan
+obtener_condiciones_regulares(codigo_plan: str) -> list[VersionPlan]
+obtener_promociones(codigo_plan: str, solo_vigentes: bool = False) -> list[VersionPlan]
+eliminar_condicion_futura_plan(identidad: dict, num: int) -> None
 consultar_version_plan(num: int) -> VersionPlan | None
 obtener_versiones_de_plan(codigo_plan: str) -> list[VersionPlan]
 finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> VersionPlan
@@ -97,11 +103,15 @@ finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> VersionP
 
 ```python
 registrar_recompensa(identidad: dict, datos: dict) -> Recompensa
+registrar_recompensa_con_condiciones(identidad: dict, datos_recompensa: dict, datos_condiciones: dict) -> Recompensa
 consultar_recompensa(codigo: str) -> Recompensa | None
 obtener_recompensas(identidad: dict) -> list[Recompensa]
 modificar_recompensa(identidad: dict, codigo: str, datos: dict) -> Recompensa
+modificar_recompensa_con_condiciones(identidad: dict, codigo: str, datos_recompensa: dict, datos_condiciones: dict) -> tuple[Recompensa, VersionRecompensa]
 eliminar_recompensa(identidad: dict, codigo: str) -> None
 crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa
+reactivar_recompensa(identidad: dict, codigo: str, datos_condiciones: dict) -> VersionRecompensa
+eliminar_condicion_futura_recompensa(identidad: dict, num: int) -> None
 consultar_version_recompensa(num: int) -> VersionRecompensa | None
 obtener_versiones_de_recompensa(codigo: str) -> list[VersionRecompensa]
 finalizar_version_recompensa(identidad: dict, num: int, fecha_final: date) -> VersionRecompensa

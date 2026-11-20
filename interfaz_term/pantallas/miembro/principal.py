@@ -192,7 +192,7 @@ def _mostrar_membresia(identidad: dict) -> None:
         )
     mostrar_tabla(
         "Membresía y beneficios",
-        ["Número", "Estado", "Plan", "Versión", "Precio", "Plazo", "Puntos", "Descuento", "Cashback"],
+        ["Número", "Estado", "Plan", "Condiciones", "Precio", "Plazo", "Puntos", "Descuento", "Cashback"],
         [fila],
     )
     _pausa()

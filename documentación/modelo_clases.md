@@ -170,11 +170,12 @@ class VersionPlan:
         """Indica si la fecha está dentro del periodo de vigencia."""
 
     def finalizar_vigencia(self, fecha: date) -> None:
-        """Acorta la vigencia sin modificar las condiciones de la versión."""
+        """Actualiza la fecha final sin modificar las condiciones."""
 ```
 
 Las condiciones de las versiones son inmutables después de crearse. La
-vigencia puede acortarse mediante `finalizar_vigencia()`. Para cambiar las
+vigencia puede acortarse o ampliarse mediante `finalizar_vigencia()`, siempre
+respetando las reglas de solapamiento del servicio. Para cambiar las
 condiciones se crea una nueva versión.
 
 ### `VersionRecompensa`

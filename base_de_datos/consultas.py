@@ -277,6 +277,48 @@ def obtener_todos_los_miembros():
         return [_obtener_miembro_conexion(conexion, num) for num in numeros]
 
 
+def buscar_miembros(filtros):
+    """Busca miembros usando filtros opcionales y su membresía actual."""
+    consulta = """
+        SELECT mi.num
+        FROM miembro mi
+        LEFT JOIN membresia me ON me.num = (
+            SELECT m2.num
+            FROM membresia m2
+            WHERE m2.miembro = mi.num
+            ORDER BY (m2.estado = 'CANCELADA'), m2.num DESC
+            LIMIT 1
+        )
+        WHERE 1 = 1
+    """
+    parametros = []
+    filtros_texto = (
+        ("nombre", "mi.nombre"),
+        ("primer_apellido", "mi.primer_apellido"),
+        ("correo", "mi.correo"),
+        ("telefono", "mi.telefono"),
+    )
+    for clave, columna in filtros_texto:
+        valor = filtros.get(clave)
+        if valor:
+            consulta += f" AND {columna} LIKE %s"
+            parametros.append(f"%{valor}%")
+
+    if filtros.get("estado"):
+        consulta += " AND me.estado = %s"
+        parametros.append(filtros["estado"])
+    if filtros.get("version_plan_actual") is not None:
+        consulta += " AND me.version_plan_actual = %s"
+        parametros.append(filtros["version_plan_actual"])
+    consulta += " ORDER BY mi.num"
+
+    with _usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(consulta, parametros)
+            numeros = [fila["num"] for fila in _filas(cursor)]
+        return [_obtener_miembro_conexion(conexion, num) for num in numeros]
+
+
 def guardar_miembro(miembro):
     with _usar_conexion() as conexion:
         with conexion.cursor() as cursor:
@@ -524,6 +566,12 @@ def guardar_version_plan(version_plan):
                 )
 
 
+def eliminar_version_plan(num):
+    with _usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute("DELETE FROM version_plan WHERE num=%s", (num,))
+
+
 # Membresia
 def buscar_membresia_por_num(num):
     with _usar_conexion() as conexion:
@@ -646,6 +694,12 @@ def guardar_version_recompensa(version_recompensa):
                     "fecha_final=%s, costo_puntos=%s, limite_canjes=%s, "
                     "recompensa=%s WHERE num=%s", valores + (version_recompensa.num,),
                 )
+
+
+def eliminar_version_recompensa(num):
+    with _usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute("DELETE FROM version_recompensa WHERE num=%s", (num,))
 
 
 # Compras, renovaciones y transacciones

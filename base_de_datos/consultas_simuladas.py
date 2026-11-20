@@ -95,6 +95,9 @@ def guardar_version_plan(version_plan: VersionPlan) -> None:
         )
     bd.versiones_plan[version_plan.num] = version_plan
 
+def eliminar_version_plan(num: int) -> None:
+    bd.versiones_plan.pop(num, None)
+
 def buscar_version_plan_por_num(num: int) -> VersionPlan | None:
     return bd.versiones_plan.get(num)
 
@@ -160,6 +163,9 @@ def guardar_version_recompensa(version_recompensa: VersionRecompensa) -> None:
             bd.siguiente_numero("versiones_recompensa", bd.versiones_recompensa),
         )
     bd.versiones_recompensa[version_recompensa.num] = version_recompensa
+
+def eliminar_version_recompensa(num: int) -> None:
+    bd.versiones_recompensa.pop(num, None)
 
 def buscar_version_recompensa_por_num(num: int) -> VersionRecompensa | None:
     return bd.versiones_recompensa.get(num)

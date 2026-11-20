@@ -34,7 +34,10 @@ def consultar_membresia_de_miembro(identidad: dict, num_miembro: int) -> Membres
         raise OperacionNoPermitida("No tiene permiso para consultar esta membresía.")
     membresia = bd.buscar_membresia_de_miembro(num_miembro)
     if membresia is not None:
-        requiere_administrador_o_propietario(identidad, membresia)
+        if identidad.get("tipo") == "usuario":
+            requiere_operador_tienda(identidad)
+        else:
+            requiere_administrador_o_propietario(identidad, membresia)
         actualizar_estado_membresia(membresia)
     return membresia
 

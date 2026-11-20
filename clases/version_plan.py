@@ -91,6 +91,6 @@ class VersionPlan:
         return self.fecha_inicio <= fecha <= self.fecha_final
 
     def finalizar_vigencia(self, fecha):
-        if fecha < self.fecha_inicio or fecha > self.fecha_final:
-            raise DatosInvalidos("La fecha final debe estar dentro de la vigencia actual.")
+        if fecha < self.fecha_inicio:
+            raise DatosInvalidos("La fecha final no puede ser anterior al inicio.")
         object.__setattr__(self, "fecha_final", fecha)
