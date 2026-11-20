@@ -54,7 +54,7 @@ def pedir_campo(
     return valor.strip()
 
 
-def pedir_formulario(campos: list[dict]) -> dict | None:
+def pedir_formulario(campos: list[dict], iniciar_en_resumen: bool = False) -> dict | None:
     """
     Solicita una lista de campos, muestra un resumen y pide confirmación.
 
@@ -87,16 +87,17 @@ def pedir_formulario(campos: list[dict]) -> dict | None:
         if "valor_inicial" in campo
     }
 
-    # Paso 1: recoger todos los campos
-    for campo in campos:
-        clave      = campo["clave"]
-        if campo.get("confirmar"):
-            valor = _pedir_valor_con_confirmacion(campo, campos, valores)
-        else:
-            valor = _pedir_valor_campo(campo, campos, valores)
-        if valor is None:
-            return None
-        valores[clave] = valor
+    # En edición los valores iniciales ya están completos y se empieza en el resumen.
+    if not iniciar_en_resumen:
+        for campo in campos:
+            clave = campo["clave"]
+            if campo.get("confirmar"):
+                valor = _pedir_valor_con_confirmacion(campo, campos, valores)
+            else:
+                valor = _pedir_valor_campo(campo, campos, valores)
+            if valor is None:
+                return None
+            valores[clave] = valor
 
     while True:
         # Paso 2: mostrar resumen
@@ -321,7 +322,7 @@ def _mostrar_tabla_campos(
         contrasena = campo.get("contrasena", False)
         valor = valores.get(clave, "")
         valor_mostrado = "••••••••" if contrasena and valor else valor
-        tabla.add_row(etiqueta, valor_mostrado)
+        tabla.add_row(etiqueta, "" if valor_mostrado is None else str(valor_mostrado))
 
     _consola.print(tabla)
 

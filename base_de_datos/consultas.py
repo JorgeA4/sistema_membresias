@@ -759,6 +759,17 @@ def obtener_compras_de_membresia(num_membresia):
         return [_consulta_compra(conexion, num) for num in numeros]
 
 
+def obtener_compras_de_usuario(num_usuario):
+    with _usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(
+                "SELECT num FROM compra WHERE usuario=%s ORDER BY num",
+                (num_usuario,),
+            )
+            numeros = [fila["num"] for fila in _filas(cursor)]
+        return [_consulta_compra(conexion, num) for num in numeros]
+
+
 def _consulta_renovacion(conexion, num):
     with conexion.cursor() as cursor:
         cursor.execute("SELECT * FROM renovacion WHERE num=%s", (num,))

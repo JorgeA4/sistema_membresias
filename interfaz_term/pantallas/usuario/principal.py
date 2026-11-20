@@ -55,6 +55,7 @@ from servicios.recompensa.servicio_recompensa import (
 from servicios.usuario.servicio_usuario import (
     consultar_usuario,
     modificar_usuario,
+    obtener_actividad_usuario,
     obtener_usuarios,
     registrar_usuario,
 )
@@ -192,7 +193,7 @@ def _filtrar_miembros(sesion: dict) -> tuple:
             {"clave": "telefono", "etiqueta": "Teléfono", "requerido": False},
             {"clave": "estado", "etiqueta": "Estado (ACTIVA, SUSPENDIDA o CANCELADA)", "requerido": False},
             {"clave": "plan", "etiqueta": "Código del plan activo", "requerido": False},
-        ]
+        ],
     )
     if datos is None:
         return "usuario", None
@@ -314,7 +315,8 @@ def _modificar_miembro_seleccionado(identidad: dict, num_miembro: int) -> None:
              "valor_inicial": miembro.segundo_apellido or ""},
             {"clave": "telefono", "etiqueta": "Teléfono actual", "valor_inicial": miembro.telefono},
             {"clave": "correo", "etiqueta": "Correo actual", "valor_inicial": miembro.correo},
-        ]
+        ],
+        iniciar_en_resumen=True,
     )
     if datos is None:
         return
@@ -749,7 +751,8 @@ def _configurar_beneficios_version(datos: dict, anterior=None) -> None:
                      "valor_inicial": getattr(getattr(anterior, "config_puntos", None), "porcentaje", "")},
                     {"clave": "vigencia_meses", "etiqueta": "Vigencia en meses (vacío sin caducidad)",
                      "requerido": False, "valor_inicial": getattr(getattr(anterior, "config_puntos", None), "vigencia_meses", "") or ""},
-                ]
+                ],
+                iniciar_en_resumen=anterior is not None,
             )
             if configuracion is not None:
                 vigencia = configuracion["vigencia_meses"]
@@ -767,7 +770,8 @@ def _configurar_beneficios_version(datos: dict, anterior=None) -> None:
                      "valor_inicial": getattr(getattr(anterior, "config_descuento", None), "monto_minimo", "") or ""},
                     {"clave": "dias_aplicables", "etiqueta": "Días ISO separados por coma (vacío todos)", "requerido": False,
                      "valor_inicial": ",".join(str(dia.dia_semana if hasattr(dia, "dia_semana") else dia) for dia in getattr(getattr(anterior, "config_descuento", None), "dias_aplicables", []))},
-                ]
+                ],
+                iniciar_en_resumen=anterior is not None,
             )
             if configuracion is not None:
                 minimo = configuracion["monto_minimo"]
@@ -785,7 +789,8 @@ def _configurar_beneficios_version(datos: dict, anterior=None) -> None:
                      "valor_inicial": getattr(getattr(anterior, "config_cashback", None), "porcentaje", "")},
                     {"clave": "limite_min_mensual", "etiqueta": "Umbral mensual (vacío sin umbral)", "requerido": False,
                      "valor_inicial": getattr(getattr(anterior, "config_cashback", None), "limite_min_mensual", "") or ""},
-                ]
+                ],
+                iniciar_en_resumen=anterior is not None,
             )
             if configuracion is not None:
                 limite = configuracion["limite_min_mensual"]
@@ -934,19 +939,20 @@ def _mostrar_detalle_usuario(identidad: dict, usuario) -> None:
             "nombre": usuario.nombre,
             "rol_nombre": usuario.rol.nombre,
         }})
+        _mostrar_informacion_usuario(usuario)
         accion = questionary.select(
             f"Usuario {usuario.num} - {usuario.nombre} {usuario.primer_apellido}",
-            choices=["Consultar información", "Modificar", "← Volver"],
+            choices=["Modificar", "Consultar actividad", "← Volver"],
         ).ask()
         if accion in (None, "← Volver"):
             return
-        if accion == "Consultar información":
-            _mostrar_informacion_usuario(usuario)
-        elif accion == "Modificar":
+        if accion == "Modificar":
             _modificar_usuario(identidad, usuario)
             actualizado = consultar_usuario(identidad, usuario.num)
             if actualizado is not None:
                 usuario = actualizado
+        elif accion == "Consultar actividad":
+            _mostrar_actividad_usuario(identidad, usuario)
 
 
 def _mostrar_informacion_usuario(usuario) -> None:
@@ -962,6 +968,25 @@ def _mostrar_informacion_usuario(usuario) -> None:
             usuario.fecha_registro,
         )],
     )
+
+
+def _mostrar_actividad_usuario(identidad: dict, usuario) -> None:
+    compras = obtener_actividad_usuario(identidad, usuario.num)
+    mostrar_tabla(
+        "Actividad del usuario",
+        ["Compra", "Membresía", "Miembro", "Monto base", "Descuento", "Cashback", "Monto final"],
+        [(
+            compra.num,
+            compra.membresia.num,
+            f"{compra.membresia.miembro.nombre} {compra.membresia.miembro.primer_apellido}",
+            compra.monto_base,
+            compra.descuento_nominal,
+            compra.cashback_aplicado,
+            compra.monto_final,
+        ) for compra in compras],
+    )
+    if not compras:
+        _consola.print("[dim]No hay ventas asociadas a este usuario.[/dim]")
     input("Presiona Enter para continuar.")
 
 
@@ -987,7 +1012,8 @@ def _modificar_usuario(identidad: dict, usuario=None) -> None:
              "requerido": False, "contrasena": True, "confirmar": True},
             {"clave": "codigo_rol", "etiqueta": "Rol actual (ADM, CAJ o GER)",
              "valor_inicial": usuario.rol.codigo},
-        ]
+        ],
+        iniciar_en_resumen=True,
     )
     if datos is None:
         return
@@ -1267,7 +1293,7 @@ def _modificar_plan_completo(identidad: dict, plan) -> None:
         {"clave": "nombre", "etiqueta": f"Nombre (actual: {plan.nombre})", "valor_inicial": plan.nombre},
         {"clave": "descripcion", "etiqueta": "Descripción actual", "requerido": False,
          "valor_inicial": plan.descripcion or ""},
-    ])
+    ], iniciar_en_resumen=True)
     if datos_plan is None:
         return
     actuales = obtener_condiciones_regulares(plan.codigo)
@@ -1304,7 +1330,7 @@ def _editar_fecha_promocion(identidad: dict, promocion) -> None:
     datos = pedir_formulario([
         {"clave": "fecha_final", "etiqueta": "Nueva fecha final (AAAA-MM-DD)",
          "valor_inicial": promocion.fecha_final},
-    ])
+    ], iniciar_en_resumen=True)
     if datos is None:
         return
     try:
@@ -1333,7 +1359,7 @@ def _pedir_condiciones(titulo: str, incluye_aplica: bool, anterior=None) -> dict
     ]
     if incluye_aplica:
         campos.append({"clave": "aplica_en", "etiqueta": "Disponible para (CONTRATACION, RENOVACION o AMBAS)"})
-    datos = pedir_formulario(campos)
+    datos = pedir_formulario(campos, iniciar_en_resumen=anterior is not None)
     if datos is None:
         return None
     try:
@@ -1486,7 +1512,7 @@ def _modificar_recompensa_desde_detalle(identidad: dict, recompensa, actual) -> 
         {"clave": "nombre", "etiqueta": f"Nombre (actual: {recompensa.nombre})", "valor_inicial": recompensa.nombre},
         {"clave": "descripcion", "etiqueta": "Descripción actual", "requerido": False,
          "valor_inicial": recompensa.descripcion or ""},
-    ])
+    ], iniciar_en_resumen=True)
     if datos_recompensa is None or actual is None:
         if actual is None:
             error("La recompensa no tiene condiciones vigentes; utiliza Reactivar recompensa.")
@@ -1536,7 +1562,7 @@ def _pedir_condiciones_recompensa(anterior=None, reactivacion=False) -> dict | N
         {"clave": "limite_canjes", "etiqueta": "Límite de canjes (vacío sin límite)",
          "requerido": False, "valor_inicial": getattr(anterior, "limite_canjes", "") or ""},
     ]
-    datos = pedir_formulario(campos)
+    datos = pedir_formulario(campos, iniciar_en_resumen=anterior is not None)
     if datos is None:
         return None
     try:

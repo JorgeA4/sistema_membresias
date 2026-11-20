@@ -45,6 +45,13 @@ def obtener_usuarios(identidad: dict) -> list[Usuario]:
     return bd.obtener_todos_los_usuarios()
 
 
+def obtener_actividad_usuario(identidad: dict, num: int):
+    requiere_administrador(identidad)
+    if bd.buscar_usuario_por_num(num) is None:
+        raise EntidadNoEncontrada("El usuario no existe.")
+    return bd.obtener_compras_de_usuario(num)
+
+
 def modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario:
     requiere_administrador(identidad)
     objetivo = bd.buscar_usuario_por_num(num)

@@ -185,6 +185,9 @@ def guardar_compra(compra: Compra) -> None:
 def obtener_compras_de_membresia(num_membresia: int) -> list[Compra]:
     return [c for c in bd.compras.values() if c.membresia.num == num_membresia]
 
+def obtener_compras_de_usuario(num_usuario: int) -> list[Compra]:
+    return [c for c in bd.compras.values() if c.usuario.num == num_usuario]
+
 def guardar_renovacion(renovacion: Renovacion) -> None:
     if renovacion.num is None:
         renovacion.num = bd.siguiente_numero("renovaciones", bd.renovaciones)

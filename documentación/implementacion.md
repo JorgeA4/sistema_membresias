@@ -68,6 +68,7 @@ eliminar_miembro(identidad: dict, num: int) -> None
 registrar_usuario(identidad: dict, datos: dict) -> Usuario
 consultar_usuario(identidad: dict, num: int) -> Usuario | None
 obtener_usuarios(identidad: dict) -> list[Usuario]
+obtener_actividad_usuario(identidad: dict, num: int) -> list[Compra]
 modificar_usuario(identidad: dict, num: int, datos: dict) -> Usuario
 eliminar_usuario(identidad: dict, num: int) -> None
 ```
