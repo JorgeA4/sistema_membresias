@@ -27,34 +27,35 @@ _consola = Console()
 
 def informacion(texto: str) -> None:
     """Muestra un panel azul informativo y espera que el usuario presione Enter."""
-    _consola.print(
-        Panel(texto, title=TITULO_INFO, border_style=COLOR_INFO, box=_caja())
-    )
-    input()
+    _mostrar_mensaje(texto, TITULO_INFO, COLOR_INFO)
 
 
 def advertencia(texto: str) -> None:
     """Muestra un panel amarillo de advertencia y espera que el usuario presione Enter."""
-    _consola.print(
-        Panel(texto, title=TITULO_ADVERTENCIA, border_style=COLOR_ADVERTENCIA, box=_caja())
-    )
-    input()
+    _mostrar_mensaje(texto, TITULO_ADVERTENCIA, COLOR_ADVERTENCIA)
 
 
 def error(texto: str) -> None:
     """Muestra un panel rojo de error y espera que el usuario presione Enter."""
-    _consola.print(
-        Panel(texto, title=TITULO_ERROR, border_style=COLOR_ERROR, box=_caja())
-    )
-    input()
+    _mostrar_mensaje(texto, TITULO_ERROR, COLOR_ERROR)
 
 
 def exito(texto: str) -> None:
     """Muestra un panel verde de éxito y espera que el usuario presione Enter."""
+    _mostrar_mensaje(texto, TITULO_EXITO, COLOR_EXITO)
+
+
+def pausar() -> None:
+    """Espera que el usuario presione Enter para continuar."""
+    input("Presiona Enter para continuar.")
+
+
+def _mostrar_mensaje(texto: str, titulo: str, color: str) -> None:
+    """Muestra un mensaje y centraliza la pausa posterior."""
     _consola.print(
-        Panel(texto, title=TITULO_EXITO, border_style=COLOR_EXITO, box=_caja())
+        Panel(texto, title=titulo, border_style=color, box=_caja())
     )
-    input()
+    pausar()
 
 
 def confirmar(pregunta: str) -> bool:

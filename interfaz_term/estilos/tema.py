@@ -11,6 +11,7 @@ COLOR_EXITO      = "green"
 COLOR_ENCABEZADO  = "bold cyan"
 COLOR_TITULO      = "bold white"
 COLOR_SUBTITULO   = "dim white"
+COLOR_BORDE_BANNER = "cyan"
 
 # ── Estilos de panel ──────────────────────────────────────────────────────────
 BORDE_PANEL       = "rounded"

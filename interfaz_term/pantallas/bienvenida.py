@@ -9,18 +9,9 @@ Firma: mostrar_bienvenida(sesion) -> (interfaz, pantalla)
     pantalla  — 2 (login) | 5 (salir)
 """
 
-from rich.console import Console
-from rich.panel import Panel
-from rich import box as rich_box
-
 import questionary
 
-from interfaz_term.estilos.tema import (
-    COLOR_ENCABEZADO,
-    COLOR_TITULO,
-)
-
-_consola = Console()
+from interfaz_term.componentes.banner import mostrar_banner
 
 
 def mostrar_bienvenida(sesion: dict) -> tuple:
@@ -32,16 +23,7 @@ def mostrar_bienvenida(sesion: dict) -> tuple:
         ("usuario", 2) — el usuario eligió acceder como usuario administrativo.
         (None, 5)      — el usuario eligió salir de la aplicación.
     """
-    _consola.clear()
-    _consola.print(
-        Panel(
-            f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}]\n"
-            f"[dim]Sistema de membresías y fidelización[/dim]",
-            border_style=COLOR_ENCABEZADO,
-            box=rich_box.ROUNDED,
-            padding=(1, 4),
-        )
-    )
+    mostrar_banner("[dim]Sistema de membresías y fidelización[/dim]")
 
     eleccion = questionary.select(
         "¿Cómo deseas ingresar?",

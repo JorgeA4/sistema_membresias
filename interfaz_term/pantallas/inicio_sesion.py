@@ -13,15 +13,11 @@ Firma: mostrar_login_con_volver(sesion) -> (interfaz, pantalla)
 import getpass
 
 from rich.console import Console
-from rich.panel import Panel
-from rich import box as rich_box
 
 import questionary
 
-from interfaz_term.estilos.tema import (
-    COLOR_ENCABEZADO,
-    COLOR_TITULO,
-)
+from interfaz_term.componentes.banner import mostrar_banner
+from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from interfaz_term.componentes.mensajes import advertencia, error
 from servicios.autenticacion.servicio_autenticacion import (
     autenticar_miembro,
@@ -37,17 +33,7 @@ def _mostrar_formulario(tipo: str) -> dict | None:
     Devuelve una identidad neutral cuando las credenciales son válidas.
     """
     while True:
-        _consola.clear()
-        _consola.print(
-            Panel(
-                f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}]\n"
-                f"[dim]Sistema de membresías y fidelización[/dim]\n\n"
-                f"Ingresando como: [{COLOR_ENCABEZADO}]{tipo.capitalize()}[/{COLOR_ENCABEZADO}]",
-                border_style=COLOR_ENCABEZADO,
-                box=rich_box.ROUNDED,
-                padding=(1, 4),
-            )
-        )
+        mostrar_banner("[dim]Sistema de membresías y fidelización[/dim]")
 
         _consola.print(f"\n[{COLOR_ENCABEZADO}]Correo electrónico:[/{COLOR_ENCABEZADO}]", end=" ")
         correo = input().strip()
@@ -80,17 +66,7 @@ def mostrar_login_con_volver(sesion: dict) -> tuple:
     """
     tipo = sesion["interfaz"]
 
-    _consola.clear()
-    _consola.print(
-        Panel(
-            f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}]\n"
-            f"[dim]Sistema de membresías y fidelización[/dim]\n\n"
-            f"Ingresando como: [{COLOR_ENCABEZADO}]{tipo.capitalize()}[/{COLOR_ENCABEZADO}]",
-            border_style=COLOR_ENCABEZADO,
-            box=rich_box.ROUNDED,
-            padding=(1, 4),
-        )
-    )
+    mostrar_banner("[dim]Sistema de membresías y fidelización[/dim]")
 
     accion = questionary.select(
         "¿Qué deseas hacer?",

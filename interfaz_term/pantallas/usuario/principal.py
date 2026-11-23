@@ -1,15 +1,13 @@
 """Menú operativo de Administrador y Cajero."""
 
-from rich.console import Console
-from rich.panel import Panel
-from rich import box as rich_box
-
 import questionary
+from rich.console import Console
 
+from interfaz_term.componentes.banner import mostrar_banner
 from interfaz_term.componentes.formulario import pedir_formulario
-from interfaz_term.componentes.mensajes import error, exito
+from interfaz_term.componentes.mensajes import error, exito, pausar
 from interfaz_term.componentes.tabla import mostrar_tabla
-from interfaz_term.estilos.tema import COLOR_ENCABEZADO, COLOR_TITULO
+from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from servicios.caja.servicio_caja import registrar_operacion_caja
 from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
@@ -86,20 +84,22 @@ def _mostrar_encabezado(sesion: dict) -> None:
     identidad = sesion.get("identidad") or {}
     nombre_rol = identidad.get("rol_nombre", "Usuario")
     nombre = identidad.get("nombre", "")
-    _consola.clear()
-    _consola.print(
-        Panel(
-            f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}] — [dim]Interfaz usuario[/dim]\n"
-            f"Usuario: {nombre} | Rol: [{COLOR_ENCABEZADO}]{nombre_rol}[/{COLOR_ENCABEZADO}]",
-            border_style=COLOR_ENCABEZADO,
-            box=rich_box.ROUNDED,
-            padding=(0, 4),
-        )
+    mostrar_banner(
+        f"Usuario: {nombre} | Rol: [{COLOR_ENCABEZADO}]{nombre_rol}[/{COLOR_ENCABEZADO}]"
     )
 
 
 def _rol(sesion: dict) -> str:
     return (sesion.get("identidad") or {}).get("rol", "").upper()
+
+
+def _ejecutar_operacion(operacion):
+    """Ejecuta una operación administrativa y muestra sus errores de dominio."""
+    try:
+        return operacion()
+    except (ValueError, PermissionError) as exc:
+        error(str(exc))
+        return None
 
 
 def mostrar_menu_usuario(sesion: dict) -> tuple:
@@ -325,11 +325,11 @@ def _modificar_miembro_seleccionado(identidad: dict, num_miembro: int) -> None:
     )
     if datos is None:
         return
-    try:
-        miembro = modificar_miembro(identidad, num_miembro, datos)
+    miembro = _ejecutar_operacion(
+        lambda: modificar_miembro(identidad, num_miembro, datos)
+    )
+    if miembro is not None:
         exito(f"Miembro {miembro.num} modificado.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _cambiar_estado_membresia_seleccionada(
@@ -470,11 +470,9 @@ def _registrar_nuevo_miembro(identidad: dict) -> None:
     )
     if datos is None:
         return
-    try:
-        miembro = registrar_miembro(identidad, datos)
+    miembro = _ejecutar_operacion(lambda: registrar_miembro(identidad, datos))
+    if miembro is not None:
         exito(f"Miembro registrado con número {miembro.num}.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _modificar_miembro(identidad: dict) -> None:
@@ -490,12 +488,12 @@ def _modificar_miembro(identidad: dict) -> None:
     )
     if datos is None:
         return
-    try:
-        numero = _numero(datos.pop("num"))
-        miembro = modificar_miembro(identidad, numero, datos)
+    numero = _ejecutar_operacion(lambda: _numero(datos.pop("num")))
+    if numero is None:
+        return
+    miembro = _ejecutar_operacion(lambda: modificar_miembro(identidad, numero, datos))
+    if miembro is not None:
         exito(f"Miembro {miembro.num} modificado.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _contratar(identidad: dict) -> None:
@@ -624,7 +622,7 @@ def _consultar_miembro(identidad: dict) -> None:
             ["Número", "Nombre", "Correo", "Teléfono"],
             [(miembro.num, f"{miembro.nombre} {miembro.primer_apellido}", miembro.correo, miembro.telefono)],
         )
-        input("Presiona Enter para continuar.")
+        pausar()
     except ValueError as exc:
         error(str(exc))
 
@@ -636,7 +634,7 @@ def _consultar_planes(identidad: dict) -> None:
         ["Código", "Nombre", "Descripción"],
         [(plan.codigo, plan.nombre, plan.descripcion or "") for plan in planes],
     )
-    input("Presiona Enter para continuar.")
+    pausar()
 
 
 def _consultar_recompensas(identidad: dict) -> None:
@@ -646,7 +644,7 @@ def _consultar_recompensas(identidad: dict) -> None:
         ["Código", "Nombre", "Descripción"],
         [(recompensa.codigo, recompensa.nombre, recompensa.descripcion or "") for recompensa in recompensas],
     )
-    input("Presiona Enter para continuar.")
+    pausar()
 
 
 def _crear_plan(identidad: dict) -> None:
@@ -659,11 +657,9 @@ def _crear_plan(identidad: dict) -> None:
     )
     if datos is None:
         return
-    try:
-        plan = registrar_plan(identidad, datos)
+    plan = _ejecutar_operacion(lambda: registrar_plan(identidad, datos))
+    if plan is not None:
         exito(f"Plan {plan.codigo} registrado.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _modificar_plan(identidad: dict) -> None:
@@ -676,12 +672,10 @@ def _modificar_plan(identidad: dict) -> None:
     )
     if datos is None:
         return
-    try:
-        codigo = datos.pop("codigo")
-        plan = modificar_plan(identidad, codigo, datos)
+    codigo = datos.pop("codigo")
+    plan = _ejecutar_operacion(lambda: modificar_plan(identidad, codigo, datos))
+    if plan is not None:
         exito(f"Plan {plan.codigo} modificado.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _crear_version_plan(identidad: dict) -> None:
@@ -843,11 +837,9 @@ def _crear_recompensa(identidad: dict) -> None:
     )
     if datos is None:
         return
-    try:
-        recompensa = registrar_recompensa(identidad, datos)
+    recompensa = _ejecutar_operacion(lambda: registrar_recompensa(identidad, datos))
+    if recompensa is not None:
         exito(f"Recompensa {recompensa.codigo} registrada.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _modificar_recompensa(identidad: dict) -> None:
@@ -860,12 +852,12 @@ def _modificar_recompensa(identidad: dict) -> None:
     )
     if datos is None:
         return
-    try:
-        codigo = datos.pop("codigo")
-        recompensa = modificar_recompensa(identidad, codigo, datos)
+    codigo = datos.pop("codigo")
+    recompensa = _ejecutar_operacion(
+        lambda: modificar_recompensa(identidad, codigo, datos)
+    )
+    if recompensa is not None:
         exito(f"Recompensa {recompensa.codigo} modificada.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _crear_version_recompensa(identidad: dict) -> None:
@@ -913,11 +905,9 @@ def _registrar_usuario(identidad: dict) -> None:
     )
     if datos is None:
         return
-    try:
-        usuario = registrar_usuario(identidad, datos)
+    usuario = _ejecutar_operacion(lambda: registrar_usuario(identidad, datos))
+    if usuario is not None:
         exito(f"Usuario registrado con número {usuario.num}.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
 
 
 def _navegar_usuarios(identidad: dict) -> None:
@@ -991,7 +981,7 @@ def _mostrar_actividad_usuario(identidad: dict, usuario) -> None:
     )
     if not compras:
         _consola.print("[dim]No hay ventas asociadas a este usuario.[/dim]")
-    input("Presiona Enter para continuar.")
+    pausar()
 
 
 def _modificar_usuario(identidad: dict, usuario=None) -> None:
@@ -1095,7 +1085,7 @@ def _consultar_usuarios(identidad: dict) -> None:
             for usuario in usuarios
         ],
     )
-    input("Presiona Enter para continuar.")
+    pausar()
 
 
 def _consultar_actividad(identidad: dict) -> None:
@@ -1137,7 +1127,7 @@ def _mostrar_actividad_membresia(identidad: dict, num_membresia: int) -> None:
             for transaccion in transacciones
         ],
     )
-    input("Presiona Enter para continuar.")
+    pausar()
 
 
 def _numero(valor: str) -> int:
@@ -1243,7 +1233,7 @@ def _mostrar_historial_condiciones(identidad: dict, codigo_plan: str, rol: str) 
         if condicion.fecha_inicio >= date.today() + timedelta(days=1)
     ]
     if rol != "ADM" or not futuras:
-        input("Presiona Enter para continuar.")
+        pausar()
         return
     opciones = [
         f"Borrar {condicion.fecha_inicio} a {condicion.fecha_final} | "
@@ -1484,7 +1474,7 @@ def _mostrar_historial_recompensa(identidad: dict, recompensa, rol: str) -> None
         if condicion.fecha_inicio >= date.today() + timedelta(days=1)
     ]
     if rol != "ADM" or not futuras:
-        input("Presiona Enter para continuar.")
+        pausar()
         return
     opciones = [
         f"Borrar {condicion.fecha_inicio} a {condicion.fecha_final}"

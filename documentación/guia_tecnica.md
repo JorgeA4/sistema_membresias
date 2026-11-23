@@ -58,6 +58,33 @@ Las pantallas principales son:
 - `componentes/formulario.py`, `mensajes.py` y `tabla.py`: reutilizan la
   interacción y la presentación.
 
+### Librerías externas y su función técnica
+
+Las dependencias externas utilizadas por el programa final aparecen en
+`requirements.txt`. Cada una resuelve una responsabilidad concreta y se usa
+desde una capa determinada:
+
+- **Rich:** construye la presentación de terminal. `Console` imprime contenido,
+  `Panel` organiza encabezados y mensajes, y `Table` muestra datos tabulares.
+  La interfaz concentra estos componentes en módulos como
+  `interfaz_term/componentes/tabla.py`, `mensajes.py` y las pantallas
+  principales. Rich no consulta la base de datos ni decide permisos.
+- **questionary:** proporciona controles interactivos para la terminal. Las
+  pantallas usan `select` para menús y `text` para entradas; los formularios
+  reutilizables agrupan varias preguntas y devuelven un `dict` que después
+  recibe un servicio.
+- **PyMySQL:** es el adaptador entre Python y MariaDB. La capa de persistencia
+  abre conexiones, crea cursores, ejecuta consultas parametrizadas y obtiene
+  filas como diccionarios mediante `DictCursor`.
+- **bcrypt:** protege las contraseñas. `hashear_contraseña` genera un hash y
+  `verificar_contraseña` compara una contraseña recibida contra el hash guardado,
+  sin recuperar la contraseña original.
+
+La librería no sustituye a la capa que la utiliza: `questionary` y Rich
+pertenecen a la interacción, PyMySQL a la persistencia y bcrypt a la seguridad.
+Los servicios permanecen entre esas capas para coordinar el comportamiento del
+negocio.
+
 #### `servicios/`
 
 Contiene la lógica de aplicación que coordina varias entidades. Los servicios
@@ -333,8 +360,7 @@ el movimiento.
 Los servicios son la frontera de los casos de uso. Una función de servicio
 recibe una identidad y datos simples, valida el contexto, obtiene las entidades
 que necesita, coordina la operación y llama a las consultas de persistencia.
-No modifica los diccionarios internos de una base simulada ni ejecuta SQL
-directamente.
+No modifica estructuras internas de persistencia ni ejecuta SQL directamente.
 
 ### Servicios principales
 
@@ -517,6 +543,142 @@ y punto de confirmación o rollback.
 
 El uso de `autocommit=False` permite que una operación compuesta confirme todos
 los cambios mediante `commit()` o los descarte con `rollback()`.
+
+### API interna de persistencia
+
+En este proyecto, la palabra **API** se refiere al conjunto de funciones Python
+que `base_de_datos/consultas.py` ofrece a los servicios. No es una API HTTP ni
+un servicio separado: es una interfaz interna que oculta los detalles de SQL,
+conexiones, cursores y mapeadores.
+
+El recorrido de una operación es:
+
+```text
+Servicio → base_de_datos.consultas → PyMySQL → MariaDB
+```
+
+Por ejemplo, un servicio no construye un `SELECT` para buscar un miembro. Usa
+la función de la API que corresponde:
+
+```python
+miembro = bd.buscar_miembro_por_num(num_miembro)
+```
+
+La función recibe un identificador, ejecuta internamente una consulta
+parametrizada, aplica `mapear_miembro` y devuelve un `Miembro` o `None`. El
+servicio trabaja con el objeto Python y no con la fila SQL.
+
+### Operaciones de lectura
+
+Las funciones de lectura siguen nombres que expresan la intención de la
+consulta:
+
+```python
+miembro = bd.buscar_miembro_por_correo(correo)
+version = bd.buscar_version_plan_por_num(num_version)
+compras = bd.obtener_compras_de_membresia(num_membresia)
+transacciones = bd.obtener_transacciones_de_miembro(num_miembro)
+```
+
+Sus resultados tienen un contrato sencillo:
+
+- `buscar_*` devuelve una entidad o `None` si no existe.
+- `obtener_*` devuelve una lista, que puede estar vacía.
+- Las consultas relacionadas reconstruyen los objetos conectados. Una compra,
+  por ejemplo, puede incluir su membresía y usuario mediante consultas y
+  mapeadores adicionales.
+
+El servicio debe validar el resultado. Que una función devuelva `None` no
+significa que la operación de negocio sea válida; normalmente el servicio lo
+convierte en `EntidadNoEncontrada` cuando la entidad era obligatoria.
+
+### Operaciones de escritura
+
+Las funciones `guardar_*` reciben objetos del dominio ya validados por el
+servicio:
+
+```python
+bd.guardar_miembro(miembro)
+bd.guardar_compra(compra)
+bd.guardar_transaccion_puntos(transaccion)
+```
+
+Si el objeto tiene `num=None`, la consulta ejecuta un `INSERT` y asigna el
+identificador generado. Si ya tiene identificador, la función ejecuta un
+`UPDATE` cuando ese tipo de entidad lo permite. La función de guardado no
+calcula descuentos, decide permisos ni selecciona versiones: esas decisiones
+pertenecen al servicio.
+
+### De SQL directo a la API Python
+
+Una consulta SQL directa como esta:
+
+```sql
+SELECT * FROM miembro WHERE correo = %s;
+```
+
+se encapsula en una función como `buscar_miembro_por_correo(correo)`. Dentro de
+`consultas.py`, el cursor recibe la sentencia y sus valores por separado:
+
+```python
+cursor.execute(
+    "SELECT * FROM miembro WHERE correo = %s",
+    (correo,),
+)
+```
+
+El marcador `%s` no se reemplaza mediante concatenación de texto. PyMySQL
+envía la sentencia y los parámetros de forma separada, lo que evita construir
+SQL con datos externos. Por esta razón, los servicios deben pasar valores a
+las funciones de la API y no insertar esos valores dentro de una cadena SQL.
+
+Para una persona que conoce SQL, la equivalencia conceptual es:
+
+| SQL directo | API de `base_de_datos.consultas` |
+|---|---|
+| `SELECT` de un miembro por número | `buscar_miembro_por_num(num)` |
+| `SELECT` de todos los planes | `obtener_todos_los_planes()` |
+| `SELECT` de compras por membresía | `obtener_compras_de_membresia(num_membresia)` |
+| `INSERT` o `UPDATE` de una compra | `guardar_compra(compra)` |
+| `INSERT` de un movimiento de puntos | `guardar_transaccion_puntos(transaccion)` |
+| `COMMIT` o `ROLLBACK` de varias escrituras | `with bd.transaccion():` |
+
+La API agrega dos pasos que una consulta SQL aislada no proporciona: convierte
+filas en objetos del dominio y conserva las relaciones entre esos objetos.
+
+### Cursores y parámetros
+
+El cursor se crea dentro de `consultas.py` con `conexion.cursor()`. Se usa como
+contexto para garantizar su cierre:
+
+```python
+with conexion.cursor() as cursor:
+    cursor.execute(consulta, parametros)
+    fila = cursor.fetchone()
+```
+
+Los servicios no reciben conexiones ni cursores. Esta decisión evita que una
+función de negocio mezcle reglas con detalles de PyMySQL y permite cambiar la
+consulta interna sin cambiar la llamada del servicio.
+
+### Transacciones desde la API
+
+Cuando una sola escritura es suficiente, `_usar_conexion()` abre una conexión,
+ejecuta la operación y hace `commit()` al terminar. Si ocurre una excepción,
+hace `rollback()` y traduce los errores SQL conocidos.
+
+Cuando un caso de uso necesita varias escrituras, el servicio usa:
+
+```python
+with bd.transaccion():
+    bd.guardar_compra(compra)
+    bd.guardar_transaccion_puntos(transaccion)
+```
+
+`transaccion()` mantiene la conexión en un `ContextVar`. Las llamadas internas a
+`_usar_conexion()` reutilizan esa conexión en lugar de confirmar cada escritura
+por separado. Si todo termina bien se hace un solo `commit()`; si falla una
+parte, se hace un solo `rollback()`.
 
 ### Consultas y transacciones
 

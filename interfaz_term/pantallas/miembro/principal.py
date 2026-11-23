@@ -1,14 +1,11 @@
 """Menú de consulta para miembros."""
 
-from rich.console import Console
-from rich.panel import Panel
-from rich import box as rich_box
-
 import questionary
 
-from interfaz_term.componentes.mensajes import error, informacion
+from interfaz_term.componentes.banner import mostrar_banner
+from interfaz_term.componentes.mensajes import error, informacion, pausar
 from interfaz_term.componentes.tabla import mostrar_tabla
-from interfaz_term.estilos.tema import COLOR_ENCABEZADO, COLOR_TITULO
+from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from interfaz_term.navegacion import (
     BENEFICIOS,
     CERRAR_SESION,
@@ -31,21 +28,11 @@ from servicios.recompensa.servicio_recompensa import (
 )
 from utilidades.excepciones import EntidadNoEncontrada
 
-_consola = Console()
-
-
 def _mostrar_encabezado(sesion: dict) -> None:
     identidad = sesion.get("identidad") or {}
     nombre = identidad.get("nombre", "")
-    _consola.clear()
-    _consola.print(
-        Panel(
-            f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}] — [dim]Interfaz de Miembro[/dim]\n"
-            f"Miembro: [{COLOR_ENCABEZADO}]{nombre}[/{COLOR_ENCABEZADO}]",
-            border_style=COLOR_ENCABEZADO,
-            box=rich_box.ROUNDED,
-            padding=(0, 4),
-        )
+    mostrar_banner(
+        f"Miembro: [{COLOR_ENCABEZADO}]{nombre}[/{COLOR_ENCABEZADO}]"
     )
 
 
@@ -265,4 +252,4 @@ def _mostrar_historial_canjes(identidad: dict) -> None:
 
 
 def _pausa() -> None:
-    input("Presiona Enter para continuar.")
+    pausar()
