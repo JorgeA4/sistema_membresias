@@ -1,16 +1,44 @@
 # Nexum
 
-## Ejecución
+## Ejecución en Linux con LAMPP
 
-Las credenciales de MariaDB deben estar definidas en
-`~/.config/nexum/nexum.env`. Cárgalas en la misma terminal desde la que se
-ejecutará la aplicación:
+Abre una terminal en la carpeta del proyecto y ejecuta los comandos en este
+orden:
 
 ```bash
+sudo /opt/lampp/lampp startmysql
 source ~/.config/nexum/nexum.env
 source .venv/bin/activate
-python main.py
+pip install -r requirements.txt
+python3 main.py
 ```
 
-MariaDB debe estar iniciado y el valor de `NEXUM_DB_SOCKET` debe apuntar al
-socket activo. Las credenciales no deben almacenarse en este repositorio.
+El archivo de credenciales debe definir las variables de entorno de MariaDB,
+incluido `NEXUM_DB_SOCKET` con la ruta del socket activo. Las credenciales no
+deben almacenarse en este repositorio.
+
+Para detener MariaDB cuando termines:
+
+```bash
+sudo /opt/lampp/lampp stopmysql
+```
+
+## Ejecución en Windows con XAMPP
+
+Abre `Símbolo del sistema` o PowerShell en la carpeta del proyecto. Inicia
+XAMPP y ejecuta el sistema con los siguientes comandos:
+
+```powershell
+C:\xampp\xampp_start.exe
+.venv\Scripts\activate
+pip install -r requirements.txt
+py main.py
+```
+
+También puedes iniciar Apache y MySQL desde el panel de control de XAMPP.
+
+Para detener XAMPP desde la terminal:
+
+```powershell
+C:\xampp\xampp_stop.exe
+```
