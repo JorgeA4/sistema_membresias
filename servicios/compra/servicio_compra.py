@@ -198,6 +198,24 @@ def obtener_saldo_cashback_de_membresia(identidad: dict, num_membresia: int) -> 
     return transacciones[-1].saldo
 
 
+def obtener_cashback_disponible(identidad: dict, num_membresia: int) -> Decimal:
+    """Obtiene el cashback realmente disponible para aplicar en una compra."""
+    membresia = _verificar_membresia(num_membresia)
+    requiere_administrador_o_propietario(identidad, membresia)
+    configuracion = (
+        membresia.version_plan_actual.config_cashback
+        if membresia.version_plan_actual is not None
+        else None
+    )
+    if configuracion is None:
+        return Decimal("0.00")
+    fecha = date.today()
+    transacciones = bd.obtener_transacciones_cashback_de_membresia(num_membresia)
+    _registrar_expiraciones_cashback(transacciones, configuracion, num_membresia, fecha)
+    transacciones = bd.obtener_transacciones_cashback_de_membresia(num_membresia)
+    return _obtener_cashback_disponible(transacciones, configuracion, fecha)
+
+
 def _obtener_membresia(datos: dict) -> Membresia:
     referencia = datos.get("membresia")
     if isinstance(referencia, int):

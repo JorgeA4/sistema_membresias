@@ -64,6 +64,8 @@ def pedir_formulario(campos: list[dict], iniciar_en_resumen: bool = False) -> di
         - requerido  (bool, opcional, default True)
         - contrasena (bool, opcional, default False)
         - confirmar  (bool, opcional, default False) — repite el valor y exige coincidencia.
+        - validador  (callable, opcional) — recibe (valor, valores) y devuelve un error o None.
+        - antes_de_pedir (callable, opcional) — recibe los valores acumulados.
 
     Flujo:
         1. Dibuja todos los campos y pide sus valores en orden; `/cancel` o Ctrl+C cancela en cualquier campo.
@@ -158,6 +160,9 @@ def _pedir_valor_campo(
     mensaje = mensaje_inicial
     while True:
         _dibujar_formulario(campos, valores, mensaje)
+        antes_de_pedir = campo.get("antes_de_pedir")
+        if antes_de_pedir is not None:
+            antes_de_pedir(valores)
         valor = pedir_campo(etiqueta, requerido=requerido, contrasena=contrasena)
         if valor is None:
             return None
@@ -169,6 +174,13 @@ def _pedir_valor_campo(
             mensaje = "Este campo es obligatorio."
             continue
         mensaje = _validar_valor(clave, valor, etiqueta)
+        if mensaje is None:
+            validador = campo.get("validador")
+            if validador is not None:
+                try:
+                    mensaje = validador(valor, valores)
+                except (ValueError, PermissionError) as exc:
+                    mensaje = str(exc)
         if mensaje is None:
             return valor
 
@@ -317,6 +329,8 @@ def _mostrar_tabla_campos(
 
     for campo in campos:
         clave      = campo["clave"]
+        if clave.startswith("_"):
+            continue
         etiqueta   = campo["etiqueta"]
         contrasena = campo.get("contrasena", False)
         valor = valores.get(clave, "")
