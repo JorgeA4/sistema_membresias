@@ -54,7 +54,13 @@ def pedir_campo(
     return valor.strip()
 
 
-def pedir_formulario(campos: list[dict], iniciar_en_resumen: bool = False) -> dict | None:
+def pedir_formulario(
+    campos: list[dict],
+    iniciar_en_resumen: bool = False,
+    mostrar_contexto=None,
+    titulo: str = "Formulario",
+    mostrar_encabezado=None,
+) -> dict | None:
     """
     Solicita una lista de campos, muestra un resumen y pide confirmación.
 
@@ -66,6 +72,10 @@ def pedir_formulario(campos: list[dict], iniciar_en_resumen: bool = False) -> di
         - confirmar  (bool, opcional, default False) — repite el valor y exige coincidencia.
         - validador  (callable, opcional) — recibe (valor, valores) y devuelve un error o None.
         - antes_de_pedir (callable, opcional) — recibe los valores acumulados.
+        - mostrar_contexto (callable, opcional) — recibe los valores acumulados y
+          devuelve líneas contextuales para el encabezado.
+        - titulo (str, opcional) — título de la operación.
+        - mostrar_encabezado (callable, opcional) — recibe (titulo, valores, contexto).
 
     Flujo:
         1. Dibuja todos los campos y pide sus valores en orden; `/cancel` o Ctrl+C cancela en cualquier campo.
@@ -94,16 +104,32 @@ def pedir_formulario(campos: list[dict], iniciar_en_resumen: bool = False) -> di
         for campo in campos:
             clave = campo["clave"]
             if campo.get("confirmar"):
-                valor = _pedir_valor_con_confirmacion(campo, campos, valores)
+                valor = _pedir_valor_con_confirmacion(
+                    campo,
+                    campos,
+                    valores,
+                    mostrar_contexto,
+                    titulo,
+                    mostrar_encabezado,
+                )
             else:
-                valor = _pedir_valor_campo(campo, campos, valores)
+                valor = _pedir_valor_campo(
+                    campo,
+                    campos,
+                    valores,
+                    mostrar_contexto,
+                    titulo=titulo,
+                    mostrar_encabezado=mostrar_encabezado,
+                )
             if valor is None:
                 return None
             valores[clave] = valor
 
     while True:
         # Paso 2: mostrar resumen
-        _mostrar_resumen(campos, valores)
+        _mostrar_resumen(
+            campos, valores, mostrar_contexto, titulo, mostrar_encabezado
+        )
 
         # Paso 3: confirmar, corregir o cancelar
         accion = questionary.select(
@@ -137,9 +163,23 @@ def pedir_formulario(campos: list[dict], iniciar_en_resumen: bool = False) -> di
         campo_elegido = next(c for c in campos if c["etiqueta"] == etiqueta_elegida)
         clave      = campo_elegido["clave"]
         if campo_elegido.get("confirmar"):
-            valor = _pedir_valor_con_confirmacion(campo_elegido, campos, valores)
+            valor = _pedir_valor_con_confirmacion(
+                campo_elegido,
+                campos,
+                valores,
+                mostrar_contexto,
+                titulo,
+                mostrar_encabezado,
+            )
         else:
-            valor = _pedir_valor_campo(campo_elegido, campos, valores)
+            valor = _pedir_valor_campo(
+                campo_elegido,
+                campos,
+                valores,
+                mostrar_contexto,
+                titulo=titulo,
+                mostrar_encabezado=mostrar_encabezado,
+            )
         if valor is None:
             return None
         valores[clave] = valor
@@ -149,7 +189,10 @@ def _pedir_valor_campo(
     campo: dict,
     campos: list[dict],
     valores: dict,
+    mostrar_contexto=None,
     mensaje_inicial: str | None = None,
+    titulo: str = "Formulario",
+    mostrar_encabezado=None,
 ) -> str | None:
     """Solicita un campo hasta que su formato sea válido o se cancele."""
     clave = campo["clave"]
@@ -159,10 +202,17 @@ def _pedir_valor_campo(
 
     mensaje = mensaje_inicial
     while True:
-        _dibujar_formulario(campos, valores, mensaje)
         antes_de_pedir = campo.get("antes_de_pedir")
         if antes_de_pedir is not None:
             antes_de_pedir(valores)
+        _dibujar_formulario(
+            campos,
+            valores,
+            mensaje,
+            mostrar_contexto,
+            titulo,
+            mostrar_encabezado,
+        )
         valor = pedir_campo(etiqueta, requerido=requerido, contrasena=contrasena)
         if valor is None:
             return None
@@ -189,6 +239,9 @@ def _pedir_valor_con_confirmacion(
     campo: dict,
     campos: list[dict],
     valores: dict,
+    mostrar_contexto=None,
+    titulo: str = "Formulario",
+    mostrar_encabezado=None,
 ) -> str | None:
     """Solicita dos veces un valor sensible y reinicia el bloque si difiere."""
     mensaje = None
@@ -197,7 +250,10 @@ def _pedir_valor_con_confirmacion(
             campo,
             campos,
             valores,
+            mostrar_contexto,
             mensaje_inicial=mensaje,
+            titulo=titulo,
+            mostrar_encabezado=mostrar_encabezado,
         )
         if valor is None:
             return None
@@ -211,6 +267,9 @@ def _pedir_valor_con_confirmacion(
             campo_confirmacion,
             campos,
             valores_temporales,
+            mostrar_contexto,
+            titulo=titulo,
+            mostrar_encabezado=mostrar_encabezado,
         )
         if confirmacion is None:
             return None
@@ -298,20 +357,35 @@ def _validar_valor(clave: str, valor: str, etiqueta: str) -> str | None:
     return None
 
 
-def _mostrar_resumen(campos: list[dict], valores: dict) -> None:
+def _mostrar_resumen(
+    campos: list[dict],
+    valores: dict,
+    mostrar_contexto=None,
+    titulo: str = "Formulario",
+    mostrar_encabezado=None,
+) -> None:
     """Muestra un resumen de los valores del formulario con Rich."""
     _consola.clear()
-    _mostrar_tabla_campos(campos, valores, "Resumen")
+    contexto = mostrar_contexto(valores) if mostrar_contexto is not None else None
+    if mostrar_encabezado is not None:
+        mostrar_encabezado(titulo, valores, contexto)
+    _mostrar_tabla_campos(campos, valores, "")
 
 
 def _dibujar_formulario(
     campos: list[dict],
     valores: dict,
     mensaje_error: str | None = None,
+    mostrar_contexto=None,
+    titulo: str = "Formulario",
+    mostrar_encabezado=None,
 ) -> None:
     """Redibuja el formulario completo antes de solicitar un valor."""
     _consola.clear()
-    _mostrar_tabla_campos(campos, valores, "Formulario")
+    contexto = mostrar_contexto(valores) if mostrar_contexto is not None else None
+    if mostrar_encabezado is not None:
+        mostrar_encabezado(titulo, valores, contexto)
+    _mostrar_tabla_campos(campos, valores, "")
     if mensaje_error:
         _consola.print(f"[yellow]Error: {mensaje_error}[/yellow]")
     _mostrar_pie_formulario()

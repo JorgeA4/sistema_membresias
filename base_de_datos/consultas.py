@@ -594,6 +594,17 @@ def buscar_membresia_de_miembro(num_miembro):
         return _consulta_membresia(conexion, fila["num"]) if fila else None
 
 
+def obtener_membresias_de_miembro(num_miembro):
+    with _usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(
+                "SELECT num FROM membresia WHERE miembro=%s ORDER BY num",
+                (num_miembro,),
+            )
+            numeros = [fila["num"] for fila in _filas(cursor)]
+        return [_consulta_membresia(conexion, num) for num in numeros]
+
+
 def guardar_membresia(membresia):
     with _usar_conexion() as conexion:
         valores = (

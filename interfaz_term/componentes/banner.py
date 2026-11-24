@@ -15,9 +15,35 @@ def mostrar_banner(texto_secundario: str) -> None:
     _consola.clear()
     _consola.print(
         Panel(
-            f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}]\n{texto_secundario}",
+            texto_secundario,
+            title=f"[{COLOR_TITULO}]NEXUM[/{COLOR_TITULO}]",
             border_style=COLOR_BORDE_BANNER,
             box=rich_box.ROUNDED,
             padding=(0, 4),
+        )
+    )
+
+
+def mostrar_banner_operacion(
+    titulo: str,
+    identidad: dict,
+    contexto: list[str] | None = None,
+    limpiar: bool = False,
+) -> None:
+    """Muestra el encabezado unificado de una operación o formulario."""
+    if limpiar:
+        _consola.clear()
+    nombre = identidad.get("nombre", "")
+    rol = identidad.get("rol_nombre", "Usuario")
+    lineas = [f"Usuario: {nombre} | Rol: {rol}"]
+    if contexto:
+        lineas.extend(contexto)
+    _consola.print(
+        Panel(
+            "\n".join(lineas),
+            title=f"[{COLOR_TITULO}]{titulo}[/{COLOR_TITULO}]",
+            border_style=COLOR_BORDE_BANNER,
+            box=rich_box.ROUNDED,
+            padding=(0, 2),
         )
     )

@@ -125,6 +125,17 @@ def buscar_membresia_de_miembro(num_miembro: int) -> Membresia | None:
         return membresias[0]
     return None
 
+
+def obtener_membresias_de_miembro(num_miembro: int) -> list[Membresia]:
+    return sorted(
+        (
+            membresia
+            for membresia in bd.membresias.values()
+            if membresia.miembro.num == num_miembro
+        ),
+        key=lambda membresia: membresia.num,
+    )
+
 def guardar_membresia(membresia: Membresia) -> None:
     if membresia.num is None:
         membresia.num = bd.siguiente_numero("membresias", bd.membresias)

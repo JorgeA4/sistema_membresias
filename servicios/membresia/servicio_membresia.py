@@ -42,6 +42,42 @@ def consultar_membresia_de_miembro(identidad: dict, num_miembro: int) -> Membres
     return membresia
 
 
+def obtener_historial_membresias(
+    identidad: dict,
+    num_membresia: int,
+) -> list[Membresia]:
+    """Obtiene todas las membresías históricas del cliente seleccionado."""
+    membresia = consultar_membresia(identidad, num_membresia)
+    if membresia is None:
+        raise EntidadNoEncontrada("La membresía no existe.")
+    historial = bd.obtener_membresias_de_miembro(membresia.miembro.num)
+    return [actualizar_estado_membresia(item) for item in historial]
+
+
+def obtener_historial_membresias_y_planes(
+    identidad: dict,
+    num_membresia: int,
+) -> list[Renovacion]:
+    """Obtiene los periodos históricos junto con el plan contratado."""
+    membresia = consultar_membresia(identidad, num_membresia)
+    if membresia is None:
+        raise EntidadNoEncontrada("La membresía no existe.")
+
+    historial = bd.obtener_membresias_de_miembro(membresia.miembro.num)
+    renovaciones = []
+    for elemento in historial:
+        actualizar_estado_membresia(elemento)
+        renovaciones.extend(bd.obtener_renovaciones_de_membresia(elemento.num))
+
+    return sorted(
+        renovaciones,
+        key=lambda renovacion: (
+            renovacion.fecha_inicio_periodo,
+            renovacion.num,
+        ),
+    )
+
+
 def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion:
     requiere_operador_tienda(identidad)
     with bd.transaccion():

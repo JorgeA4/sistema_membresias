@@ -3,7 +3,7 @@
 import questionary
 from rich.console import Console
 
-from interfaz_term.componentes.banner import mostrar_banner
+from interfaz_term.componentes.banner import mostrar_banner, mostrar_banner_operacion
 from interfaz_term.componentes.formulario import pedir_formulario
 from interfaz_term.componentes.mensajes import error, exito, pausar
 from interfaz_term.componentes.tabla import mostrar_tabla
@@ -11,6 +11,7 @@ from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from servicios.caja.servicio_caja import registrar_operacion_caja
 from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
+    obtener_transacciones_cashback_de_membresia,
     obtener_transacciones_de_membresia,
 )
 from servicios.ajuste.servicio_ajuste import ajustar_cashback, ajustar_puntos
@@ -19,6 +20,7 @@ from servicios.membresia.servicio_membresia import (
     reactivar_membresia,
     renovar_membresia,
     suspender_membresia,
+    obtener_historial_membresias_y_planes,
 )
 from servicios.miembro.servicio_miembro import (
     modificar_miembro,
@@ -82,9 +84,11 @@ from interfaz_term.validaciones.validadores_compra import (
     crear_validador_membresia_compra,
     crear_validador_recompensa,
     crear_mostrador_cashback,
+    mostrar_cliente_compra,
     validar_cashback,
 )
 from interfaz_term.validaciones.validadores_membresia import (
+    crear_contexto_membresia,
     crear_validador_membresia,
     crear_validador_membresia_para_renovacion,
 )
@@ -116,6 +120,14 @@ def _mostrar_encabezado(sesion: dict) -> None:
     mostrar_banner(
         f"Usuario: {nombre} | Rol: [{COLOR_ENCABEZADO}]{nombre_rol}[/{COLOR_ENCABEZADO}]"
     )
+
+
+def _crear_encabezado_formulario(identidad: dict):
+    """Crea el renderizador del banner unificado de formularios."""
+    def mostrar(titulo, valores, contexto):
+        mostrar_banner_operacion(titulo, identidad, contexto, limpiar=False)
+
+    return mostrar
 
 
 def _rol(sesion: dict) -> str:
@@ -176,7 +188,7 @@ def mostrar_operaciones_tienda(sesion: dict) -> tuple:
     elif accion == "Renovar membresía":
         _renovar(identidad)
     elif accion == "Cambiar plan":
-        _renovar(identidad, titulo="Cambiar plan mediante renovación")
+        _renovar(identidad, titulo="Cambiar plan")
     elif accion == "← Volver":
         return "usuario", VOLVER
     return "usuario", None
@@ -203,7 +215,9 @@ def _buscar_membresia(sesion: dict) -> tuple:
             "clave": "num_membresia",
             "etiqueta": "Número de membresía",
             "validador": crear_validador_membresia(identidad),
-        }]
+        }],
+        titulo="Buscar membresía",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return "usuario", None
@@ -223,6 +237,8 @@ def _filtrar_miembros(sesion: dict) -> tuple:
             {"clave": "estado", "etiqueta": "Estado (ACTIVA, SUSPENDIDA o CANCELADA)", "requerido": False},
             {"clave": "plan", "etiqueta": "Código del plan activo", "requerido": False},
         ],
+        titulo="Filtrar miembros",
+        mostrar_encabezado=_crear_encabezado_formulario(sesion["identidad"]),
     )
     if datos is None:
         return "usuario", None
@@ -288,42 +304,33 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
         raise EntidadNoEncontrada("La membresía no existe.")
     miembro = membresia.miembro
 
-    _mostrar_encabezado(sesion)
+    _mostrar_banner_consulta("Membresía", identidad, membresia)
+    version = membresia.version_plan_actual
     mostrar_tabla(
-        "Información del miembro",
-        ["Nombre", "Correo", "Teléfono"],
+        "",
+        ["Número", "Estado", "Plan", "Condiciones"],
         [(
-            f"{miembro.nombre} {miembro.primer_apellido}",
-            miembro.correo,
-            miembro.telefono,
+            membresia.num,
+            membresia.estado.value,
+            version.plan.nombre if version else "Sin plan",
+            version.num if version else "-",
         )],
     )
-    if membresia is not None:
-        version = membresia.version_plan_actual
-        mostrar_tabla(
-            "Membresía actual",
-            ["Número", "Estado", "Plan", "Condiciones"],
-            [(
-                membresia.num,
-                membresia.estado.value,
-                version.plan.nombre if version else "Sin plan",
-                version.num if version else "-",
-            )],
-        )
 
-    opciones = ["Consultar actividad", "← Volver"] if membresia is not None else ["← Volver"]
+    opciones = ["← Volver"]
     if _rol(sesion) in {"ADM", "GER"}:
-        opciones = ["Modificar miembro"]
-        if membresia is not None:
-            opciones.append("Consultar actividad")
-            if membresia.estado.value == "ACTIVA":
-                opciones.append("Suspender membresía")
-                opciones.append("Cancelar membresía")
-            elif membresia.estado.value == "SUSPENDIDA":
-                opciones.append("Reactivar membresía")
-                opciones.append("Cancelar membresía")
+        opciones = ["Consultar datos personales", "Modificar miembro", "Consultar actividad"]
+        if membresia.estado.value == "ACTIVA":
+            opciones.append("Suspender membresía")
+            opciones.append("Cancelar membresía")
+        elif membresia.estado.value == "SUSPENDIDA":
+            opciones.append("Reactivar membresía")
+            opciones.append("Cancelar membresía")
         opciones.append("← Volver")
     accion = questionary.select("¿Qué deseas hacer?", choices=opciones).ask()
+    if accion == "Consultar datos personales":
+        _mostrar_datos_personales(identidad, miembro)
+        return "usuario", None
     if accion == "Modificar miembro":
         _modificar_miembro_seleccionado(identidad, miembro)
         return "usuario", None
@@ -352,6 +359,8 @@ def _modificar_miembro_seleccionado(identidad: dict, miembro) -> None:
             {"clave": "telefono", "etiqueta": "Teléfono actual", "valor_inicial": miembro.telefono},
             {"clave": "correo", "etiqueta": "Correo actual", "valor_inicial": miembro.correo},
         ],
+        titulo="Modificar miembro",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
         iniciar_en_resumen=True,
     )
     if datos is None:
@@ -474,7 +483,10 @@ def _registrar_venta(identidad: dict) -> None:
                 "requerido": False,
                 "validador": crear_validador_recompensa(identidad),
             },
-        ]
+        ],
+        titulo="Nueva compra",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=mostrar_cliente_compra,
     )
     if datos is None:
         return
@@ -508,7 +520,9 @@ def _contratar_nuevo_miembro(identidad: dict) -> None:
                 "contrasena": True,
                 "confirmar": True,
             },
-        ]
+        ],
+        titulo="Contratar membresía",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -535,7 +549,9 @@ def _modificar_miembro(identidad: dict) -> None:
             {"clave": "segundo_apellido", "etiqueta": "Segundo apellido", "requerido": False},
             {"clave": "telefono", "etiqueta": "Teléfono"},
             {"clave": "correo", "etiqueta": "Correo electrónico"},
-        ]
+        ],
+        titulo="Modificar miembro",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -563,7 +579,10 @@ def _renovar(identidad: dict, titulo: str = "Renovar membresía") -> None:
                 "etiqueta": "Número de membresía",
                 "validador": crear_validador_membresia_para_renovacion(identidad),
             },
-        ]
+        ],
+        titulo=titulo,
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=crear_contexto_membresia(identidad),
     )
     if datos is None:
         return
@@ -655,7 +674,10 @@ def _consultar_miembro(identidad: dict) -> None:
         "clave": "num_membresia",
         "etiqueta": "Número de membresía",
         "validador": crear_validador_membresia(identidad),
-    }])
+    }],
+        titulo="Consultar membresía",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos is None:
         return
     membresia = datos["_membresia"]
@@ -698,7 +720,9 @@ def _crear_plan(identidad: dict) -> None:
             },
             {"clave": "nombre", "etiqueta": "Nombre"},
             {"clave": "descripcion", "etiqueta": "Descripción", "requerido": False},
-        ]
+        ],
+        titulo="Nuevo plan",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -713,7 +737,9 @@ def _modificar_plan(identidad: dict) -> None:
             {"clave": "codigo", "etiqueta": "Código del plan"},
             {"clave": "nombre", "etiqueta": "Nuevo nombre"},
             {"clave": "descripcion", "etiqueta": "Nueva descripción", "requerido": False},
-        ]
+        ],
+        titulo="Modificar plan",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -740,7 +766,9 @@ def _crear_version_plan(identidad: dict) -> None:
             {"clave": "precio", "etiqueta": "Precio"},
             {"clave": "plazo_meses", "etiqueta": "Plazo en meses"},
             {"clave": "aplica_en", "etiqueta": "Aplicación (CONTRATACION, RENOVACION o AMBAS)"},
-        ]
+        ],
+        titulo="Nueva versión de plan",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -748,14 +776,14 @@ def _crear_version_plan(identidad: dict) -> None:
         datos["fecha_inicio"] = _fecha(datos["fecha_inicio"])
         datos["fecha_final"] = _fecha(datos["fecha_final"])
         datos["plazo_meses"] = _numero(datos["plazo_meses"])
-        _configurar_beneficios_version(datos)
+        _configurar_beneficios_version(datos, identidad=identidad)
         version = crear_version_plan(identidad, datos)
         exito(f"Condiciones del plan registradas.")
     except (ValueError, PermissionError) as exc:
         error(str(exc))
 
 
-def _configurar_beneficios_version(datos: dict, anterior=None) -> None:
+def _configurar_beneficios_version(datos: dict, anterior=None, identidad=None) -> None:
     if anterior is not None:
         if anterior.config_puntos is not None:
             datos["config_puntos"] = ConfigPuntos(
@@ -803,6 +831,11 @@ def _configurar_beneficios_version(datos: dict, anterior=None) -> None:
                      "requerido": False, "valor_inicial": getattr(getattr(anterior, "config_puntos", None), "vigencia_meses", "") or ""},
                 ],
                 iniciar_en_resumen=anterior is not None,
+                titulo="Configurar puntos",
+                mostrar_encabezado=(
+                    _crear_encabezado_formulario(identidad)
+                    if identidad is not None else None
+                ),
             )
             if configuracion is not None:
                 vigencia = configuracion["vigencia_meses"]
@@ -822,6 +855,11 @@ def _configurar_beneficios_version(datos: dict, anterior=None) -> None:
                      "valor_inicial": ",".join(str(dia.dia_semana if hasattr(dia, "dia_semana") else dia) for dia in getattr(getattr(anterior, "config_descuento", None), "dias_aplicables", []))},
                 ],
                 iniciar_en_resumen=anterior is not None,
+                titulo="Configurar descuento",
+                mostrar_encabezado=(
+                    _crear_encabezado_formulario(identidad)
+                    if identidad is not None else None
+                ),
             )
             if configuracion is not None:
                 minimo = configuracion["monto_minimo"]
@@ -841,6 +879,11 @@ def _configurar_beneficios_version(datos: dict, anterior=None) -> None:
                      "valor_inicial": getattr(getattr(anterior, "config_cashback", None), "limite_min_mensual", "") or ""},
                 ],
                 iniciar_en_resumen=anterior is not None,
+                titulo="Configurar cashback",
+                mostrar_encabezado=(
+                    _crear_encabezado_formulario(identidad)
+                    if identidad is not None else None
+                ),
             )
             if configuracion is not None:
                 limite = configuracion["limite_min_mensual"]
@@ -865,7 +908,9 @@ def _finalizar_version_plan(identidad: dict) -> None:
     datos = pedir_formulario(
         [
             {"clave": "fecha_final", "etiqueta": "Nueva fecha final (AAAA-MM-DD)"},
-        ]
+        ],
+        titulo="Finalizar versión de plan",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -890,7 +935,9 @@ def _crear_recompensa(identidad: dict) -> None:
             },
             {"clave": "nombre", "etiqueta": "Nombre"},
             {"clave": "descripcion", "etiqueta": "Descripción", "requerido": False},
-        ]
+        ],
+        titulo="Nueva recompensa",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -905,7 +952,9 @@ def _modificar_recompensa(identidad: dict) -> None:
             {"clave": "codigo", "etiqueta": "Código de recompensa"},
             {"clave": "nombre", "etiqueta": "Nuevo nombre"},
             {"clave": "descripcion", "etiqueta": "Nueva descripción", "requerido": False},
-        ]
+        ],
+        titulo="Modificar recompensa",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -933,7 +982,9 @@ def _crear_version_recompensa(identidad: dict) -> None:
             },
             {"clave": "costo_puntos", "etiqueta": "Costo en puntos"},
             {"clave": "limite_canjes", "etiqueta": "Límite de canjes", "requerido": False},
-        ]
+        ],
+        titulo="Nueva versión de recompensa",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -970,7 +1021,9 @@ def _registrar_usuario(identidad: dict) -> None:
                 "confirmar": True,
             },
             {"clave": "codigo_rol", "etiqueta": "Rol (ADM, CAJ o GER)"},
-        ]
+        ],
+        titulo="Nuevo usuario",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -1059,7 +1112,10 @@ def _modificar_usuario(identidad: dict, usuario=None) -> None:
             "clave": "num_usuario",
             "etiqueta": "Número de usuario",
             "validador": crear_validador_usuario(consultar_usuario, identidad),
-        }])
+        }],
+            titulo="Buscar usuario",
+            mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        )
         if datos_usuario is None:
             return
         usuario = datos_usuario["_usuario"]
@@ -1078,6 +1134,8 @@ def _modificar_usuario(identidad: dict, usuario=None) -> None:
              "valor_inicial": usuario.rol.codigo},
         ],
         iniciar_en_resumen=True,
+        titulo="Modificar usuario",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
     )
     if datos is None:
         return
@@ -1095,7 +1153,10 @@ def _cambiar_estado_membresia(identidad: dict, operacion, estado: str) -> None:
         "clave": "num_membresia",
         "etiqueta": "Número de membresía",
         "validador": crear_validador_membresia(identidad),
-    }])
+    }],
+        titulo=f"Cambiar estado de membresía",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos is None:
         return
     try:
@@ -1115,7 +1176,10 @@ def _ajustar_puntos(identidad: dict) -> None:
             },
             {"clave": "movimiento", "etiqueta": "Movimiento de puntos (+/-)"},
             {"clave": "concepto", "etiqueta": "Concepto"},
-        ]
+        ],
+        titulo="Ajustar puntos",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=crear_contexto_membresia(identidad, puntos=True),
     )
     if datos is None:
         return
@@ -1141,7 +1205,10 @@ def _ajustar_cashback(identidad: dict) -> None:
             },
             {"clave": "movimiento", "etiqueta": "Movimiento de cashback (+/-)"},
             {"clave": "concepto", "etiqueta": "Concepto"},
-        ]
+        ],
+        titulo="Ajustar cashback",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=crear_contexto_membresia(identidad, cashback=True),
     )
     if datos is None:
         return
@@ -1175,17 +1242,107 @@ def _consultar_actividad(identidad: dict) -> None:
         "clave": "num_membresia",
         "etiqueta": "Número de membresía",
         "validador": crear_validador_membresia(identidad),
-    }])
+    }],
+        titulo="Consultar actividad",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos is None:
         return
     _mostrar_actividad_membresia(identidad, datos["_membresia"].num)
 
 
 def _mostrar_actividad_membresia(identidad: dict, num_membresia: int) -> None:
-    compras = obtener_compras_de_membresia(identidad, num_membresia)
-    transacciones = obtener_transacciones_de_membresia(identidad, num_membresia)
+    membresia = consultar_membresia(identidad, num_membresia)
+    if membresia is None:
+        raise EntidadNoEncontrada("La membresía no existe.")
+    while True:
+        _mostrar_banner_consulta("Actividad", identidad, membresia)
+        opciones = [
+            "Historial de membresías y planes",
+            "Historial de compras",
+            "Movimientos de puntos",
+            "Movimientos de cashback",
+            "← Volver",
+        ]
+        seleccion = questionary.select("¿Qué deseas consultar?", choices=opciones).ask()
+        if seleccion in (None, "← Volver"):
+            return
+        if seleccion == "Historial de membresías y planes":
+            _mostrar_historial_membresias(identidad, membresia)
+        elif seleccion == "Historial de compras":
+            _mostrar_historial_compras(identidad, membresia)
+        elif seleccion == "Movimientos de puntos":
+            _mostrar_movimientos_puntos(identidad, membresia)
+        elif seleccion == "Movimientos de cashback":
+            _mostrar_movimientos_cashback(identidad, membresia)
+
+
+def _mostrar_datos_personales(identidad: dict, miembro) -> None:
+    _mostrar_banner_consulta(
+        "Datos personales",
+        identidad,
+        contexto=[f"Cliente: {miembro.nombre} {miembro.primer_apellido}"],
+    )
     mostrar_tabla(
-        "Compras de la membresía",
+        "",
+        ["Nombre", "Correo", "Teléfono"],
+        [(
+            f"{miembro.nombre} {miembro.primer_apellido}",
+            miembro.correo,
+            miembro.telefono,
+        )],
+    )
+    pausar()
+
+
+def _mostrar_banner_consulta(
+    titulo: str,
+    identidad: dict,
+    membresia=None,
+    contexto: list[str] | None = None,
+) -> None:
+    if contexto is None:
+        contexto = []
+    if membresia is not None:
+        contexto = [
+            f"Cliente: {membresia.miembro.nombre} "
+            f"{membresia.miembro.primer_apellido}",
+            f"Membresía: {membresia.num}",
+            *contexto,
+        ]
+    mostrar_banner_operacion(titulo, identidad, contexto, limpiar=True)
+
+
+def _mostrar_historial_membresias(identidad: dict, membresia) -> None:
+    historial = obtener_historial_membresias_y_planes(identidad, membresia.num)
+    _mostrar_banner_consulta(
+        "Historial de membresías y planes",
+        identidad,
+        membresia,
+    )
+    mostrar_tabla(
+        "",
+        ["Membresía", "Plan", "Versión", "Inicio", "Fin", "Estado"],
+        [
+            (
+                renovacion.membresia.num,
+                renovacion.version_plan_comprado.plan.nombre,
+                renovacion.version_plan_comprado.num,
+                renovacion.fecha_inicio_periodo,
+                renovacion.fecha_fin_periodo,
+                renovacion.membresia.estado.value,
+            )
+            for renovacion in historial
+        ],
+    )
+    pausar()
+
+
+def _mostrar_historial_compras(identidad: dict, membresia) -> None:
+    compras = obtener_compras_de_membresia(identidad, membresia.num)
+    _mostrar_banner_consulta("Historial de compras", identidad, membresia)
+    mostrar_tabla(
+        "",
         ["Número", "Fecha", "Monto base", "Descuento", "Cashback", "Monto final", "Usuario"],
         [
             (
@@ -1200,12 +1357,41 @@ def _mostrar_actividad_membresia(identidad: dict, num_membresia: int) -> None:
             for compra in compras
         ],
     )
+
+    pausar()
+
+
+def _mostrar_movimientos_puntos(identidad: dict, membresia) -> None:
+    transacciones = obtener_transacciones_de_membresia(identidad, membresia.num)
+    _mostrar_banner_consulta("Movimientos de puntos", identidad, membresia)
     mostrar_tabla(
-        "Movimientos de puntos de la membresía",
+        "",
         ["Fecha", "Número", "Movimiento", "Saldo", "Concepto"],
         [
             (transaccion.fecha, transaccion.num, transaccion.movimiento,
              transaccion.saldo, transaccion.concepto or "")
+            for transaccion in transacciones
+        ],
+    )
+    pausar()
+
+
+def _mostrar_movimientos_cashback(identidad: dict, membresia) -> None:
+    transacciones = obtener_transacciones_cashback_de_membresia(
+        identidad, membresia.num
+    )
+    _mostrar_banner_consulta("Movimientos de cashback", identidad, membresia)
+    mostrar_tabla(
+        "",
+        ["Fecha", "Número", "Movimiento", "Saldo", "Concepto"],
+        [
+            (
+                transaccion.fecha,
+                transaccion.num,
+                transaccion.monto,
+                transaccion.saldo,
+                transaccion.concepto or "",
+            )
             for transaccion in transacciones
         ],
     )
@@ -1372,10 +1558,15 @@ def _crear_plan_completo(identidad: dict) -> None:
         },
         {"clave": "nombre", "etiqueta": "Nombre"},
         {"clave": "descripcion", "etiqueta": "Descripción", "requerido": False},
-    ])
+    ],
+        titulo="Nuevo plan",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos_plan is None:
         return
-    datos_condiciones = _pedir_condiciones("Condiciones iniciales del plan", incluye_aplica=False)
+    datos_condiciones = _pedir_condiciones(
+        "Condiciones iniciales del plan", incluye_aplica=False, identidad=identidad
+    )
     if datos_condiciones is None:
         return
     try:
@@ -1390,7 +1581,11 @@ def _modificar_plan_completo(identidad: dict, plan) -> None:
         {"clave": "nombre", "etiqueta": f"Nombre (actual: {plan.nombre})", "valor_inicial": plan.nombre},
         {"clave": "descripcion", "etiqueta": "Descripción actual", "requerido": False,
          "valor_inicial": plan.descripcion or ""},
-    ], iniciar_en_resumen=True)
+    ],
+        iniciar_en_resumen=True,
+        titulo="Modificar plan",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos_plan is None:
         return
     actuales = obtener_condiciones_regulares(plan.codigo)
@@ -1401,7 +1596,10 @@ def _modificar_plan_completo(identidad: dict, plan) -> None:
         default=None,
     )
     datos_condiciones = _pedir_condiciones(
-        "Nuevas condiciones del plan", incluye_aplica=False, anterior=actual
+        "Nuevas condiciones del plan",
+        incluye_aplica=False,
+        anterior=actual,
+        identidad=identidad,
     )
     if datos_condiciones is None:
         return
@@ -1413,7 +1611,9 @@ def _modificar_plan_completo(identidad: dict, plan) -> None:
 
 
 def _crear_promocion(identidad: dict, codigo_plan: str) -> None:
-    datos = _pedir_condiciones("Nueva promoción", incluye_aplica=True)
+    datos = _pedir_condiciones(
+        "Nueva promoción", incluye_aplica=True, identidad=identidad
+    )
     if datos is None:
         return
     try:
@@ -1427,7 +1627,11 @@ def _editar_fecha_promocion(identidad: dict, promocion) -> None:
     datos = pedir_formulario([
         {"clave": "fecha_final", "etiqueta": "Nueva fecha final (AAAA-MM-DD)",
          "valor_inicial": promocion.fecha_final},
-    ], iniciar_en_resumen=True)
+    ],
+        iniciar_en_resumen=True,
+        titulo="Editar promoción",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos is None:
         return
     try:
@@ -1437,7 +1641,12 @@ def _editar_fecha_promocion(identidad: dict, promocion) -> None:
         error(str(exc))
 
 
-def _pedir_condiciones(titulo: str, incluye_aplica: bool, anterior=None) -> dict | None:
+def _pedir_condiciones(
+    titulo: str,
+    incluye_aplica: bool,
+    anterior=None,
+    identidad=None,
+) -> dict | None:
     from datetime import date, timedelta
 
     def valor(nombre, defecto=""):
@@ -1461,14 +1670,22 @@ def _pedir_condiciones(titulo: str, incluye_aplica: bool, anterior=None) -> dict
     ]
     if incluye_aplica:
         campos.append({"clave": "aplica_en", "etiqueta": "Disponible para (CONTRATACION, RENOVACION o AMBAS)"})
-    datos = pedir_formulario(campos, iniciar_en_resumen=anterior is not None)
+    datos = pedir_formulario(
+        campos,
+        iniciar_en_resumen=anterior is not None,
+        titulo=titulo,
+        mostrar_encabezado=(
+            _crear_encabezado_formulario(identidad)
+            if identidad is not None else None
+        ),
+    )
     if datos is None:
         return None
     try:
         datos["fecha_inicio"] = _fecha(datos["fecha_inicio"])
         datos["fecha_final"] = _fecha(datos["fecha_final"])
         datos["plazo_meses"] = _numero(datos["plazo_meses"])
-        _configurar_beneficios_version(datos, anterior)
+        _configurar_beneficios_version(datos, anterior, identidad)
         return datos
     except ValueError as exc:
         error(str(exc))
@@ -1598,10 +1815,13 @@ def _crear_recompensa_completa(identidad: dict) -> None:
         },
         {"clave": "nombre", "etiqueta": "Nombre"},
         {"clave": "descripcion", "etiqueta": "Descripción", "requerido": False},
-    ])
+    ],
+        titulo="Nueva recompensa",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos_recompensa is None:
         return
-    datos_condiciones = _pedir_condiciones_recompensa()
+    datos_condiciones = _pedir_condiciones_recompensa(identidad=identidad)
     if datos_condiciones is None:
         return
     try:
@@ -1618,12 +1838,16 @@ def _modificar_recompensa_desde_detalle(identidad: dict, recompensa, actual) -> 
         {"clave": "nombre", "etiqueta": f"Nombre (actual: {recompensa.nombre})", "valor_inicial": recompensa.nombre},
         {"clave": "descripcion", "etiqueta": "Descripción actual", "requerido": False,
          "valor_inicial": recompensa.descripcion or ""},
-    ], iniciar_en_resumen=True)
+    ],
+        iniciar_en_resumen=True,
+        titulo="Modificar recompensa",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
     if datos_recompensa is None or actual is None:
         if actual is None:
             error("La recompensa no tiene condiciones vigentes; utiliza Reactivar recompensa.")
         return
-    datos_condiciones = _pedir_condiciones_recompensa(actual)
+    datos_condiciones = _pedir_condiciones_recompensa(actual, identidad=identidad)
     if datos_condiciones is None:
         return
     try:
@@ -1639,7 +1863,9 @@ def _reactivar_recompensa(identidad: dict, recompensa, condiciones) -> None:
     from datetime import date
 
     anterior = max(condiciones, key=lambda condicion: (condicion.fecha_inicio, condicion.num), default=None)
-    datos = _pedir_condiciones_recompensa(anterior, reactivacion=True)
+    datos = _pedir_condiciones_recompensa(
+        anterior, reactivacion=True, identidad=identidad
+    )
     if datos is None:
         return
     try:
@@ -1649,7 +1875,11 @@ def _reactivar_recompensa(identidad: dict, recompensa, condiciones) -> None:
         error(str(exc))
 
 
-def _pedir_condiciones_recompensa(anterior=None, reactivacion=False) -> dict | None:
+def _pedir_condiciones_recompensa(
+    anterior=None,
+    reactivacion=False,
+    identidad=None,
+) -> dict | None:
     from datetime import date
 
     if reactivacion:
@@ -1673,7 +1903,15 @@ def _pedir_condiciones_recompensa(anterior=None, reactivacion=False) -> dict | N
         {"clave": "limite_canjes", "etiqueta": "Límite de canjes (vacío sin límite)",
          "requerido": False, "valor_inicial": getattr(anterior, "limite_canjes", "") or ""},
     ]
-    datos = pedir_formulario(campos, iniciar_en_resumen=anterior is not None)
+    datos = pedir_formulario(
+        campos,
+        iniciar_en_resumen=anterior is not None,
+        titulo="Condiciones de recompensa",
+        mostrar_encabezado=(
+            _crear_encabezado_formulario(identidad)
+            if identidad is not None else None
+        ),
+    )
     if datos is None:
         return None
     try:

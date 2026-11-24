@@ -2,9 +2,6 @@
 
 from decimal import Decimal
 
-from rich.console import Console
-from rich.panel import Panel
-
 from servicios.caja.servicio_caja import validar_canje
 from servicios.compra.servicio_compra import (
     obtener_cashback_disponible,
@@ -14,9 +11,6 @@ from servicios.recompensa.servicio_recompensa import (
     consultar_recompensa,
     obtener_versiones_de_recompensa,
 )
-
-
-_consola = Console()
 
 
 def crear_validador_membresia_compra(identidad: dict):
@@ -37,20 +31,12 @@ def crear_validador_membresia_compra(identidad: dict):
 
 
 def mostrar_cashback_disponible(identidad: dict, valores: dict) -> None:
-    """Muestra el saldo disponible antes de solicitar cashback."""
+    """Prepara el saldo disponible antes de solicitar cashback."""
     membresia = valores.get("_membresia")
     if membresia is None:
         return
     saldo = obtener_cashback_disponible(identidad, membresia.num)
     valores["_cashback_disponible"] = saldo
-    _consola.print(
-        Panel(
-            f"Membresía: [bold]{membresia.num}[/bold]\n"
-            f"Disponible: [bold]${saldo:.2f}[/bold]",
-            title="Cashback disponible",
-            border_style="cyan",
-        )
-    )
 
 
 def crear_mostrador_cashback(identidad: dict):
@@ -59,6 +45,18 @@ def crear_mostrador_cashback(identidad: dict):
         mostrar_cashback_disponible(identidad, valores)
 
     return mostrar
+
+
+def mostrar_cliente_compra(valores: dict) -> list[str] | None:
+    """Devuelve el contexto del cliente para el banner de la compra."""
+    membresia = valores.get("_membresia")
+    if membresia is None:
+        return None
+    miembro = membresia.miembro
+    contexto = [f"Cliente: {miembro.nombre} {miembro.primer_apellido}"]
+    if "_cashback_disponible" in valores:
+        contexto.append(f"Cashback disponible: ${valores['_cashback_disponible']:.2f}")
+    return contexto
 
 
 def validar_cashback(valor, valores):
