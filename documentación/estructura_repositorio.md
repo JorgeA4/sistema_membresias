@@ -19,6 +19,7 @@ sistema_membresias/
 │   ├── caja/
 │   └── ajuste/
 ├── base_de_datos/
+│   ├── ejecutor.py
 │   └── consultas/
 │       ├── miembros/
 │       │   ├── consultas_miembros.py
@@ -89,9 +90,10 @@ organizadas por dominio dentro de `consultas/`:
 - `consultas_*.py`: lecturas y obtención de datos.
 - `operaciones_*.py`: inserciones, modificaciones y eliminaciones.
 
-La infraestructura común de conexión, transacciones y mapeo se mantiene en
-`consultas/_persistencia.py`. La conexión con MariaDB se encuentra pendiente
-de completar.
+La infraestructura común de conexión, transacciones y errores se mantiene en
+`ejecutor.py`. Cada módulo de dominio contiene directamente sus consultas SQL,
+operaciones de persistencia y mapeos necesarios. La conexión con MariaDB se
+encuentra pendiente de completar.
 
 ## `interfaz_term/`
 

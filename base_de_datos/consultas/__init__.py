@@ -1,5 +1,4 @@
-"""Acceso persistente organizado por dominio de negocio."""
+"""Consultas y operaciones de persistencia organizadas por dominio."""
 
-from ._persistencia import *
-from ._persistencia import transaccion
+from base_de_datos.ejecutor import transaccion
 from . import miembros, usuarios, membresias, planes, recompensas, compras
