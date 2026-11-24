@@ -1,8 +1,11 @@
 """Menú de consulta para miembros."""
 
+from decimal import Decimal
+
 import questionary
 
-from interfaz_term.componentes.banner import mostrar_banner
+from interfaz_term.componentes.banner import mostrar_banner, mostrar_banner_operacion
+from interfaz_term.componentes.formulario import pedir_formulario
 from interfaz_term.componentes.mensajes import error, informacion, pausar
 from interfaz_term.componentes.tabla import formatear_fecha_hora, mostrar_tabla
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO
@@ -18,6 +21,7 @@ from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
     obtener_fecha_vencimiento_puntos,
     obtener_saldo_de_membresia,
+    obtener_transacciones_cashback_de_membresia,
     obtener_transacciones_de_membresia,
 )
 from servicios.membresia.servicio_membresia import consultar_membresia_de_miembro
@@ -28,6 +32,7 @@ from servicios.recompensa.servicio_recompensa import (
 )
 from utilidades.excepciones import EntidadNoEncontrada
 from utilidades.movimientos import obtener_datos_movimiento
+from interfaz_term.validaciones.validadores_fecha import validar_fecha_final_rango
 
 def _mostrar_encabezado(sesion: dict) -> None:
     identidad = sesion.get("identidad") or {}
@@ -217,16 +222,64 @@ def _mostrar_compras(identidad: dict) -> None:
     membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
         raise EntidadNoEncontrada("No tienes una membresía registrada.")
-    compras = obtener_compras_de_membresia(identidad, membresia.num)
+    rango = _pedir_rango_fechas(identidad, membresia, "Historial de compras")
+    if rango is None:
+        return
+    fecha_inicio, fecha_final = rango
+    compras = obtener_compras_de_membresia(
+        identidad,
+        membresia.num,
+        fecha_inicio,
+        fecha_final,
+    )
+    puntos = obtener_transacciones_de_membresia(identidad, membresia.num)
+    cashback = obtener_transacciones_cashback_de_membresia(
+        identidad, membresia.num
+    )
+    puntos_por_compra = {
+        compra.num: sum(
+            transaccion.movimiento
+            for transaccion in puntos
+            if transaccion.compra is not None
+            and transaccion.compra.num == compra.num
+            and transaccion.movimiento > 0
+        )
+        for compra in compras
+    }
+    cashback_por_compra = {
+        compra.num: sum(
+            (
+                transaccion.monto
+                for transaccion in cashback
+                if transaccion.compra is not None
+                and transaccion.compra.num == compra.num
+                and transaccion.monto > 0
+            ),
+            Decimal("0.00"),
+        )
+        for compra in compras
+    }
     mostrar_tabla(
         "Historial de compras",
-        ["Número", "Fecha", "Monto base", "Descuento", "Monto final"],
+        [
+            "Número",
+            "Fecha y hora",
+            "Monto base",
+            "Descuento",
+            "Cashback aplicado",
+            "Cashback generado",
+            "Puntos generados",
+            "Monto final",
+        ],
         [
             (
                 c.num,
                 formatear_fecha_hora(c.fecha),
                 c.monto_base,
                 c.descuento_nominal,
+                c.cashback_aplicado,
+                cashback_por_compra[c.num],
+                puntos_por_compra[c.num],
                 c.monto_final,
             )
             for c in compras
@@ -239,11 +292,20 @@ def _mostrar_historial_puntos(identidad: dict) -> None:
     membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
         raise EntidadNoEncontrada("No tienes una membresía registrada.")
-    transacciones = obtener_transacciones_de_membresia(identidad, membresia.num)
+    rango = _pedir_rango_fechas(identidad, membresia, "Historial de puntos")
+    if rango is None:
+        return
+    fecha_inicio, fecha_final = rango
+    transacciones = obtener_transacciones_de_membresia(
+        identidad,
+        membresia.num,
+        fecha_inicio,
+        fecha_final,
+    )
     mostrar_tabla(
         "Historial de puntos",
         [
-            "Fecha",
+            "Fecha y hora",
             "Número",
             "Tipo",
             "Movimiento",
@@ -262,6 +324,45 @@ def _mostrar_historial_puntos(identidad: dict) -> None:
         ],
     )
     _pausa()
+
+
+def _pedir_rango_fechas(identidad: dict, membresia, titulo: str):
+    datos = pedir_formulario(
+        [
+            {
+                "clave": "fecha_inicio",
+                "etiqueta": "Fecha inicial (opcional)",
+                "requerido": False,
+            },
+            {
+                "clave": "fecha_final",
+                "etiqueta": "Fecha final (opcional)",
+                "requerido": False,
+                "validador": validar_fecha_final_rango,
+            },
+        ],
+        titulo=titulo,
+        mostrar_encabezado=lambda nombre, _valores, contexto: mostrar_banner_operacion(
+            nombre,
+            {"nombre": identidad.get("nombre", ""), "rol_nombre": "Miembro"},
+            contexto,
+            limpiar=False,
+        ),
+        mostrar_contexto=lambda _valores: [
+            f"Cliente: {membresia.miembro.nombre} "
+            f"{membresia.miembro.primer_apellido}",
+            f"Membresía: {membresia.num}",
+        ],
+    )
+    if datos is None:
+        return None
+    from datetime import date
+    return (
+        date.fromisoformat(datos["fecha_inicio"])
+        if datos["fecha_inicio"] else None,
+        date.fromisoformat(datos["fecha_final"])
+        if datos["fecha_final"] else None,
+    )
 
 
 def _mostrar_historial_canjes(identidad: dict) -> None:

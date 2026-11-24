@@ -91,6 +91,9 @@ from interfaz_term.validaciones.validadores_compra import (
     mostrar_cliente_compra,
     validar_cashback,
 )
+from interfaz_term.validaciones.validadores_fecha import (
+    validar_fecha_final_rango,
+)
 from interfaz_term.validaciones.validadores_membresia import (
     crear_contexto_membresia,
     crear_validador_membresia,
@@ -1114,7 +1117,7 @@ def _mostrar_actividad_usuario(identidad: dict, usuario) -> None:
     compras = obtener_actividad_usuario(identidad, usuario.num)
     mostrar_tabla(
         "Actividad del usuario",
-        ["Compra", "Fecha", "Membresía", "Miembro", "Monto base", "Descuento", "Cashback", "Monto final"],
+        ["Compra", "Fecha y hora", "Membresía", "Miembro", "Monto base", "Descuento", "Cashback", "Monto final"],
         [(
             compra.num,
             formatear_fecha_hora(compra.fecha),
@@ -1378,12 +1381,89 @@ def _mostrar_historial_membresias(identidad: dict, membresia) -> None:
     pausar()
 
 
+def _pedir_rango_fechas(identidad: dict, membresia, titulo: str):
+    datos = pedir_formulario(
+        [
+            {
+                "clave": "fecha_inicio",
+                "etiqueta": "Fecha inicial (opcional)",
+                "requerido": False,
+            },
+            {
+                "clave": "fecha_final",
+                "etiqueta": "Fecha final (opcional)",
+                "requerido": False,
+                "validador": validar_fecha_final_rango,
+            },
+        ],
+        titulo=titulo,
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=lambda _valores: [
+            f"Cliente: {membresia.miembro.nombre} "
+            f"{membresia.miembro.primer_apellido}",
+            f"Membresía: {membresia.num}",
+        ],
+    )
+    if datos is None:
+        return None
+    return (
+        _fecha(datos["fecha_inicio"]) if datos["fecha_inicio"] else None,
+        _fecha(datos["fecha_final"]) if datos["fecha_final"] else None,
+    )
+
+
 def _mostrar_historial_compras(identidad: dict, membresia) -> None:
-    compras = obtener_compras_de_membresia(identidad, membresia.num)
+    rango = _pedir_rango_fechas(identidad, membresia, "Historial de compras")
+    if rango is None:
+        return
+    fecha_inicio, fecha_final = rango
+    compras = obtener_compras_de_membresia(
+        identidad,
+        membresia.num,
+        fecha_inicio,
+        fecha_final,
+    )
+    puntos = obtener_transacciones_de_membresia(identidad, membresia.num)
+    cashback = obtener_transacciones_cashback_de_membresia(
+        identidad, membresia.num
+    )
+    puntos_por_compra = {
+        compra.num: sum(
+            transaccion.movimiento
+            for transaccion in puntos
+            if transaccion.compra is not None
+            and transaccion.compra.num == compra.num
+            and transaccion.movimiento > 0
+        )
+        for compra in compras
+    }
+    cashback_por_compra = {
+        compra.num: sum(
+            (
+                transaccion.monto
+                for transaccion in cashback
+                if transaccion.compra is not None
+                and transaccion.compra.num == compra.num
+                and transaccion.monto > 0
+            ),
+            Decimal("0.00"),
+        )
+        for compra in compras
+    }
     _mostrar_banner_consulta("Historial de compras", identidad, membresia)
     mostrar_tabla(
         "",
-        ["Número", "Fecha", "Monto base", "Descuento", "Cashback", "Monto final", "Usuario"],
+        [
+            "Número",
+            "Fecha y hora",
+            "Monto base",
+            "Descuento",
+            "Cashback aplicado",
+            "Cashback generado",
+            "Puntos generados",
+            "Monto final",
+            "Usuario",
+        ],
         [
             (
                 compra.num,
@@ -1391,6 +1471,8 @@ def _mostrar_historial_compras(identidad: dict, membresia) -> None:
                 compra.monto_base,
                 compra.descuento_nominal,
                 compra.cashback_aplicado,
+                cashback_por_compra[compra.num],
+                puntos_por_compra[compra.num],
                 compra.monto_final,
                 compra.usuario.num,
             )
@@ -1402,12 +1484,21 @@ def _mostrar_historial_compras(identidad: dict, membresia) -> None:
 
 
 def _mostrar_movimientos_puntos(identidad: dict, membresia) -> None:
-    transacciones = obtener_transacciones_de_membresia(identidad, membresia.num)
+    rango = _pedir_rango_fechas(identidad, membresia, "Movimientos de puntos")
+    if rango is None:
+        return
+    fecha_inicio, fecha_final = rango
+    transacciones = obtener_transacciones_de_membresia(
+        identidad,
+        membresia.num,
+        fecha_inicio,
+        fecha_final,
+    )
     _mostrar_banner_consulta("Movimientos de puntos", identidad, membresia)
     mostrar_tabla(
         "",
         [
-            "Fecha",
+            "Fecha y hora",
             "Número",
             "Tipo",
             "Movimiento",
@@ -1429,14 +1520,25 @@ def _mostrar_movimientos_puntos(identidad: dict, membresia) -> None:
 
 
 def _mostrar_movimientos_cashback(identidad: dict, membresia) -> None:
+    rango = _pedir_rango_fechas(
+        identidad,
+        membresia,
+        "Movimientos de cashback",
+    )
+    if rango is None:
+        return
+    fecha_inicio, fecha_final = rango
     transacciones = obtener_transacciones_cashback_de_membresia(
-        identidad, membresia.num
+        identidad,
+        membresia.num,
+        fecha_inicio,
+        fecha_final,
     )
     _mostrar_banner_consulta("Movimientos de cashback", identidad, membresia)
     mostrar_tabla(
         "",
         [
-            "Fecha",
+            "Fecha y hora",
             "Número",
             "Tipo",
             "Movimiento",
@@ -1679,6 +1781,12 @@ def _modificar_plan_completo(identidad: dict, plan) -> None:
 def _modificar_beneficios_plan(identidad: dict, plan) -> None:
     from datetime import date, timedelta
 
+    def mostrar_contexto(_valores):
+        return [
+            f"Plan: {plan.nombre}",
+            f"Descripción: {plan.descripcion or 'Sin descripción'}",
+        ]
+
     condiciones = obtener_condiciones_regulares(plan.codigo)
     vigentes = [condicion for condicion in condiciones if condicion.esta_vigente()]
     actual = max(
@@ -1744,6 +1852,7 @@ def _modificar_beneficios_plan(identidad: dict, plan) -> None:
         iniciar_en_resumen=True,
         titulo="Modificar beneficios",
         mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=mostrar_contexto,
     )
     if datos is None:
         return

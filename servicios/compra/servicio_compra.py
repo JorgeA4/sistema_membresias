@@ -77,19 +77,31 @@ def registrar_compra(identidad: dict, datos: dict) -> Compra:
         return compra
 
 
-def obtener_compras_de_membresia(identidad: dict, num_membresia: int) -> list[Compra]:
+def obtener_compras_de_membresia(
+    identidad: dict,
+    num_membresia: int,
+    fecha_inicio=None,
+    fecha_final=None,
+) -> list[Compra]:
     membresia = _verificar_membresia(num_membresia)
     requiere_administrador_o_propietario(identidad, membresia)
-    return bd.obtener_compras_de_membresia(num_membresia)
+    compras = bd.obtener_compras_de_membresia(num_membresia)
+    return [
+        compra for compra in compras
+        if _esta_en_rango(compra.fecha, fecha_inicio, fecha_final)
+    ]
 
 
 def obtener_transacciones_de_membresia(
-    identidad: dict, num_membresia: int
+    identidad: dict,
+    num_membresia: int,
+    fecha_inicio=None,
+    fecha_final=None,
 ) -> list[TransaccionPuntos]:
     membresia = _verificar_membresia(num_membresia)
     requiere_administrador_o_propietario(identidad, membresia)
     actualizar_vigencia_puntos(membresia)
-    return sorted(
+    transacciones = sorted(
         (
             transaccion for transaccion in bd.obtener_transacciones_de_miembro(membresia.miembro.num)
             if transaccion.membresia is not None
@@ -97,6 +109,10 @@ def obtener_transacciones_de_membresia(
         ),
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
     )
+    return [
+        transaccion for transaccion in transacciones
+        if _esta_en_rango(transaccion.fecha, fecha_inicio, fecha_final)
+    ]
 
 
 def obtener_saldo_de_membresia(identidad: dict, num_membresia: int) -> int:
@@ -188,13 +204,32 @@ def _sumar_meses(fecha: date, meses: int) -> date:
 def obtener_transacciones_cashback_de_membresia(
     identidad: dict,
     num_membresia: int,
+    fecha_inicio=None,
+    fecha_final=None,
 ) -> list[TransaccionCashback]:
     membresia = _verificar_membresia(num_membresia)
     requiere_administrador_o_propietario(identidad, membresia)
-    return sorted(
+    transacciones = sorted(
         bd.obtener_transacciones_cashback_de_membresia(num_membresia),
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
     )
+    return [
+        transaccion for transaccion in transacciones
+        if _esta_en_rango(transaccion.fecha, fecha_inicio, fecha_final)
+    ]
+
+
+def _esta_en_rango(fecha, fecha_inicio, fecha_final) -> bool:
+    if fecha_inicio is None and fecha_final is None:
+        return True
+    if fecha is None:
+        return False
+    fecha_calendario = fecha.date() if isinstance(fecha, datetime) else fecha
+    if fecha_inicio is not None and fecha_calendario < fecha_inicio:
+        return False
+    if fecha_final is not None and fecha_calendario > fecha_final:
+        return False
+    return True
 
 
 def obtener_saldo_cashback_de_membresia(identidad: dict, num_membresia: int) -> Decimal:
