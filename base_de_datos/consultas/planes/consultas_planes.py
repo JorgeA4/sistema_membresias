@@ -47,11 +47,14 @@ def _consulta_version_plan(conexion, num):
             cd.porcentaje AS config_descuento_porcentaje,
             cd.monto_minimo AS config_descuento_minimo
         FROM
-            version_plan vp
-        JOIN plan p ON p.codigo = vp.plan
-        LEFT JOIN config_cashback cc ON cc.num = vp.config_cashback
-        LEFT JOIN config_puntos cp ON cp.num = vp.config_puntos
-        LEFT JOIN config_descuento cd ON cd.num = vp.config_descuento
+            version_plan AS vp
+            INNER JOIN plan AS p ON vp.plan = p.codigo
+            LEFT JOIN config_cashback AS cc
+                ON vp.config_cashback = cc.num
+            LEFT JOIN config_puntos AS cp
+                ON vp.config_puntos = cp.num
+            LEFT JOIN config_descuento AS cd
+                ON vp.config_descuento = cd.num
         WHERE
             vp.num = %s
     """

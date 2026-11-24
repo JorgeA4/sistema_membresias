@@ -19,7 +19,7 @@ def _consulta_compra(conexion, num):
             c.*,
             (
                 SELECT MIN(tp.fecha)
-                FROM transaccion_puntos tp
+                FROM transaccion_puntos AS tp
                 WHERE tp.compra = c.num
                 AND tp.movimiento > 0
                 AND tp.version_recompensa IS NULL
@@ -115,8 +115,8 @@ def obtener_transacciones_de_miembro(num_miembro):
             tp.num
         FROM
             transaccion_puntos tp
-        JOIN
-            membresia m ON m.num = tp.membresia
+        INNER JOIN
+            membresia AS m ON tp.membresia = m.num
         WHERE
             m.miembro = %s
         ORDER BY
