@@ -82,20 +82,6 @@ def obtener_compras_de_membresia(identidad: dict, num_membresia: int) -> list[Co
     return bd.obtener_compras_de_membresia(num_membresia)
 
 
-def obtener_transacciones_de_miembro(identidad: dict, num_miembro: int) -> list[TransaccionPuntos]:
-    if bd.buscar_miembro_por_num(num_miembro) is None:
-        raise EntidadNoEncontrada("El miembro no existe.")
-    membresia = bd.buscar_membresia_de_miembro(num_miembro)
-    if membresia is None:
-        raise EntidadNoEncontrada("El miembro no tiene una membresía.")
-    requiere_administrador_o_propietario(identidad, membresia)
-    actualizar_vigencia_puntos(membresia)
-    return sorted(
-        bd.obtener_transacciones_de_miembro(num_miembro),
-        key=lambda transaccion: (transaccion.fecha, transaccion.num),
-    )
-
-
 def obtener_transacciones_de_membresia(
     identidad: dict, num_membresia: int
 ) -> list[TransaccionPuntos]:
@@ -112,19 +98,15 @@ def obtener_transacciones_de_membresia(
     )
 
 
-def obtener_saldo_de_miembro(identidad: dict, num_miembro: int) -> int:
-    transacciones = obtener_transacciones_de_miembro(identidad, num_miembro)
+def obtener_saldo_de_membresia(identidad: dict, num_membresia: int) -> int:
+    transacciones = obtener_transacciones_de_membresia(identidad, num_membresia)
     if not transacciones:
         return 0
     return transacciones[-1].saldo
 
 
-def obtener_fecha_vencimiento_puntos(identidad: dict, num_miembro: int):
-    if bd.buscar_miembro_por_num(num_miembro) is None:
-        raise EntidadNoEncontrada("El miembro no existe.")
-    membresia = bd.buscar_membresia_de_miembro(num_miembro)
-    if membresia is None:
-        raise EntidadNoEncontrada("El miembro no tiene una membresía.")
+def obtener_fecha_vencimiento_puntos(identidad: dict, num_membresia: int):
+    membresia = _verificar_membresia(num_membresia)
     requiere_administrador_o_propietario(identidad, membresia)
     actualizar_vigencia_puntos(membresia)
     return _calcular_fecha_vencimiento_puntos(membresia)

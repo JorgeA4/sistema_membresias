@@ -215,7 +215,6 @@ def _validar_valor(clave: str, valor: str, etiqueta: str) -> str | None:
     if clave in {
         "num",
         "num_membresia",
-        "num_miembro",
         "num_version",
         "plazo_meses",
         "vigencia_meses",

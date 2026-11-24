@@ -262,7 +262,12 @@ def validar_canje(
     if not version.esta_vigente():
         raise VersionNoVigente("La versión de recompensa no está vigente.")
 
-    transacciones = bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+    transacciones = [
+        transaccion
+        for transaccion in bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+        if transaccion.membresia is not None
+        and transaccion.membresia.num == num_membresia
+    ]
     canjes = [
         transaccion
         for transaccion in transacciones
@@ -285,7 +290,12 @@ def obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[Transa
         raise EntidadNoEncontrada("La membresía no existe.")
     requiere_administrador_o_propietario(identidad, membresia)
 
-    transacciones = bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+    transacciones = [
+        transaccion
+        for transaccion in bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+        if transaccion.membresia is not None
+        and transaccion.membresia.num == num_membresia
+    ]
     return sorted(
         (
             transaccion

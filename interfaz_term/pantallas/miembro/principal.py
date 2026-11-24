@@ -17,7 +17,7 @@ from interfaz_term.navegacion import (
 from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
     obtener_fecha_vencimiento_puntos,
-    obtener_saldo_de_miembro,
+    obtener_saldo_de_membresia,
     obtener_transacciones_de_membresia,
 )
 from servicios.membresia.servicio_membresia import consultar_membresia_de_miembro
@@ -149,8 +149,8 @@ def _mostrar_informacion(identidad: dict) -> None:
         raise EntidadNoEncontrada("El miembro no existe.")
     mostrar_tabla(
         "Información personal",
-        ["Número", "Nombre", "Correo", "Teléfono"],
-        [(miembro.num, f"{miembro.nombre} {miembro.primer_apellido}", miembro.correo, miembro.telefono)],
+        ["Nombre", "Correo", "Teléfono"],
+        [(f"{miembro.nombre} {miembro.primer_apellido}", miembro.correo, miembro.telefono)],
     )
     _pausa()
 
@@ -186,12 +186,15 @@ def _mostrar_membresia(identidad: dict) -> None:
 
 
 def _mostrar_puntos(identidad: dict) -> None:
-    saldo = obtener_saldo_de_miembro(identidad, identidad["num"])
-    fecha_vencimiento = obtener_fecha_vencimiento_puntos(identidad, identidad["num"])
+    membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
+    if membresia is None:
+        raise EntidadNoEncontrada("No tienes una membresía registrada.")
+    saldo = obtener_saldo_de_membresia(identidad, membresia.num)
+    fecha_vencimiento = obtener_fecha_vencimiento_puntos(identidad, membresia.num)
     mostrar_tabla(
         "Saldo de puntos",
-        ["Miembro", "Saldo", "Válidos hasta"],
-        [(identidad["num"], saldo, fecha_vencimiento or "Sin vencimiento")],
+        ["Membresía", "Saldo", "Válidos hasta"],
+        [(membresia.num, saldo, fecha_vencimiento or "Sin vencimiento")],
     )
     _pausa()
 

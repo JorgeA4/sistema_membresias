@@ -19,7 +19,7 @@ def ajustar_puntos(identidad: dict, num_membresia: int, movimiento: int, concept
         raise DatosInvalidos("El ajuste de puntos debe ser un entero distinto de cero.")
     if not concepto or not concepto.strip():
         raise DatosInvalidos("El concepto del ajuste es obligatorio.")
-    saldo = _saldo_puntos(membresia.miembro.num)
+    saldo = _saldo_puntos(membresia.num)
     nuevo_saldo = saldo + movimiento
     if nuevo_saldo < 0:
         raise SaldoInsuficiente("El ajuste dejaría el saldo de puntos en negativo.")
@@ -72,8 +72,14 @@ def _obtener_membresia(num_membresia: int):
     return membresia
 
 
-def _saldo_puntos(num_miembro: int) -> int:
-    transacciones = bd.obtener_transacciones_de_miembro(num_miembro)
+def _saldo_puntos(num_membresia: int) -> int:
+    membresia = _obtener_membresia(num_membresia)
+    transacciones = [
+        transaccion
+        for transaccion in bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+        if transaccion.membresia is not None
+        and transaccion.membresia.num == num_membresia
+    ]
     if not transacciones:
         return 0
     return max(transacciones, key=lambda t: (t.fecha, t.num)).saldo

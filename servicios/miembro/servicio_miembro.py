@@ -36,6 +36,21 @@ def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
     return miembro
 
 
+def registrar_miembro_con_membresia(identidad: dict, datos: dict, num_version_plan: int):
+    """Registra un miembro y contrata su primera membresía atomícamente."""
+    requiere_operador_tienda(identidad)
+    from servicios.membresia.servicio_membresia import contratar_membresia
+
+    with bd.transaccion():
+        miembro = registrar_miembro(identidad, datos)
+        renovacion = contratar_membresia(
+            identidad,
+            miembro.num,
+            num_version_plan,
+        )
+        return miembro, renovacion
+
+
 def consultar_miembro(identidad: dict, num: int) -> Miembro | None:
     if not isinstance(identidad, dict):
         raise OperacionNoPermitida("Se requiere una identidad autenticada.")

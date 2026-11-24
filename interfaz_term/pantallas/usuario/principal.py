@@ -12,17 +12,18 @@ from servicios.caja.servicio_caja import registrar_operacion_caja
 from servicios.compra.servicio_compra import (
     obtener_compras_de_membresia,
     obtener_transacciones_de_membresia,
-    obtener_transacciones_de_miembro,
 )
 from servicios.ajuste.servicio_ajuste import ajustar_cashback, ajustar_puntos
 from servicios.membresia.servicio_membresia import (
-    contratar_membresia,
     cancelar_membresia,
     reactivar_membresia,
     renovar_membresia,
     suspender_membresia,
 )
-from servicios.miembro.servicio_miembro import modificar_miembro, registrar_miembro
+from servicios.miembro.servicio_miembro import (
+    modificar_miembro,
+    registrar_miembro_con_membresia,
+)
 from servicios.miembro.servicio_miembro import buscar_miembros
 from servicios.plan.servicio_plan import (
     crear_promocion,
@@ -133,7 +134,6 @@ def mostrar_operaciones_tienda(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
     opciones = [
         "Registrar venta",
-        "Registrar miembro",
         "Contratar membresía",
         "Renovar membresía",
         "Cambiar plan",
@@ -143,10 +143,8 @@ def mostrar_operaciones_tienda(sesion: dict) -> tuple:
     identidad = sesion["identidad"]
     if accion == "Registrar venta":
         _registrar_venta(identidad)
-    elif accion == "Registrar miembro":
-        _registrar_nuevo_miembro(identidad)
     elif accion == "Contratar membresía":
-        _contratar(identidad)
+        _contratar_nuevo_miembro(identidad)
     elif accion == "Renovar membresía":
         _renovar(identidad)
     elif accion == "Cambiar plan":
@@ -177,8 +175,8 @@ def _buscar_membresia(sesion: dict) -> tuple:
         membresia = consultar_membresia(sesion["identidad"], _numero(valor))
         if membresia is None:
             raise EntidadNoEncontrada("La membresía no existe.")
-        sesion["miembro_seleccionado"] = membresia.miembro.num
-        sesion["miembros_resultado"] = [membresia.miembro.num]
+        sesion["membresia_seleccionada"] = membresia.num
+        sesion["membresias_resultado"] = [membresia.num]
         return "usuario", DETALLE_MIEMBRO
     except (ValueError, PermissionError) as exc:
         error(str(exc))
@@ -199,13 +197,22 @@ def _filtrar_miembros(sesion: dict) -> tuple:
     if datos is None:
         return "usuario", None
     try:
+        identidad = sesion["identidad"]
         if datos["estado"]:
             datos["estado"] = datos["estado"].upper()
         miembros = buscar_miembros(sesion["identidad"], datos)
         if not miembros:
             error("No se encontraron miembros con esos filtros.")
             return "usuario", None
-        sesion["miembros_resultado"] = [miembro.num for miembro in miembros]
+        sesion["membresias_resultado"] = [
+            membresia.num
+            for miembro in miembros
+            if (membresia := consultar_membresia_de_miembro(identidad, miembro.num))
+            is not None
+        ]
+        if not sesion["membresias_resultado"]:
+            error("No se encontraron miembros con membresía asociada.")
+            return "usuario", None
         return "usuario", RESULTADOS_MIEMBROS
     except (ValueError, PermissionError) as exc:
         error(str(exc))
@@ -214,50 +221,48 @@ def _filtrar_miembros(sesion: dict) -> tuple:
 
 def mostrar_resultados_miembros(sesion: dict) -> tuple:
     identidad = sesion["identidad"]
-    miembros = [
-        consultar_miembro(identidad, num)
-        for num in sesion.get("miembros_resultado", [])
+    membresias = [
+        consultar_membresia(identidad, num)
+        for num in sesion.get("membresias_resultado", [])
     ]
-    miembros = [miembro for miembro in miembros if miembro is not None]
-    if not miembros:
+    membresias = [membresia for membresia in membresias if membresia is not None]
+    if not membresias:
         error("No hay resultados para mostrar.")
         return "usuario", VOLVER
 
     opciones = []
     referencias = {}
-    for miembro in miembros:
-        membresia = consultar_membresia_de_miembro(identidad, miembro.num)
+    for membresia in membresias:
+        miembro = membresia.miembro
         etiqueta = (
             f"Membresía {membresia.num} | "
-            if membresia is not None else "Sin membresía | "
+            f"{miembro.nombre} {miembro.primer_apellido} | {miembro.correo}"
         )
-        etiqueta += f"{miembro.nombre} {miembro.primer_apellido} | {miembro.correo}"
         opciones.append(etiqueta)
-        referencias[etiqueta] = miembro.num
+        referencias[etiqueta] = membresia.num
     opciones.append("← Volver")
 
     _mostrar_encabezado(sesion)
     seleccion = questionary.select("Selecciona un miembro", choices=opciones).ask()
     if seleccion == "← Volver" or seleccion is None:
         return "usuario", VOLVER
-    sesion["miembro_seleccionado"] = referencias[seleccion]
+    sesion["membresia_seleccionada"] = referencias[seleccion]
     return "usuario", DETALLE_MIEMBRO
 
 
 def mostrar_detalle_miembro(sesion: dict) -> tuple:
     identidad = sesion["identidad"]
-    num_miembro = sesion.get("miembro_seleccionado")
-    miembro = consultar_miembro(identidad, num_miembro)
-    if miembro is None:
-        raise EntidadNoEncontrada("El miembro no existe.")
-    membresia = consultar_membresia_de_miembro(identidad, num_miembro)
+    num_membresia = sesion.get("membresia_seleccionada")
+    membresia = consultar_membresia(identidad, num_membresia)
+    if membresia is None:
+        raise EntidadNoEncontrada("La membresía no existe.")
+    miembro = membresia.miembro
 
     _mostrar_encabezado(sesion)
     mostrar_tabla(
         "Información del miembro",
-        ["Número", "Nombre", "Correo", "Teléfono"],
+        ["Nombre", "Correo", "Teléfono"],
         [(
-            miembro.num,
             f"{miembro.nombre} {miembro.primer_apellido}",
             miembro.correo,
             miembro.telefono,
@@ -290,28 +295,24 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
         opciones.append("← Volver")
     accion = questionary.select("¿Qué deseas hacer?", choices=opciones).ask()
     if accion == "Modificar miembro":
-        _modificar_miembro_seleccionado(identidad, num_miembro)
+        _modificar_miembro_seleccionado(identidad, miembro)
         return "usuario", None
     if accion == "Suspender membresía":
-        _cambiar_estado_membresia_seleccionada(identidad, num_miembro, suspender_membresia, "suspendida")
+        _cambiar_estado_membresia_seleccionada(identidad, num_membresia, suspender_membresia, "suspendida")
         return "usuario", None
     if accion == "Reactivar membresía":
-        _cambiar_estado_membresia_seleccionada(identidad, num_miembro, reactivar_membresia, "activa")
+        _cambiar_estado_membresia_seleccionada(identidad, num_membresia, reactivar_membresia, "activa")
         return "usuario", None
     if accion == "Consultar actividad":
         _mostrar_actividad_membresia(identidad, membresia.num)
         return "usuario", None
     if accion == "Cancelar membresía":
-        _cambiar_estado_membresia_seleccionada(identidad, num_miembro, cancelar_membresia, "cancelada")
+        _cambiar_estado_membresia_seleccionada(identidad, num_membresia, cancelar_membresia, "cancelada")
         return "usuario", None
     return "usuario", VOLVER
 
 
-def _modificar_miembro_seleccionado(identidad: dict, num_miembro: int) -> None:
-    miembro = consultar_miembro(identidad, num_miembro)
-    if miembro is None:
-        error("El miembro no existe.")
-        return
+def _modificar_miembro_seleccionado(identidad: dict, miembro) -> None:
     datos = pedir_formulario(
         [
             {"clave": "nombre", "etiqueta": "Nombre actual", "valor_inicial": miembro.nombre},
@@ -326,21 +327,21 @@ def _modificar_miembro_seleccionado(identidad: dict, num_miembro: int) -> None:
     if datos is None:
         return
     miembro = _ejecutar_operacion(
-        lambda: modificar_miembro(identidad, num_miembro, datos)
+        lambda: modificar_miembro(identidad, miembro.num, datos)
     )
     if miembro is not None:
-        exito(f"Miembro {miembro.num} modificado.")
+        exito("Miembro modificado.")
 
 
 def _cambiar_estado_membresia_seleccionada(
     identidad: dict,
-    num_miembro: int,
+    num_membresia: int,
     operacion,
     estado: str,
 ) -> None:
-    membresia = consultar_membresia_de_miembro(identidad, num_miembro)
+    membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
-        error("El miembro no tiene una membresía registrada.")
+        error("La membresía no existe.")
         return
     try:
         operacion(identidad, membresia.num)
@@ -452,7 +453,7 @@ def _registrar_venta(identidad: dict) -> None:
         error(str(exc))
 
 
-def _registrar_nuevo_miembro(identidad: dict) -> None:
+def _contratar_nuevo_miembro(identidad: dict) -> None:
     datos = pedir_formulario(
         [
             {"clave": "nombre", "etiqueta": "Nombre"},
@@ -470,15 +471,24 @@ def _registrar_nuevo_miembro(identidad: dict) -> None:
     )
     if datos is None:
         return
-    miembro = _ejecutar_operacion(lambda: registrar_miembro(identidad, datos))
-    if miembro is not None:
-        exito(f"Miembro registrado con número {miembro.num}.")
+    version = _seleccionar_version_plan(identidad, "CONTRATACION")
+    if version is None:
+        return
+    resultado = _ejecutar_operacion(
+        lambda: registrar_miembro_con_membresia(identidad, datos, version.num)
+    )
+    if resultado is not None:
+        miembro, renovacion = resultado
+        exito(
+            f"Membresía contratada con número {renovacion.membresia.num}. "
+            f"Renovación inicial {renovacion.num}."
+        )
 
 
 def _modificar_miembro(identidad: dict) -> None:
     datos = pedir_formulario(
         [
-            {"clave": "num", "etiqueta": "Número de miembro"},
+            {"clave": "num", "etiqueta": "Número de membresía"},
             {"clave": "nombre", "etiqueta": "Nombre"},
             {"clave": "primer_apellido", "etiqueta": "Primer apellido"},
             {"clave": "segundo_apellido", "etiqueta": "Segundo apellido", "requerido": False},
@@ -488,34 +498,20 @@ def _modificar_miembro(identidad: dict) -> None:
     )
     if datos is None:
         return
-    numero = _ejecutar_operacion(lambda: _numero(datos.pop("num")))
-    if numero is None:
+    numero_membresia = _ejecutar_operacion(lambda: _numero(datos.pop("num")))
+    if numero_membresia is None:
         return
-    miembro = _ejecutar_operacion(lambda: modificar_miembro(identidad, numero, datos))
-    if miembro is not None:
-        exito(f"Miembro {miembro.num} modificado.")
-
-
-def _contratar(identidad: dict) -> None:
-    datos = pedir_formulario(
-        [
-            {"clave": "num_miembro", "etiqueta": "Número de miembro"},
-        ]
+    membresia = _ejecutar_operacion(
+        lambda: consultar_membresia(identidad, numero_membresia)
     )
-    if datos is None:
+    if membresia is None:
+        error("La membresía no existe.")
         return
-    try:
-        version = _seleccionar_version_plan(identidad, "CONTRATACION")
-        if version is None:
-            return
-        renovacion = contratar_membresia(
-            identidad,
-            _numero(datos["num_miembro"]),
-            version.num,
-        )
-        exito(f"Membresía contratada con renovación {renovacion.num}.")
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
+    miembro = _ejecutar_operacion(
+        lambda: modificar_miembro(identidad, membresia.miembro.num, datos)
+    )
+    if miembro is not None:
+        exito("Miembro modificado.")
 
 
 def _renovar(identidad: dict, titulo: str = "Renovar membresía") -> None:
@@ -610,17 +606,18 @@ def _seleccionar_version_plan(identidad: dict, aplica_en: str | None):
 
 
 def _consultar_miembro(identidad: dict) -> None:
-    numero = questionary.text("Número de miembro:").ask()
+    numero = questionary.text("Número de membresía:").ask()
     if numero is None:
         return
     try:
-        miembro = consultar_miembro(identidad, _numero(numero))
-        if miembro is None:
-            raise EntidadNoEncontrada("El miembro no existe.")
+        membresia = consultar_membresia(identidad, _numero(numero))
+        if membresia is None:
+            raise EntidadNoEncontrada("La membresía no existe.")
+        miembro = membresia.miembro
         mostrar_tabla(
-            "Miembro",
-            ["Número", "Nombre", "Correo", "Teléfono"],
-            [(miembro.num, f"{miembro.nombre} {miembro.primer_apellido}", miembro.correo, miembro.telefono)],
+            "Membresía",
+            ["Membresía", "Nombre", "Correo", "Teléfono"],
+            [(membresia.num, f"{miembro.nombre} {miembro.primer_apellido}", miembro.correo, miembro.telefono)],
         )
         pausar()
     except ValueError as exc:
