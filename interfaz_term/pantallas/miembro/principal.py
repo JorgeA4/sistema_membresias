@@ -31,6 +31,7 @@ from servicios.recompensa.servicio_recompensa import (
     obtener_versiones_recompensa_vigentes,
 )
 from utilidades.excepciones import EntidadNoEncontrada
+from utilidades.fechas import convertir_fecha
 from utilidades.movimientos import obtener_datos_movimiento
 from interfaz_term.validaciones.validadores_fecha import validar_fecha_final_rango
 
@@ -356,11 +357,10 @@ def _pedir_rango_fechas(identidad: dict, membresia, titulo: str):
     )
     if datos is None:
         return None
-    from datetime import date
     return (
-        date.fromisoformat(datos["fecha_inicio"])
+        convertir_fecha(datos["fecha_inicio"])
         if datos["fecha_inicio"] else None,
-        date.fromisoformat(datos["fecha_final"])
+        convertir_fecha(datos["fecha_final"])
         if datos["fecha_final"] else None,
     )
 

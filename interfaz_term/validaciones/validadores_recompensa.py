@@ -21,12 +21,9 @@ def validar_codigo_existente(consultar_recompensa):
 
 
 def validar_fecha_final(valor, valores):
-    from datetime import date
+    from utilidades.fechas import convertir_fecha
 
-    def convertir(fecha):
-        if isinstance(fecha, date):
-            return fecha
-        return date.fromisoformat(fecha)
-
-    if "fecha_inicio" in valores and convertir(valor) < convertir(valores["fecha_inicio"]):
+    if "fecha_inicio" in valores and convertir_fecha(valor) < convertir_fecha(
+        valores["fecha_inicio"]
+    ):
         return "La fecha final no puede ser anterior a la fecha inicial."

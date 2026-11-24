@@ -83,6 +83,7 @@ from interfaz_term.navegacion import (
     VOLVER,
 )
 from utilidades.excepciones import EntidadNoEncontrada
+from utilidades.fechas import convertir_fecha
 from utilidades.movimientos import obtener_datos_movimiento
 from interfaz_term.validaciones.validadores_compra import (
     crear_validador_membresia_compra,
@@ -785,10 +786,10 @@ def _crear_version_plan(identidad: dict) -> None:
                 "etiqueta": "Código del plan",
                 "validador": crear_validador_codigo_plan(obtener_planes, identidad),
             },
-            {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (AAAA-MM-DD)"},
+            {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (DD/MM/AAAA o desplazamiento relativo)"},
             {
                 "clave": "fecha_final",
-                "etiqueta": "Fecha final (AAAA-MM-DD)",
+                "etiqueta": "Fecha final (DD/MM/AAAA o desplazamiento relativo)",
                 "validador": validar_fecha_final_plan,
             },
             {"clave": "precio", "etiqueta": "Precio"},
@@ -935,7 +936,7 @@ def _finalizar_version_plan(identidad: dict) -> None:
 
     datos = pedir_formulario(
         [
-            {"clave": "fecha_final", "etiqueta": "Nueva fecha final (AAAA-MM-DD)"},
+            {"clave": "fecha_final", "etiqueta": "Nueva fecha final (DD/MM/AAAA o desplazamiento relativo)"},
         ],
         titulo="Finalizar versión de plan",
         mostrar_encabezado=_crear_encabezado_formulario(identidad),
@@ -1002,10 +1003,10 @@ def _crear_version_recompensa(identidad: dict) -> None:
                 "etiqueta": "Código de recompensa",
                 "validador": validar_codigo_existente(consultar_recompensa),
             },
-            {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (AAAA-MM-DD)"},
+            {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (DD/MM/AAAA o desplazamiento relativo)"},
             {
                 "clave": "fecha_final",
-                "etiqueta": "Fecha final (AAAA-MM-DD)",
+                "etiqueta": "Fecha final (DD/MM/AAAA o desplazamiento relativo)",
                 "validador": validar_fecha_final_recompensa,
             },
             {"clave": "costo_puntos", "etiqueta": "Costo en puntos"},
@@ -1567,14 +1568,7 @@ def _numero(valor: str) -> int:
 
 
 def _fecha(valor: str):
-    from datetime import date
-
-    if isinstance(valor, date):
-        return valor
-    try:
-        return date.fromisoformat(valor)
-    except (TypeError, ValueError):
-        raise ValueError("La fecha debe tener formato AAAA-MM-DD.") from None
+    return convertir_fecha(valor)
 
 
 def _navegar_planes(identidad: dict, rol: str) -> None:
@@ -1902,7 +1896,7 @@ def _crear_promocion(identidad: dict, codigo_plan: str) -> None:
 
 def _editar_fecha_promocion(identidad: dict, promocion) -> None:
     datos = pedir_formulario([
-        {"clave": "fecha_final", "etiqueta": "Nueva fecha final (AAAA-MM-DD)",
+        {"clave": "fecha_final", "etiqueta": "Nueva fecha final (DD/MM/AAAA o desplazamiento relativo)",
          "valor_inicial": promocion.fecha_final},
     ],
         iniciar_en_resumen=True,
@@ -1936,10 +1930,10 @@ def _pedir_condiciones(
         return getattr(anterior, nombre, defecto) if anterior is not None else defecto
 
     campos = [
-        {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (AAAA-MM-DD)", "valor_inicial": valor("fecha_inicio")},
+        {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (DD/MM/AAAA o desplazamiento relativo)", "valor_inicial": valor("fecha_inicio")},
         {
             "clave": "fecha_final",
-            "etiqueta": "Fecha final (AAAA-MM-DD)",
+            "etiqueta": "Fecha final (DD/MM/AAAA o desplazamiento relativo)",
             "valor_inicial": valor("fecha_final"),
             "validador": validar_fecha_final_plan,
         },
@@ -2174,10 +2168,10 @@ def _pedir_condiciones_recompensa(
         inicio = ""
     final = max(getattr(anterior, "fecha_final", date.today()), inicio or date.today()) if anterior is not None else ""
     campos = [
-        {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (AAAA-MM-DD)", "valor_inicial": inicio},
+        {"clave": "fecha_inicio", "etiqueta": "Fecha inicial (DD/MM/AAAA o desplazamiento relativo)", "valor_inicial": inicio},
         {
             "clave": "fecha_final",
-            "etiqueta": "Fecha final (AAAA-MM-DD)",
+            "etiqueta": "Fecha final (DD/MM/AAAA o desplazamiento relativo)",
             "valor_inicial": final,
             "validador": validar_fecha_final_recompensa,
         },

@@ -16,6 +16,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO, ESTILO_TABLA
+from utilidades.fechas import convertir_fecha
 import questionary
 
 _consola = Console()
@@ -329,9 +330,9 @@ def _validar_valor(clave: str, valor: str, etiqueta: str) -> str | None:
 
     if clave in {"fecha_inicio", "fecha_final"}:
         try:
-            date.fromisoformat(valor)
-        except ValueError:
-            return "La fecha debe tener formato AAAA-MM-DD."
+            convertir_fecha(valor)
+        except ValueError as exc:
+            return str(exc)
         return None
 
     if clave == "correo" and not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", valor):
@@ -388,7 +389,7 @@ def _dibujar_formulario(
     _mostrar_tabla_campos(campos, valores, "")
     if mensaje_error:
         _consola.print(f"[yellow]Error: {mensaje_error}[/yellow]")
-    _mostrar_pie_formulario()
+    _mostrar_pie_formulario(campos)
 
 
 def _mostrar_tabla_campos(
@@ -414,11 +415,21 @@ def _mostrar_tabla_campos(
     _consola.print(tabla)
 
 
-def _mostrar_pie_formulario() -> None:
+def _mostrar_pie_formulario(campos: list[dict]) -> None:
     """Muestra la ayuda del formulario separada de los prompts de entrada."""
+    ayuda_fecha = any(
+        campo["clave"] in {"fecha_inicio", "fecha_final"}
+        for campo in campos
+    )
+    texto = f"Escribe [bold]{_COMANDO_CANCELAR}[/bold] en cualquier campo para cancelar."
+    if ayuda_fecha:
+        texto += (
+            "\nFechas: DD/MM/AAAA o desplazamiento relativo: "
+            "0=hoy, -1=ayer, 1=mañana."
+        )
     _consola.print(
         Panel(
-            f"Escribe [bold]{_COMANDO_CANCELAR}[/bold] en cualquier campo para cancelar.",
+            texto,
             border_style="dim",
             title="Ayuda",
             title_align="left",
