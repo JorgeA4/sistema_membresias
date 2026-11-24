@@ -19,6 +19,25 @@ sistema_membresias/
 │   ├── caja/
 │   └── ajuste/
 ├── base_de_datos/
+│   └── consultas/
+│       ├── miembros/
+│       │   ├── consultas_miembros.py
+│       │   └── operaciones_miembros.py
+│       ├── usuarios/
+│       │   ├── consultas_usuarios.py
+│       │   └── operaciones_usuarios.py
+│       ├── membresias/
+│       │   ├── consultas_membresias.py
+│       │   └── operaciones_membresias.py
+│       ├── planes/
+│       │   ├── consultas_planes.py
+│       │   └── operaciones_planes.py
+│       ├── recompensas/
+│       │   ├── consultas_recompensas.py
+│       │   └── operaciones_recompensas.py
+│       └── compras/
+│           ├── consultas_compras.py
+│           └── operaciones_compras.py
 ├── interfaz_term/
 ├── interfaz_qt/
 ├── utilidades/
@@ -64,9 +83,15 @@ servicios de compra y recompensa, según corresponda.
 
 ## `base_de_datos/`
 
-Contiene la persistencia y las consultas del sistema. Actualmente incluye una
-base de datos simulada en memoria, datos de prueba y consultas simuladas. La
-conexión con MariaDB se encuentra pendiente de completar.
+Contiene la persistencia y las consultas del sistema. Las consultas están
+organizadas por dominio dentro de `consultas/`:
+
+- `consultas_*.py`: lecturas y obtención de datos.
+- `operaciones_*.py`: inserciones, modificaciones y eliminaciones.
+
+La infraestructura común de conexión, transacciones y mapeo se mantiene en
+`consultas/_persistencia.py`. La conexión con MariaDB se encuentra pendiente
+de completar.
 
 ## `interfaz_term/`
 

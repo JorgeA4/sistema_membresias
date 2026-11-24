@@ -1,6 +1,8 @@
 from datetime import date
 
-import base_de_datos.consultas as bd
+from base_de_datos.consultas import transaccion
+import base_de_datos.consultas.miembros.consultas_miembros as consultas_miembros
+import base_de_datos.consultas.miembros.operaciones_miembros as operaciones_miembros
 from clases.miembro import Miembro
 from servicios.autorizacion.servicio_autorizacion import (
     requiere_administrador,
@@ -20,7 +22,7 @@ def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
     correo = datos["correo"].strip()
     if not correo:
         raise DatosInvalidos("El correo es obligatorio.")
-    if bd.buscar_miembro_por_correo(correo) is not None:
+    if consultas_miembros.buscar_miembro_por_correo(correo) is not None:
         raise DatosInvalidos("El correo ya está registrado.")
     miembro = Miembro(
         num=None,
@@ -32,7 +34,7 @@ def registrar_miembro(identidad: dict, datos: dict) -> Miembro:
         contraseña=hashear_contraseña(datos["contraseña"]),
         fecha_registro=datos.get("fecha_registro", date.today()),
     )
-    bd.guardar_miembro(miembro)
+    operaciones_miembros.guardar_miembro(miembro)
     return miembro
 
 
@@ -41,7 +43,7 @@ def registrar_miembro_con_membresia(identidad: dict, datos: dict, num_version_pl
     requiere_operador_tienda(identidad)
     from servicios.membresia.servicio_membresia import contratar_membresia
 
-    with bd.transaccion():
+    with transaccion():
         miembro = registrar_miembro(identidad, datos)
         renovacion = contratar_membresia(
             identidad,
@@ -61,17 +63,17 @@ def consultar_miembro(identidad: dict, num: int) -> Miembro | None:
             raise OperacionNoPermitida("No tiene permiso para consultar este miembro.")
     else:
         raise OperacionNoPermitida("Se requiere una identidad autenticada.")
-    return bd.buscar_miembro_por_num(num)
+    return consultas_miembros.buscar_miembro_por_num(num)
 
 
 def obtener_miembros(identidad: dict) -> list[Miembro]:
     requiere_operador_tienda(identidad)
-    return bd.obtener_todos_los_miembros()
+    return consultas_miembros.obtener_todos_los_miembros()
 
 
 def buscar_miembros(identidad: dict, filtros: dict) -> list[Miembro]:
     requiere_operador_tienda(identidad)
-    return bd.buscar_miembros(filtros)
+    return consultas_miembros.buscar_miembros(filtros)
 
 
 def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
@@ -94,7 +96,7 @@ def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
     if "contraseña" in datos:
         miembro.contraseña = hashear_contraseña(datos["contraseña"])
 
-    bd.guardar_miembro(miembro)
+    operaciones_miembros.guardar_miembro(miembro)
     return miembro
 
 
@@ -102,6 +104,6 @@ def eliminar_miembro(identidad: dict, num: int) -> None:
     requiere_administrador(identidad)
     if consultar_miembro(identidad, num) is None:
         raise EntidadNoEncontrada("El miembro no existe.")
-    if bd.tiene_historial_miembro(num):
+    if consultas_miembros.tiene_historial_miembro(num):
         raise OperacionNoPermitida("No se puede eliminar un miembro con historial.")
-    bd.eliminar_miembro(num)
+    operaciones_miembros.eliminar_miembro(num)

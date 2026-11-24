@@ -1,6 +1,11 @@
 from datetime import date, datetime, timedelta
 
-import base_de_datos.consultas as bd
+from base_de_datos.consultas import transaccion
+import base_de_datos.consultas.compras.consultas_compras as consultas_compras
+import base_de_datos.consultas.membresias.consultas_membresias as consultas_membresias
+import base_de_datos.consultas.recompensas.consultas_recompensas as consultas_recompensas
+import base_de_datos.consultas.compras.operaciones_compras as operaciones_compras
+import base_de_datos.consultas.recompensas.operaciones_recompensas as operaciones_recompensas
 from clases.membresia import Membresia
 from clases.recompensa import Recompensa
 from clases.transaccion_puntos import TransaccionPuntos
@@ -30,11 +35,11 @@ def registrar_recompensa(identidad: dict, datos: dict) -> Recompensa:
 
     if not codigo or not nombre:
         raise DatosInvalidos("El código y el nombre de la recompensa son obligatorios.")
-    if bd.buscar_recompensa_por_codigo(codigo) is not None:
+    if consultas_recompensas.buscar_recompensa_por_codigo(codigo) is not None:
         raise DatosInvalidos("El código de la recompensa ya existe.")
 
     recompensa = Recompensa(codigo, nombre, datos.get("descripcion"))
-    bd.guardar_recompensa(recompensa)
+    operaciones_recompensas.guardar_recompensa(recompensa)
     return recompensa
 
 
@@ -42,7 +47,7 @@ def registrar_recompensa_con_condiciones(
     identidad: dict, datos_recompensa: dict, datos_condiciones: dict
 ) -> Recompensa:
     requiere_administrador(identidad)
-    with bd.transaccion():
+    with transaccion():
         recompensa = registrar_recompensa(identidad, datos_recompensa)
         condiciones = dict(datos_condiciones)
         condiciones["recompensa"] = recompensa
@@ -51,12 +56,12 @@ def registrar_recompensa_con_condiciones(
 
 
 def consultar_recompensa(codigo: str) -> Recompensa | None:
-    return bd.buscar_recompensa_por_codigo(codigo)
+    return consultas_recompensas.buscar_recompensa_por_codigo(codigo)
 
 
 def obtener_recompensas(identidad: dict) -> list[Recompensa]:
     requiere_administrador_o_gerente(identidad)
-    return bd.obtener_todas_las_recompensas()
+    return consultas_recompensas.obtener_todas_las_recompensas()
 
 
 def modificar_recompensa(identidad: dict, codigo: str, datos: dict) -> Recompensa:
@@ -79,7 +84,7 @@ def modificar_recompensa(identidad: dict, codigo: str, datos: dict) -> Recompens
     if "descripcion" in datos:
         recompensa.descripcion = datos["descripcion"]
 
-    bd.guardar_recompensa(recompensa)
+    operaciones_recompensas.guardar_recompensa(recompensa)
     return recompensa
 
 
@@ -88,9 +93,9 @@ def eliminar_recompensa(identidad: dict, codigo: str) -> None:
     recompensa = consultar_recompensa(codigo)
     if recompensa is None:
         raise EntidadNoEncontrada("La recompensa no existe.")
-    if bd.obtener_versiones_de_recompensa(codigo):
+    if consultas_recompensas.obtener_versiones_de_recompensa(codigo):
         raise OperacionNoPermitida("No se puede eliminar una recompensa con versiones registradas.")
-    bd.eliminar_recompensa(codigo)
+    operaciones_recompensas.eliminar_recompensa(codigo)
 
 
 def crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa:
@@ -108,7 +113,7 @@ def crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa:
     if any(
         version.fecha_inicio <= fecha_final
         and fecha_inicio <= version.fecha_final
-        for version in bd.obtener_versiones_de_recompensa(recompensa.codigo)
+        for version in consultas_recompensas.obtener_versiones_de_recompensa(recompensa.codigo)
     ):
         raise OperacionNoPermitida("Ya existe una versión vigente en ese período.")
     if isinstance(costo_puntos, bool) or not isinstance(costo_puntos, int) or costo_puntos <= 0:
@@ -131,7 +136,7 @@ def crear_version_recompensa(identidad: dict, datos: dict) -> VersionRecompensa:
         limite_canjes=limite_canjes,
         recompensa=recompensa,
     )
-    bd.guardar_version_recompensa(version)
+    operaciones_recompensas.guardar_version_recompensa(version)
     return version
 
 
@@ -150,11 +155,11 @@ def modificar_recompensa_con_condiciones(
     fecha_inicio = datos_condiciones["fecha_inicio"]
     if actual is not None and fecha_inicio <= actual.fecha_inicio:
         raise DatosInvalidos("La nueva fecha inicial debe ser posterior a la condición actual.")
-    with bd.transaccion():
+    with transaccion():
         recompensa = modificar_recompensa(identidad, codigo, datos_recompensa)
         if actual is not None and fecha_inicio - timedelta(days=1) < actual.fecha_final:
             actual.finalizar_vigencia(fecha_inicio - timedelta(days=1))
-            bd.guardar_version_recompensa(actual)
+            operaciones_recompensas.guardar_version_recompensa(actual)
         condiciones = dict(datos_condiciones)
         condiciones["recompensa"] = codigo
         return recompensa, crear_version_recompensa(identidad, condiciones)
@@ -183,24 +188,24 @@ def eliminar_condicion_futura_recompensa(identidad: dict, num: int) -> None:
         raise EntidadNoEncontrada("La condición de recompensa no existe.")
     if version.fecha_inicio < date.today() + timedelta(days=1):
         raise OperacionNoPermitida("Solo se pueden borrar condiciones que comiencen a partir de mañana.")
-    bd.eliminar_version_recompensa(num)
+    operaciones_recompensas.eliminar_version_recompensa(num)
 
 
 def consultar_version_recompensa(num: int) -> VersionRecompensa | None:
-    return bd.buscar_version_recompensa_por_num(num)
+    return consultas_recompensas.buscar_version_recompensa_por_num(num)
 
 
 def obtener_versiones_de_recompensa(codigo: str) -> list[VersionRecompensa]:
     if consultar_recompensa(codigo) is None:
         raise EntidadNoEncontrada("La recompensa no existe.")
-    return bd.obtener_versiones_de_recompensa(codigo)
+    return consultas_recompensas.obtener_versiones_de_recompensa(codigo)
 
 
 def obtener_versiones_recompensa_vigentes() -> list[VersionRecompensa]:
     return [
         version
-        for recompensa in bd.obtener_todas_las_recompensas()
-        for version in bd.obtener_versiones_de_recompensa(recompensa.codigo)
+        for recompensa in consultas_recompensas.obtener_todas_las_recompensas()
+        for version in consultas_recompensas.obtener_versiones_de_recompensa(recompensa.codigo)
         if version.esta_vigente()
     ]
 
@@ -214,7 +219,7 @@ def finalizar_version_recompensa(identidad: dict, num: int, fecha_final: date) -
         raise DatosInvalidos("La fecha final no es válida.")
 
     version.finalizar_vigencia(fecha_final)
-    bd.guardar_version_recompensa(version)
+    operaciones_recompensas.guardar_version_recompensa(version)
     return version
 
 
@@ -238,7 +243,7 @@ def canjear_recompensa(
         version_recompensa=version,
         membresia=membresia,
     )
-    bd.guardar_transaccion_puntos(transaccion)
+    operaciones_compras.guardar_transaccion_puntos(transaccion)
     return transaccion
 
 
@@ -248,7 +253,7 @@ def validar_canje(
     num_version_recompensa: int,
 ):
     requiere_operador_tienda(identidad)
-    membresia = bd.buscar_membresia_por_num(num_membresia)
+    membresia = consultas_membresias.buscar_membresia_por_num(num_membresia)
     if membresia is None:
         raise EntidadNoEncontrada("La membresía no existe.")
     actualizar_estado_membresia(membresia)
@@ -264,7 +269,7 @@ def validar_canje(
 
     transacciones = [
         transaccion
-        for transaccion in bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+        for transaccion in consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
         if transaccion.membresia is not None
         and transaccion.membresia.num == num_membresia
     ]
@@ -285,14 +290,14 @@ def validar_canje(
 
 
 def obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[TransaccionPuntos]:
-    membresia = bd.buscar_membresia_por_num(num_membresia)
+    membresia = consultas_membresias.buscar_membresia_por_num(num_membresia)
     if membresia is None:
         raise EntidadNoEncontrada("La membresía no existe.")
     requiere_administrador_o_propietario(identidad, membresia)
 
     transacciones = [
         transaccion
-        for transaccion in bd.obtener_transacciones_de_miembro(membresia.miembro.num)
+        for transaccion in consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
         if transaccion.membresia is not None
         and transaccion.membresia.num == num_membresia
     ]
@@ -310,9 +315,9 @@ def obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[Transa
 def _obtener_recompensa(datos: dict) -> Recompensa:
     referencia = datos.get("recompensa")
     if isinstance(referencia, str):
-        recompensa = bd.buscar_recompensa_por_codigo(referencia)
+        recompensa = consultas_recompensas.buscar_recompensa_por_codigo(referencia)
     elif referencia is None:
-        recompensa = bd.buscar_recompensa_por_codigo(datos.get("codigo_recompensa"))
+        recompensa = consultas_recompensas.buscar_recompensa_por_codigo(datos.get("codigo_recompensa"))
     else:
         recompensa = referencia
 

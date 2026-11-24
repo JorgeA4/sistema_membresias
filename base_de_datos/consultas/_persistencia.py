@@ -1,4 +1,10 @@
-"""Consultas reales de Nexum y adaptación a los objetos del dominio."""
+"""Implementación común de persistencia de Nexum.
+
+Los servicios acceden a esta implementación mediante los módulos organizados
+por dominio dentro de ``base_de_datos.consultas``. Este módulo conserva la
+infraestructura compartida de conexión, transacciones y mapeo mientras se
+mantiene la compatibilidad con el acceso persistente existente.
+"""
 
 from contextlib import contextmanager
 from contextvars import ContextVar

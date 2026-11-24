@@ -2,7 +2,11 @@ import calendar
 from datetime import date, timedelta
 from decimal import Decimal
 
-import base_de_datos.consultas as bd
+from base_de_datos.consultas import transaccion
+import base_de_datos.consultas.membresias.consultas_membresias as consultas_membresias
+import base_de_datos.consultas.miembros.consultas_miembros as consultas_miembros
+import base_de_datos.consultas.planes.consultas_planes as consultas_planes
+import base_de_datos.consultas.membresias.operaciones_membresias as operaciones_membresias
 from clases.membresia import Membresia
 from clases.renovacion import Renovacion
 from clases.version_plan import TipoAplicacionPlan, VersionPlan
@@ -21,7 +25,7 @@ from utilidades.excepciones import (
 
 def consultar_membresia(identidad: dict, num: int) -> Membresia | None:
     requiere_operador_tienda(identidad)
-    membresia = bd.buscar_membresia_por_num(num)
+    membresia = consultas_membresias.buscar_membresia_por_num(num)
     if membresia is not None:
         actualizar_estado_membresia(membresia)
     return membresia
@@ -32,7 +36,7 @@ def consultar_membresia_de_miembro(identidad: dict, num_miembro: int) -> Membres
         raise OperacionNoPermitida("Se requiere una identidad autenticada.")
     if identidad.get("tipo") == "miembro" and identidad.get("num") != num_miembro:
         raise OperacionNoPermitida("No tiene permiso para consultar esta membresía.")
-    membresia = bd.buscar_membresia_de_miembro(num_miembro)
+    membresia = consultas_membresias.buscar_membresia_de_miembro(num_miembro)
     if membresia is not None:
         if identidad.get("tipo") == "usuario":
             requiere_operador_tienda(identidad)
@@ -50,7 +54,7 @@ def obtener_historial_membresias(
     membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
         raise EntidadNoEncontrada("La membresía no existe.")
-    historial = bd.obtener_membresias_de_miembro(membresia.miembro.num)
+    historial = consultas_membresias.obtener_membresias_de_miembro(membresia.miembro.num)
     return [actualizar_estado_membresia(item) for item in historial]
 
 
@@ -63,11 +67,11 @@ def obtener_historial_membresias_y_planes(
     if membresia is None:
         raise EntidadNoEncontrada("La membresía no existe.")
 
-    historial = bd.obtener_membresias_de_miembro(membresia.miembro.num)
+    historial = consultas_membresias.obtener_membresias_de_miembro(membresia.miembro.num)
     renovaciones = []
     for elemento in historial:
         actualizar_estado_membresia(elemento)
-        renovaciones.extend(bd.obtener_renovaciones_de_membresia(elemento.num))
+        renovaciones.extend(consultas_membresias.obtener_renovaciones_de_membresia(elemento.num))
 
     return sorted(
         renovaciones,
@@ -86,7 +90,7 @@ def obtener_ultima_renovacion_efectiva(
     membresia = consultar_membresia(identidad, num_membresia)
     if membresia is None:
         raise EntidadNoEncontrada("La membresía no existe.")
-    renovaciones = bd.obtener_renovaciones_de_membresia(num_membresia)
+    renovaciones = consultas_membresias.obtener_renovaciones_de_membresia(num_membresia)
     if not renovaciones:
         return None
     efectivas = [
@@ -105,14 +109,14 @@ def obtener_ultima_renovacion_efectiva(
 
 def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion:
     requiere_operador_tienda(identidad)
-    with bd.transaccion():
+    with transaccion():
         membresia = consultar_membresia(identidad, num_membresia)
         if membresia is None:
             raise EntidadNoEncontrada("La membresía no existe.")
         if membresia.estado == Membresia.Estado.CANCELADA:
             raise OperacionNoPermitida("La membresía está cancelada y requiere una nueva contratación.")
 
-        version = bd.buscar_version_plan_por_num(num_version_plan)
+        version = consultas_planes.buscar_version_plan_por_num(num_version_plan)
         if version is None:
             raise EntidadNoEncontrada("La versión de plan no existe.")
         if not version.esta_vigente():
@@ -140,8 +144,8 @@ def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int
         if fecha_inicio <= fecha_pago:
             membresia.version_plan_actual = version
             membresia.estado = Membresia.Estado.ACTIVA
-        bd.guardar_renovacion(renovacion)
-        bd.guardar_membresia(membresia)
+        operaciones_membresias.guardar_renovacion(renovacion)
+        operaciones_membresias.guardar_membresia(membresia)
         return renovacion
 
 
@@ -151,19 +155,19 @@ def contratar_membresia(
     num_version_plan: int,
 ) -> Renovacion:
     requiere_operador_tienda(identidad)
-    with bd.transaccion():
-        miembro = bd.buscar_miembro_por_num(num_miembro)
+    with transaccion():
+        miembro = consultas_miembros.buscar_miembro_por_num(num_miembro)
         if miembro is None:
             raise EntidadNoEncontrada("El miembro no existe.")
 
-        version = bd.buscar_version_plan_por_num(num_version_plan)
+        version = consultas_planes.buscar_version_plan_por_num(num_version_plan)
         if version is None:
             raise EntidadNoEncontrada("La versión de plan no existe.")
         if not version.esta_vigente():
             raise VersionNoVigente("La versión de plan no está vigente.")
         if version.aplica_en not in (TipoAplicacionPlan.CONTRATACION, TipoAplicacionPlan.AMBAS):
             raise OperacionNoPermitida("La versión de plan no permite contrataciones.")
-        existente = bd.buscar_membresia_de_miembro(num_miembro)
+        existente = consultas_membresias.buscar_membresia_de_miembro(num_miembro)
         if existente is not None:
             actualizar_estado_membresia(existente)
             if existente.estado != Membresia.Estado.CANCELADA:
@@ -176,7 +180,7 @@ def contratar_membresia(
             miembro=miembro,
             version_plan_actual=version,
         )
-        bd.guardar_membresia(membresia)
+        operaciones_membresias.guardar_membresia(membresia)
         renovacion = Renovacion(
             num=None,
             fecha_pago=date.today(),
@@ -186,7 +190,7 @@ def contratar_membresia(
             membresia=membresia,
             version_plan_comprado=version,
         )
-        bd.guardar_renovacion(renovacion)
+        operaciones_membresias.guardar_renovacion(renovacion)
         return renovacion
 
 
@@ -199,7 +203,7 @@ def cancelar_membresia(identidad: dict, num_membresia: int) -> Membresia:
         raise OperacionNoPermitida("La membresía ya está cancelada.")
 
     membresia.estado = Membresia.Estado.CANCELADA
-    bd.guardar_membresia(membresia)
+    operaciones_membresias.guardar_membresia(membresia)
     return membresia
 
 
@@ -211,7 +215,7 @@ def suspender_membresia(identidad: dict, num_membresia: int) -> Membresia:
     if membresia.estado == Membresia.Estado.CANCELADA:
         raise OperacionNoPermitida("La membresía está cancelada.")
     membresia.estado = Membresia.Estado.SUSPENDIDA
-    bd.guardar_membresia(membresia)
+    operaciones_membresias.guardar_membresia(membresia)
     return membresia
 
 
@@ -228,7 +232,7 @@ def reactivar_membresia(identidad: dict, num_membresia: int) -> Membresia:
     if periodo is None or date.today() > periodo[1]:
         raise OperacionNoPermitida("El periodo de la membresía ya terminó; debe renovarse.")
     membresia.estado = Membresia.Estado.ACTIVA
-    bd.guardar_membresia(membresia)
+    operaciones_membresias.guardar_membresia(membresia)
     return membresia
 
 
@@ -250,19 +254,19 @@ def actualizar_estado_membresia(membresia: Membresia, fecha: date | None = None)
                 membresia.version_plan_actual = version
                 cambio = True
         if cambio:
-            bd.guardar_membresia(membresia)
+            operaciones_membresias.guardar_membresia(membresia)
         return membresia
 
     if fecha <= _sumar_meses(fecha_final + timedelta(days=1), 1) - timedelta(days=1):
         membresia.estado = Membresia.Estado.SUSPENDIDA
     else:
         membresia.estado = Membresia.Estado.CANCELADA
-    bd.guardar_membresia(membresia)
+    operaciones_membresias.guardar_membresia(membresia)
     return membresia
 
 
 def _obtener_inicio_renovacion(membresia: Membresia, fecha_pago: date) -> date:
-    renovaciones = bd.obtener_renovaciones_de_membresia(membresia.num)
+    renovaciones = consultas_membresias.obtener_renovaciones_de_membresia(membresia.num)
     if renovaciones:
         ultima = max(
             renovaciones,
@@ -285,7 +289,7 @@ def _obtener_periodo_actual(membresia: Membresia, fecha: date):
             renovacion.fecha_fin_periodo,
             renovacion.version_plan_comprado,
         )
-        for renovacion in bd.obtener_renovaciones_de_membresia(membresia.num)
+        for renovacion in consultas_membresias.obtener_renovaciones_de_membresia(membresia.num)
         if renovacion.fecha_inicio_periodo <= fecha
     ]
     if periodos:

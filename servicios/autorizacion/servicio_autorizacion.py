@@ -1,4 +1,5 @@
-import base_de_datos.consultas as bd
+import base_de_datos.consultas.miembros.consultas_miembros as consultas_miembros
+import base_de_datos.consultas.usuarios.consultas_usuarios as consultas_usuarios
 from clases.membresia import Membresia
 from clases.usuario import Usuario
 from utilidades.excepciones import OperacionNoPermitida
@@ -88,7 +89,7 @@ def _obtener_usuario(identidad: dict) -> Usuario:
     if identidad.get("tipo") != "usuario":
         raise OperacionNoPermitida("Se requiere un usuario autenticado.")
 
-    usuario = bd.buscar_usuario_por_num(identidad.get("num"))
+    usuario = consultas_usuarios.buscar_usuario_por_num(identidad.get("num"))
     if not isinstance(usuario, Usuario):
         raise OperacionNoPermitida("El usuario autenticado no existe.")
     return usuario
@@ -98,7 +99,7 @@ def _obtener_miembro(identidad: dict):
     if not isinstance(identidad, dict):
         raise OperacionNoPermitida("Se requiere una identidad autenticada.")
 
-    miembro = bd.buscar_miembro_por_num(identidad.get("num"))
+    miembro = consultas_miembros.buscar_miembro_por_num(identidad.get("num"))
     if miembro is None:
         raise OperacionNoPermitida("El miembro autenticado no existe.")
     return miembro

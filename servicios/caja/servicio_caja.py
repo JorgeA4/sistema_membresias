@@ -1,4 +1,5 @@
-import base_de_datos.consultas as bd
+from base_de_datos.consultas import transaccion
+import base_de_datos.consultas.recompensas.consultas_recompensas as consultas_recompensas
 from servicios.autorizacion.servicio_autorizacion import requiere_operador_tienda
 from servicios.compra.servicio_compra import registrar_compra
 from servicios.recompensa.servicio_recompensa import canjear_recompensa, validar_canje
@@ -18,7 +19,7 @@ def registrar_operacion_caja(identidad: dict, datos: dict) -> dict:
         version_recompensa = _obtener_version_recompensa_vigente(codigo_recompensa)
         validar_canje(identidad, num_membresia, version_recompensa.num)
 
-    with bd.transaccion():
+    with transaccion():
 
         compra = registrar_compra(
             identidad,
@@ -40,12 +41,12 @@ def registrar_operacion_caja(identidad: dict, datos: dict) -> dict:
 
 
 def _obtener_version_recompensa_vigente(codigo: str):
-    recompensa = bd.buscar_recompensa_por_codigo(codigo.strip())
+    recompensa = consultas_recompensas.buscar_recompensa_por_codigo(codigo.strip())
     if recompensa is None:
         raise EntidadNoEncontrada("La recompensa no existe.")
     versiones = [
         version
-        for version in bd.obtener_versiones_de_recompensa(codigo)
+        for version in consultas_recompensas.obtener_versiones_de_recompensa(codigo)
         if version.esta_vigente()
     ]
     if len(versiones) != 1:
