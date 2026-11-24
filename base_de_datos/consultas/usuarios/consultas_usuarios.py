@@ -1,4 +1,3 @@
-"""Acceso persistente de usuarios."""
 
 from base_de_datos.ejecutor import (
     ejecutar_una,
@@ -12,10 +11,8 @@ from base_de_datos.mapeadores import (
     mapear_usuario,
 )
 
-# Consulta un rol usando una conexión existente.
-# Consulta un rol usando una conexión existente.
+# consulta un rol usando una conexion existente
 def _obtener_rol_conexion(conexion, codigo):
-    # Consulta un rol usando una conexión existente.
     consulta = """
         SELECT *
         FROM rol
@@ -23,12 +20,13 @@ def _obtener_rol_conexion(conexion, codigo):
     """
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (codigo,))
-        return mapear_rol(obtener_fila(cursor))
+        fila = obtener_fila(cursor)
+    if fila is None:
+        return None
+    return mapear_rol(fila)
 
-# Consulta un usuario usando una conexión existente.
-# Consulta un usuario usando una conexión existente.
+# consulta un usuario usando una conexion existente
 def _obtener_usuario_conexion(conexion, num):
-    # Consulta un usuario usando una conexión existente.
     consulta = """
         SELECT *
         FROM usuario
@@ -42,7 +40,7 @@ def _obtener_usuario_conexion(conexion, num):
     rol = _obtener_rol_conexion(conexion, fila["rol"])
     return mapear_usuario(fila, rol)
 
-# Consulta un usuario por su correo electrónico.
+# consulta un usuario por su correo electronico
 def buscar_usuario_por_correo(correo):
     consulta = """
         SELECT *
@@ -58,12 +56,12 @@ def buscar_usuario_por_correo(correo):
         rol = _obtener_rol_conexion(conexion, fila["rol"])
         return mapear_usuario(fila, rol)
 
-# Consulta un usuario por su número.
+# consulta un usuario por su numero
 def buscar_usuario_por_num(num):
     with usar_conexion() as conexion:
         return _obtener_usuario_conexion(conexion, num)
 
-# Consulta todos los usuarios ordenados por número.
+# consulta todos los usuarios ordenados por numero
 def obtener_todos_los_usuarios():
     consulta = """
         SELECT num
@@ -73,13 +71,15 @@ def obtener_todos_los_usuarios():
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta)
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_obtener_usuario_conexion(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _obtener_usuario_conexion(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Comprueba si un usuario tiene compras registradas.
-# Comprueba si un usuario tiene compras registradas.
+# comprueba si un usuario tiene compras registradas
 def tiene_historial_usuario(num):
-    """Indica si el usuario tiene al menos una compra registrada."""
     consulta = """
         SELECT EXISTS(
             SELECT 1
@@ -90,12 +90,12 @@ def tiene_historial_usuario(num):
     fila = ejecutar_una(consulta, (num,))
     return bool(fila["tiene_historial"])
 
-# Consulta un rol por su código.
+# consulta un rol por su codigo
 def buscar_rol_por_codigo(codigo):
     with usar_conexion() as conexion:
         return _obtener_rol_conexion(conexion, codigo)
 
-# Consulta todos los roles ordenados por código.
+# consulta todos los roles ordenados por codigo
 def obtener_todos_los_roles():
     consulta = """
         SELECT *

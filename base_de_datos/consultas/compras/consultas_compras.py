@@ -1,4 +1,3 @@
-"""Acceso persistente de compras."""
 
 from decimal import Decimal
 
@@ -13,8 +12,7 @@ from base_de_datos.consultas.membresias.consultas_membresias import _consulta_me
 from base_de_datos.consultas.recompensas.consultas_recompensas import _consulta_version_recompensa
 from base_de_datos.consultas.usuarios.consultas_usuarios import _obtener_usuario_conexion
 
-# Consulta una compra y su fecha derivada.
-# Consulta una compra y su fecha derivada.
+# Consulta una compra y su fecha derivada
 def _consulta_compra(conexion, num):
     consulta = """
         SELECT
@@ -41,12 +39,12 @@ def _consulta_compra(conexion, num):
         _obtener_usuario_conexion(conexion, fila["usuario"]),
     )
 
-# Consulta una compra por su número.
+# consulta una compra por su numero
 def buscar_compra_por_num(num):
     with usar_conexion() as conexion:
         return _consulta_compra(conexion, num)
 
-# Consulta las compras de una membresía.
+#consulta las compras de una membresia
 def obtener_compras_de_membresia(num_membresia):
     consulta = """
         SELECT num
@@ -57,10 +55,14 @@ def obtener_compras_de_membresia(num_membresia):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (num_membresia,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_compra(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_compra(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Consulta las compras registradas por un usuario.
+# consulta las compras registradas por un usuario
 def obtener_compras_de_usuario(num_usuario):
     consulta = """
         SELECT num
@@ -71,11 +73,14 @@ def obtener_compras_de_usuario(num_usuario):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (num_usuario,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_compra(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_compra(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Consulta una transacción de puntos y sus relaciones.
-# Consulta una transacción de puntos y sus relaciones.
+# Consulta una transaccion de puntos y sus relaciones.
 def _consulta_transaccion_puntos(conexion, num):
     consulta = """
         SELECT *
@@ -103,7 +108,7 @@ def _consulta_transaccion_puntos(conexion, num):
         _consulta_membresia(conexion, fila["membresia"]),
     )
 
-# Consulta los movimientos de puntos de un miembro.
+# consulta los movimientos de puntos de un miembro
 def obtener_transacciones_de_miembro(num_miembro):
     consulta = """
         SELECT
@@ -121,10 +126,14 @@ def obtener_transacciones_de_miembro(num_miembro):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (num_miembro,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_transaccion_puntos(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_transaccion_puntos(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Consulta el saldo actual de puntos de un miembro.
+# consulta el saldo qctual de puntos de un miembro
 def obtener_saldo_de_miembro(num_miembro):
     transacciones = obtener_transacciones_de_miembro(num_miembro)
     if not transacciones:
@@ -134,8 +143,7 @@ def obtener_saldo_de_miembro(num_miembro):
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
     ).saldo
 
-# Consulta una transacción de cashback y sus relaciones.
-# Consulta una transacción de cashback y sus relaciones.
+# consulta una transaccion de cashback y sus relaciones
 def _consulta_transaccion_cashback(conexion, num):
     consulta = """
         SELECT *
@@ -156,7 +164,7 @@ def _consulta_transaccion_cashback(conexion, num):
         _consulta_membresia(conexion, fila["membresia"]),
     )
 
-# Consulta los movimientos de cashback de una membresía.
+# consulta los movimientos de casback de una membresia
 def obtener_transacciones_cashback_de_membresia(num_membresia):
     consulta = """
         SELECT num
@@ -169,10 +177,14 @@ def obtener_transacciones_cashback_de_membresia(num_membresia):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (num_membresia,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_transaccion_cashback(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_transaccion_cashback(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Consulta el saldo actual de cashback de una membresía.
+# consulta el saldo actual de cashback de una membresia
 def obtener_saldo_cashback_de_membresia(num_membresia):
     transacciones = obtener_transacciones_cashback_de_membresia(num_membresia)
     if not transacciones:

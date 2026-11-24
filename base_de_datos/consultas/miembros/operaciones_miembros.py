@@ -1,9 +1,8 @@
-"""Acceso persistente de miembros."""
 
 from base_de_datos.ejecutor import usar_conexion
 
 
-# Guarda un miembro nuevo o actualizado.
+# guarda un miembro nuevo o actualizado
 def guardar_miembro(miembro):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
@@ -49,7 +48,7 @@ def guardar_miembro(miembro):
                     valores + (miembro.num,),
                 )
 
-# Elimina un miembro por su número.
+# elimina un miembro por su numero
 def eliminar_miembro(num):
     consulta = """
         DELETE FROM miembro

@@ -1,4 +1,3 @@
-"""Acceso persistente de planes."""
 
 from base_de_datos.ejecutor import obtener_fila, obtener_filas, usar_conexion
 from base_de_datos.mapeadores import (
@@ -9,8 +8,7 @@ from base_de_datos.mapeadores import (
     mapear_version_plan,
 )
 
-# Consulta un plan usando una conexión existente.
-# Consulta un plan usando una conexión existente.
+# consulta un plan usando una conexion existente
 def _obtener_plan_conexion(conexion, codigo):
     consulta = """
         SELECT *
@@ -19,10 +17,12 @@ def _obtener_plan_conexion(conexion, codigo):
     """
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (codigo,))
-        return mapear_plan(obtener_fila(cursor))
+        fila = obtener_fila(cursor)
+    if fila is None:
+        return None
+    return mapear_plan(fila)
 
-# Consulta una versión de plan y sus configuraciones.
-# Consulta una versión de plan y sus configuraciones.
+# consulta una versipn de plan y sus configuraciones
 def _consulta_version_plan(conexion, num):
     consulta = """
         SELECT
@@ -71,7 +71,8 @@ def _consulta_version_plan(conexion, num):
             """,
             (fila["config_descuento_num"],),
         )
-        dias = [registro["dia_semana"] for registro in obtener_filas(cursor)]
+        filas = obtener_filas(cursor)
+        lista_dias = [fila["dia_semana"] for fila in filas]
     version_base = None
     if fila["version_base_de_promo"] is not None:
         version_base = _consulta_version_plan(
@@ -83,16 +84,16 @@ def _consulta_version_plan(conexion, num):
         plan,
         mapear_configuracion_cashback(fila),
         mapear_configuracion_puntos(fila),
-        mapear_configuracion_descuento(fila, dias),
+        mapear_configuracion_descuento(fila, lista_dias),
         version_base,
     )
 
-# Consulta un plan por su código.
+# consuta un plan por su codigo
 def buscar_plan_por_codigo(codigo):
     with usar_conexion() as conexion:
         return _obtener_plan_conexion(conexion, codigo)
 
-# Consulta todos los planes ordenados por código.
+# consulta todos los planes ordenados por codigos
 def obtener_todos_los_planes():
     consulta = """
         SELECT codigo
@@ -102,10 +103,14 @@ def obtener_todos_los_planes():
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta)
-            codigos = [fila["codigo"] for fila in obtener_filas(cursor)]
-        return [_obtener_plan_conexion(conexion, codigo) for codigo in codigos]
+            filas = obtener_filas(cursor)
+            lista_codigos = [fila["codigo"] for fila in filas]
+        return [
+            _obtener_plan_conexion(conexion, codigo)
+            for codigo in lista_codigos
+        ]
 
-# Consulta las versiones de un plan.
+# consulta las versiones de un plan
 def obtener_versiones_de_plan(codigo_plan):
     consulta = """
         SELECT num
@@ -116,15 +121,19 @@ def obtener_versiones_de_plan(codigo_plan):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (codigo_plan,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_version_plan(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_version_plan(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Consulta una versión de plan por su número.
+#  consulta una version de plan por su numero
 def buscar_version_plan_por_num(num):
     with usar_conexion() as conexion:
         return _consulta_version_plan(conexion, num)
 
-# Consulta la versión vigente de un plan.
+# consulta la version vigente de un plan.
 def buscar_version_plan_vigente(codigo_plan):
     consulta = """
         SELECT num

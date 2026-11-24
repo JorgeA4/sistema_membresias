@@ -1,5 +1,3 @@
-"""Configuración y apertura de conexiones con MariaDB de Nexum."""
-
 import os
 
 import pymysql
@@ -8,8 +6,8 @@ from pymysql.connections import Connection
 
 load_dotenv()
 
+# abre una conexion a Nexum usando la configuracion del entorno
 def obtener_conexion() -> Connection:
-    """Abre una conexión a Nexum usando la configuración del entorno."""
     usuario = os.getenv("NEXUM_DB_USUARIO", "root")
     contraseña = os.getenv("NEXUM_DB_CONTRASENA", "")
     nombre_base = os.getenv("NEXUM_DB_NOMBRE", "Nexum")

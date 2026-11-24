@@ -1,8 +1,7 @@
-"""Acceso persistente de recompensas."""
 
 from base_de_datos.ejecutor import usar_conexion
 
-# Guarda una recompensa nueva o actualizada.
+# guarda una recompensa nueva o actualizada
 def guardar_recompensa(recompensa):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
@@ -24,7 +23,7 @@ def guardar_recompensa(recompensa):
                  recompensa.nombre, recompensa.descripcion),
             )
 
-# Elimina una recompensa por su código.
+# elimina una recompensa por su codigo.
 def eliminar_recompensa(codigo):
     consulta = """
         DELETE FROM recompensa
@@ -34,7 +33,7 @@ def eliminar_recompensa(codigo):
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (codigo,))
 
-# Guarda una versión de recompensa.
+# gurda una version de recompensa
 def guardar_version_recompensa(version_recompensa):
     with usar_conexion() as conexion:
         valores = (
@@ -76,7 +75,7 @@ def guardar_version_recompensa(version_recompensa):
                     valores + (version_recompensa.num,),
                 )
 
-# Elimina una versión de recompensa por su número.
+# elimina una version de recompensa por su numero
 def eliminar_version_recompensa(num):
     consulta = """
         DELETE FROM version_recompensa

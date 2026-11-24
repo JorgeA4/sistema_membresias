@@ -1,8 +1,7 @@
-"""Acceso persistente de usuarios."""
 
 from base_de_datos.ejecutor import usar_conexion
 
-# Guarda un usuario nuevo o actualizado.
+# guarda un usuario nuevo o actualizado
 def guardar_usuario(usuario):
     with usar_conexion() as conexion:
         valores = (
@@ -50,7 +49,7 @@ def guardar_usuario(usuario):
                     valores + (usuario.num,),
                 )
 
-# Elimina un usuario por su número.
+# elimina un usuario por su numero
 def eliminar_usuario(num):
     consulta = """
         DELETE FROM usuario

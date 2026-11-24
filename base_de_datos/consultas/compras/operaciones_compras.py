@@ -1,9 +1,8 @@
-"""Acceso persistente de compras."""
 
 from base_de_datos.ejecutor import usar_conexion
 
 
-# Guarda una compra nueva o actualizada.
+# guarda una compra nueva o actualizada
 def guardar_compra(compra):
     with usar_conexion() as conexion:
         valores = (
@@ -49,7 +48,7 @@ def guardar_compra(compra):
                     valores + (compra.num,),
                 )
 
-# Guarda una transacción de puntos.
+# guarda una transaccion de puntos
 def guardar_transaccion_puntos(transaccion):
     compra = None
     if transaccion.compra is not None:
@@ -103,7 +102,7 @@ def guardar_transaccion_puntos(transaccion):
                     valores + (transaccion.num,),
                 )
 
-# Guarda una transacción de cashback.
+# guarda una transaccion de cashback
 def guardar_transaccion_cashback(transaccion):
     compra = None
     if transaccion.compra is not None:

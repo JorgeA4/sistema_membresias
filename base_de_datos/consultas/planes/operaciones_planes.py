@@ -1,8 +1,7 @@
-"""Acceso persistente de planes."""
 
 from base_de_datos.ejecutor import usar_conexion
 
-# Guarda una configuración nueva o actualiza la existente.
+# guarda una configuracion nueva o actualiza la existente
 def _guardar_configuracion(conexion, configuracion, tabla, columnas, valores):
     if configuracion is None:
         return None
@@ -45,7 +44,7 @@ def _guardar_configuracion(conexion, configuracion, tabla, columnas, valores):
             )
     return configuracion.num
 
-# Guarda un plan nuevo o actualizado.
+# guarda un plan nuevo o actualizado
 def guardar_plan(plan):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
@@ -66,7 +65,7 @@ def guardar_plan(plan):
                 (plan.codigo, plan.nombre, plan.descripcion, plan.nombre, plan.descripcion),
             )
 
-# Elimina un plan por su código.
+# elimina un plan por su codigo
 def eliminar_plan(codigo):
     consulta = """
         DELETE FROM plan
@@ -76,7 +75,7 @@ def eliminar_plan(codigo):
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (codigo,))
 
-# Guarda una versión de plan y sus configuraciones.
+# guarda una version de plan y sus configuraciones
 def guardar_version_plan(version_plan):
     with usar_conexion() as conexion:
         cashback = version_plan.config_cashback
@@ -193,7 +192,7 @@ def guardar_version_plan(version_plan):
                     valores + (version_plan.num,),
                 )
 
-# Elimina una versión de plan por su número.
+# elimina una version de plan por su numero
 def eliminar_version_plan(num):
     consulta = """
         DELETE FROM version_plan

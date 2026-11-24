@@ -1,5 +1,3 @@
-"""Ejecución centralizada de operaciones contra MariaDB."""
-
 from contextlib import contextmanager
 from contextvars import ContextVar
 
@@ -11,8 +9,8 @@ from utilidades.excepciones import ErrorPersistencia
 _conexion_actual = ContextVar("conexion_nexum", default=None)
 
 
+# convierte cualquier error de mariadb en un error generico de persistencia
 def traducir_error_sql(error):
-    """Convierte cualquier error de MariaDB en un error genérico de persistencia."""
     if isinstance(error, pymysql.MySQLError):
         return ErrorPersistencia(
             "No fue posible completar la operación en la base de datos."
@@ -20,9 +18,9 @@ def traducir_error_sql(error):
     return error
 
 
+# proporciona una conexion y confirma o revierte la operacion
 @contextmanager
 def usar_conexion():
-    """Proporciona una conexión y confirma o revierte la operación."""
     conexion = _conexion_actual.get()
     propia = conexion is None
     if propia:
@@ -43,9 +41,9 @@ def usar_conexion():
             conexion.close()
 
 
+# agrupa varias operaciones en una unica transaccion mariadb
 @contextmanager
 def transaccion():
-    """Agrupa varias operaciones en una única transacción MariaDB."""
     conexion_existente = _conexion_actual.get()
     if conexion_existente is not None:
         yield
@@ -67,32 +65,36 @@ def transaccion():
         conexion.close()
 
 
+# obtiene una sola fila del cursor
 def obtener_fila(cursor):
     return cursor.fetchone()
 
 
+# obtiene todas las filas del cursor
 def obtener_filas(cursor):
     return cursor.fetchall()
 
 
+# ejecuta una consulta y devuelve una sola fila
 def ejecutar_una(consulta, parametros=()):
-    """Ejecuta una consulta y devuelve una sola fila."""
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, parametros)
-            return obtener_fila(cursor)
+            fila = obtener_fila(cursor)
+            return fila
 
 
+# ejecuta una consulta y devuelve todas sus filas
 def ejecutar_varias(consulta, parametros=()):
-    """Ejecuta una consulta y devuelve todas sus filas."""
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, parametros)
-            return obtener_filas(cursor)
+            filas = obtener_filas(cursor)
+            return filas
 
 
+# ejecuta una operacion de escritura contra la base de datos
 def ejecutar(consulta, parametros=()):
-    """Ejecuta una operación de escritura contra la base de datos."""
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, parametros)

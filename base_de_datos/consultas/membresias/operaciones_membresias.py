@@ -1,9 +1,8 @@
-"""Acceso persistente de membresias."""
 
 from base_de_datos.ejecutor import usar_conexion
 
 
-# Guarda una membresía nueva o actualizada.
+# guarda una membresia nueva o actualizada
 def guardar_membresia(membresia):
     version_plan = None
     if membresia.version_plan_actual is not None:
@@ -46,7 +45,7 @@ def guardar_membresia(membresia):
                     valores + (membresia.num,),
                 )
 
-# Guarda una renovación nueva o actualizada.
+# guarda una renovacion nueva o actualizada
 def guardar_renovacion(renovacion):
     with usar_conexion() as conexion:
         valores = (

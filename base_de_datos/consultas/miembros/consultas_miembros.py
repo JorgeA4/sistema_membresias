@@ -1,4 +1,3 @@
-"""Acceso persistente de miembros."""
 
 from base_de_datos.ejecutor import (
     ejecutar_una,
@@ -11,9 +10,8 @@ from base_de_datos.mapeadores import (
 )
 
 
-# Consulta un miembro usando una conexión existente.
+# consulta un miembro usando una conexipn existente
 def _obtener_miembro_conexion(conexion, num):
-    # Consulta un miembro usando una conexión existente.
     consulta = """
         SELECT *
         FROM miembro
@@ -21,9 +19,14 @@ def _obtener_miembro_conexion(conexion, num):
     """
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (num,))
-        return mapear_miembro(obtener_fila(cursor))
+        fila = obtener_fila(cursor)
 
-# Consulta un miembro por su correo electrónico.
+    if fila is None:
+        return None
+
+    return mapear_miembro(fila)
+
+# consulta un miembro por su correo electronico
 def buscar_miembro_por_correo(correo):
     consulta = """
         SELECT *
@@ -35,12 +38,12 @@ def buscar_miembro_por_correo(correo):
         return None
     return mapear_miembro(fila)
 
-# Consulta un miembro por su número.
+# consulta un miembro por su numero
 def buscar_miembro_por_num(num):
     with usar_conexion() as conexion:
         return _obtener_miembro_conexion(conexion, num)
 
-# Consulta todos los miembros ordenados por número.
+# consulta todos los miembros ordenados por numero.
 def obtener_todos_los_miembros():
     consulta = """
         SELECT num
@@ -50,13 +53,15 @@ def obtener_todos_los_miembros():
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta)
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_obtener_miembro_conexion(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _obtener_miembro_conexion(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Comprueba si un miembro tiene membresías registradas.
-# Comprueba si un miembro tiene membresías registradas.
+# comprueba si un miembro tiene membresias registradas
 def tiene_historial_miembro(num):
-    """Indica si el miembro tiene al menos una membresía registrada."""
     consulta = """
         SELECT EXISTS(
             SELECT 1

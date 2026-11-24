@@ -1,4 +1,3 @@
-"""Acceso persistente de recompensas."""
 
 from base_de_datos.ejecutor import obtener_fila, obtener_filas, usar_conexion
 from base_de_datos.mapeadores import (
@@ -6,8 +5,7 @@ from base_de_datos.mapeadores import (
     mapear_version_recompensa,
 )
 
-# Consulta una recompensa usando una conexión existente.
-# Consulta una recompensa usando una conexión existente.
+# consulta una recompensa usando una conexion existente
 def _obtener_recompensa_conexion(conexion, codigo):
     consulta = """
         SELECT *
@@ -16,10 +14,12 @@ def _obtener_recompensa_conexion(conexion, codigo):
     """
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (codigo,))
-        return mapear_recompensa(obtener_fila(cursor))
+        fila = obtener_fila(cursor)
+    if fila is None:
+        return None
+    return mapear_recompensa(fila)
 
-# Consulta una versión de recompensa y su recompensa.
-# Consulta una versión de recompensa y su recompensa.
+# consulta una versin de recompensa y su recompensa
 def _consulta_version_recompensa(conexion, num):
     consulta = """
         SELECT *
@@ -35,12 +35,12 @@ def _consulta_version_recompensa(conexion, num):
         fila, _obtener_recompensa_conexion(conexion, fila["recompensa"])
     )
 
-# Consulta una recompensa por su código.
+# consulta una recompensa por su codigo
 def buscar_recompensa_por_codigo(codigo):
     with usar_conexion() as conexion:
         return _obtener_recompensa_conexion(conexion, codigo)
 
-# Consulta todas las recompensas ordenadas por código.
+# Consulta todas las recompensas ordenadas por codigo
 def obtener_todas_las_recompensas():
     consulta = """
         SELECT codigo
@@ -50,10 +50,14 @@ def obtener_todas_las_recompensas():
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta)
-            codigos = [fila["codigo"] for fila in obtener_filas(cursor)]
-        return [_obtener_recompensa_conexion(conexion, codigo) for codigo in codigos]
+            filas = obtener_filas(cursor)
+            lista_codigos = [fila["codigo"] for fila in filas]
+        return [
+            _obtener_recompensa_conexion(conexion, codigo)
+            for codigo in lista_codigos
+        ]
 
-# Consulta las versiones de una recompensa.
+# consulta las versiones de una recompensa.
 def obtener_versiones_de_recompensa(codigo_recompensa):
     consulta = """
         SELECT num
@@ -64,15 +68,19 @@ def obtener_versiones_de_recompensa(codigo_recompensa):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (codigo_recompensa,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_version_recompensa(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_version_recompensa(conexion, num)
+            for num in lista_numeros
+        ]
 
-# Consulta una versión de recompensa por su número.
+# consulta una version de recompensa por su numero
 def buscar_version_recompensa_por_num(num):
     with usar_conexion() as conexion:
         return _consulta_version_recompensa(conexion, num)
 
-# Consulta la versión vigente de una recompensa.
+# consuta la version vigente de una recompensa
 def buscar_version_recompensa_vigente(codigo_recompensa):
     consulta = """
         SELECT num

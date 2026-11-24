@@ -1,4 +1,3 @@
-"""Acceso persistente de membresias."""
 
 from base_de_datos.ejecutor import obtener_fila, obtener_filas, usar_conexion
 from base_de_datos.mapeadores import (
@@ -9,8 +8,7 @@ from base_de_datos.mapeadores import (
 from base_de_datos.consultas.miembros.consultas_miembros import _obtener_miembro_conexion
 from base_de_datos.consultas.planes.consultas_planes import _consulta_version_plan
 
-# Consulta una membresía y sus relaciones.
-# Consulta una membresía y sus relaciones.
+#consulta una membresia y sus relaciones.
 def _consulta_membresia(conexion, num):
     consulta = """
         SELECT *
@@ -34,8 +32,7 @@ def _consulta_membresia(conexion, num):
         version_plan,
     )
 
-# Consulta una renovación y sus relaciones.
-# Consulta una renovación y sus relaciones.
+# consulta una renovacion y sus relaciones
 def _consulta_renovacion(conexion, num):
     consulta = """
         SELECT *
@@ -52,12 +49,12 @@ def _consulta_renovacion(conexion, num):
         _consulta_version_plan(conexion, fila["version_plan_comprado"]),
     )
 
-# Consulta una membresía por su número.
+# consulta una membresia por su numero.
 def buscar_membresia_por_num(num):
     with usar_conexion() as conexion:
         return _consulta_membresia(conexion, num)
 
-# Consulta la membresía principal de un miembro.
+# consulta la membresia principal de un miembro
 def buscar_membresia_de_miembro(num_miembro):
     consulta = """
         SELECT num
@@ -74,7 +71,7 @@ def buscar_membresia_de_miembro(num_miembro):
             return None
         return _consulta_membresia(conexion, fila["num"])
 
-# Consulta todas las membresías de un miembro.
+# consulta todas las membresias de un mimbro
 def obtener_membresias_de_miembro(num_miembro):
     consulta = """
         SELECT num
@@ -85,11 +82,15 @@ def obtener_membresias_de_miembro(num_miembro):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (num_miembro,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_membresia(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_membresia(conexion, num)
+            for num in lista_numeros
+        ]
 
 
-# Consulta las renovaciones de una membresía.
+# consulta las renovaciones de una membresia
 def obtener_renovaciones_de_membresia(num_membresia):
     consulta = """
         SELECT num
@@ -100,5 +101,9 @@ def obtener_renovaciones_de_membresia(num_membresia):
     with usar_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(consulta, (num_membresia,))
-            numeros = [fila["num"] for fila in obtener_filas(cursor)]
-        return [_consulta_renovacion(conexion, num) for num in numeros]
+            filas = obtener_filas(cursor)
+            lista_numeros = [fila["num"] for fila in filas]
+        return [
+            _consulta_renovacion(conexion, num)
+            for num in lista_numeros
+        ]

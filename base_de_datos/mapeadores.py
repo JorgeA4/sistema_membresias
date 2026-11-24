@@ -1,5 +1,3 @@
-"""Conversión de filas de MariaDB a objetos del dominio."""
-
 from clases.compra import Compra
 from clases.membresia import Membresia
 from clases.miembro import Miembro
@@ -20,7 +18,7 @@ from clases.version_plan import (
 )
 from clases.version_recompensa import VersionRecompensa
 
-
+# convierte una fila en un miembro
 def mapear_miembro(fila):
     if fila is None:
         return None
@@ -30,13 +28,13 @@ def mapear_miembro(fila):
         fila["contraseña"], fila["fecha_registro"],
     )
 
-
+# convierte una fila en un rol
 def mapear_rol(fila):
     if fila is None:
         return None
     return Rol(fila["codigo"], fila["nombre"], fila["descripcion"])
 
-
+# convierte una fila en un usaurio
 def mapear_usuario(fila, rol):
     if fila is None:
         return None
@@ -46,19 +44,19 @@ def mapear_usuario(fila, rol):
         fila["contraseña"], rol, fila["fecha_registro"],
     )
 
-
+# convierte una fila en un plan
 def mapear_plan(fila):
     if fila is None:
         return None
     return Plan(fila["codigo"], fila["nombre"], fila["descripcion"])
 
-
+# convierte una fila en una recompensa
 def mapear_recompensa(fila):
     if fila is None:
         return None
     return Recompensa(fila["codigo"], fila["nombre"], fila["descripcion"])
 
-
+# convierte una fila y sus configuraciones en una version de plan
 def mapear_version_plan(fila, plan, configuracion_cashback,
                         configuracion_puntos, configuracion_descuento,
                         version_base_de_promo=None):
@@ -72,7 +70,7 @@ def mapear_version_plan(fila, plan, configuracion_cashback,
         configuracion_descuento, version_base_de_promo,
     )
 
-
+# convierte la configuracion de cashback de una fila
 def mapear_configuracion_cashback(fila):
     if fila is None or fila["config_cashback_num"] is None:
         return None
@@ -81,7 +79,7 @@ def mapear_configuracion_cashback(fila):
         fila["config_cashback_limite"],
     )
 
-
+# convierte la configuracion de puntos de una fila
 def mapear_configuracion_puntos(fila):
     if fila is None or fila["config_puntos_num"] is None:
         return None
@@ -90,7 +88,7 @@ def mapear_configuracion_puntos(fila):
         fila["config_puntos_vigencia"],
     )
 
-
+# convierte la configuracion de descuento y sus dias
 def mapear_configuracion_descuento(fila, dias):
     if fila is None or fila["config_descuento_num"] is None:
         return None
@@ -103,7 +101,7 @@ def mapear_configuracion_descuento(fila, dias):
     ]
     return configuracion
 
-
+# convierte una fila en una version de recompensa
 def mapear_version_recompensa(fila, recompensa):
     if fila is None:
         return None
@@ -112,7 +110,7 @@ def mapear_version_recompensa(fila, recompensa):
         fila["fecha_final"], fila["limite_canjes"], recompensa,
     )
 
-
+# convierte una fila en una membresia
 def mapear_membresia(fila, miembro, version_plan):
     if fila is None:
         return None
@@ -121,7 +119,7 @@ def mapear_membresia(fila, miembro, version_plan):
         miembro, version_plan,
     )
 
-
+# convierte una fila en una compra
 def mapear_compra(fila, membresia, usuario):
     if fila is None:
         return None
@@ -131,7 +129,7 @@ def mapear_compra(fila, membresia, usuario):
         fila["monto_final"], membresia, usuario, fila.get("fecha"),
     )
 
-
+# convierte una fila en una renovacion
 def mapear_renovacion(fila, membresia, version_plan):
     if fila is None:
         return None
@@ -141,7 +139,7 @@ def mapear_renovacion(fila, membresia, version_plan):
         membresia, version_plan,
     )
 
-
+# convierte una fila en una transaccion de puntos
 def mapear_transaccion_puntos(fila, compra, version_recompensa, membresia):
     if fila is None:
         return None
@@ -150,7 +148,7 @@ def mapear_transaccion_puntos(fila, compra, version_recompensa, membresia):
         fila["concepto"], compra, version_recompensa, membresia,
     )
 
-
+# convierte una fila en una transaccion de cashback
 def mapear_transaccion_cashback(fila, compra, membresia):
     if fila is None:
         return None
