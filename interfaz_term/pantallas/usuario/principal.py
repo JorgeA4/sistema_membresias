@@ -29,7 +29,7 @@ from servicios.miembro.servicio_miembro import (
     modificar_miembro,
     registrar_miembro_con_membresia,
 )
-from servicios.miembro.servicio_miembro import buscar_miembros, obtener_miembros
+from servicios.miembro.servicio_miembro import obtener_miembros
 from servicios.plan.servicio_plan import (
     crear_promocion,
     crear_version_plan,
@@ -208,12 +208,12 @@ def mostrar_operaciones_tienda(sesion: dict) -> tuple:
 
 def mostrar_miembros_membresias(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
-    opciones = ["Buscar una membresía", "Filtrar miembros", "← Volver"]
+    opciones = ["Buscar una membresía", "Mostrar todos los miembros", "← Volver"]
     accion = questionary.select("Miembros y membresías", choices=opciones).ask()
     if accion == "Buscar una membresía":
         return _buscar_membresia(sesion)
-    if accion == "Filtrar miembros":
-        return _filtrar_miembros(sesion)
+    if accion == "Mostrar todos los miembros":
+        return _mostrar_todos_miembros(sesion)
     elif accion == "← Volver":
         return "usuario", VOLVER
     return "usuario", None
@@ -239,42 +239,19 @@ def _buscar_membresia(sesion: dict) -> tuple:
     return "usuario", DETALLE_MIEMBRO
 
 
-def _filtrar_miembros(sesion: dict) -> tuple:
-    datos = pedir_formulario(
-        [
-            {"clave": "nombre", "etiqueta": "Nombre", "requerido": False},
-            {"clave": "primer_apellido", "etiqueta": "Primer apellido", "requerido": False},
-            {"clave": "correo", "etiqueta": "Correo", "requerido": False},
-            {"clave": "telefono", "etiqueta": "Teléfono", "requerido": False},
-            {"clave": "estado", "etiqueta": "Estado (ACTIVA, SUSPENDIDA o CANCELADA)", "requerido": False},
-            {"clave": "plan", "etiqueta": "Código del plan activo", "requerido": False},
-        ],
-        titulo="Filtrar miembros",
-        mostrar_encabezado=_crear_encabezado_formulario(sesion["identidad"]),
-    )
-    if datos is None:
+def _mostrar_todos_miembros(sesion: dict) -> tuple:
+    identidad = sesion["identidad"]
+    miembros = obtener_miembros(identidad)
+    sesion["membresias_resultado"] = [
+        membresia.num
+        for miembro in miembros
+        if (membresia := consultar_membresia_de_miembro(identidad, miembro.num))
+        is not None
+    ]
+    if not sesion["membresias_resultado"]:
+        error("No se encontraron miembros con membresía asociada.")
         return "usuario", None
-    try:
-        identidad = sesion["identidad"]
-        if datos["estado"]:
-            datos["estado"] = datos["estado"].upper()
-        miembros = buscar_miembros(sesion["identidad"], datos)
-        if not miembros:
-            error("No se encontraron miembros con esos filtros.")
-            return "usuario", None
-        sesion["membresias_resultado"] = [
-            membresia.num
-            for miembro in miembros
-            if (membresia := consultar_membresia_de_miembro(identidad, miembro.num))
-            is not None
-        ]
-        if not sesion["membresias_resultado"]:
-            error("No se encontraron miembros con membresía asociada.")
-            return "usuario", None
-        return "usuario", RESULTADOS_MIEMBROS
-    except (ValueError, PermissionError) as exc:
-        error(str(exc))
-        return "usuario", None
+    return "usuario", RESULTADOS_MIEMBROS
 
 
 def mostrar_resultados_miembros(sesion: dict) -> tuple:

@@ -71,11 +71,6 @@ def obtener_miembros(identidad: dict) -> list[Miembro]:
     return consultas_miembros.obtener_todos_los_miembros()
 
 
-def buscar_miembros(identidad: dict, filtros: dict) -> list[Miembro]:
-    requiere_operador_tienda(identidad)
-    return consultas_miembros.buscar_miembros(filtros)
-
-
 def modificar_miembro(identidad: dict, num: int, datos: dict) -> Miembro:
     requiere_administrador_o_gerente(identidad)
     miembro = consultar_miembro(identidad, num)

@@ -73,3 +73,26 @@ def obtener_fila(cursor):
 
 def obtener_filas(cursor):
     return cursor.fetchall()
+
+
+def ejecutar_una(consulta, parametros=()):
+    """Ejecuta una consulta y devuelve una sola fila."""
+    with usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(consulta, parametros)
+            return obtener_fila(cursor)
+
+
+def ejecutar_varias(consulta, parametros=()):
+    """Ejecuta una consulta y devuelve todas sus filas."""
+    with usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(consulta, parametros)
+            return obtener_filas(cursor)
+
+
+def ejecutar(consulta, parametros=()):
+    """Ejecuta una operación de escritura contra la base de datos."""
+    with usar_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(consulta, parametros)
