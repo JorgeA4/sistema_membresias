@@ -30,51 +30,6 @@ from utilidades.excepciones import (
     OperacionNoPermitida,
 )
 
-# Imports anteriores conservados para referencia y compatibilidad documental.
-# from base_de_datos.bd_simulada import transaccion
-# from base_de_datos.consultas_simuladas import buscar_miembro_por_correo
-# from base_de_datos.consultas_simuladas import buscar_miembro_por_num
-# from base_de_datos.consultas_simuladas import obtener_todos_los_miembros
-# from base_de_datos.consultas_simuladas import guardar_miembro
-# from base_de_datos.consultas_simuladas import eliminar_miembro
-# from base_de_datos.consultas_simuladas import buscar_usuario_por_correo
-# from base_de_datos.consultas_simuladas import buscar_usuario_por_num
-# from base_de_datos.consultas_simuladas import obtener_todos_los_usuarios
-# from base_de_datos.consultas_simuladas import guardar_usuario
-# from base_de_datos.consultas_simuladas import eliminar_usuario
-# from base_de_datos.consultas_simuladas import buscar_plan_por_codigo
-# from base_de_datos.consultas_simuladas import obtener_todos_los_planes
-# from base_de_datos.consultas_simuladas import guardar_plan
-# from base_de_datos.consultas_simuladas import eliminar_plan
-# from base_de_datos.consultas_simuladas import obtener_versiones_de_plan
-# from base_de_datos.consultas_simuladas import buscar_version_plan_por_num
-# from base_de_datos.consultas_simuladas import buscar_version_plan_vigente
-# from base_de_datos.consultas_simuladas import guardar_version_plan
-# from base_de_datos.consultas_simuladas import buscar_membresia_por_num
-# from base_de_datos.consultas_simuladas import buscar_membresia_de_miembro
-# from base_de_datos.consultas_simuladas import guardar_membresia
-# from base_de_datos.consultas_simuladas import buscar_recompensa_por_codigo
-# from base_de_datos.consultas_simuladas import obtener_todas_las_recompensas
-# from base_de_datos.consultas_simuladas import guardar_recompensa
-# from base_de_datos.consultas_simuladas import eliminar_recompensa
-# from base_de_datos.consultas_simuladas import obtener_versiones_de_recompensa
-# from base_de_datos.consultas_simuladas import buscar_version_recompensa_por_num
-# from base_de_datos.consultas_simuladas import buscar_version_recompensa_vigente
-# from base_de_datos.consultas_simuladas import guardar_version_recompensa
-# from base_de_datos.consultas_simuladas import buscar_compra_por_num
-# from base_de_datos.consultas_simuladas import guardar_compra
-# from base_de_datos.consultas_simuladas import obtener_compras_de_membresia
-# from base_de_datos.consultas_simuladas import guardar_renovacion
-# from base_de_datos.consultas_simuladas import obtener_renovaciones_de_membresia
-# from base_de_datos.consultas_simuladas import guardar_transaccion_puntos
-# from base_de_datos.consultas_simuladas import obtener_transacciones_de_miembro
-# from base_de_datos.consultas_simuladas import obtener_saldo_de_miembro
-# from base_de_datos.consultas_simuladas import guardar_transaccion_cashback
-# from base_de_datos.consultas_simuladas import obtener_transacciones_cashback_de_membresia
-# from base_de_datos.consultas_simuladas import obtener_saldo_cashback_de_membresia
-# from base_de_datos.consultas_simuladas import buscar_rol_por_codigo
-# from base_de_datos.consultas_simuladas import obtener_todos_los_roles
-
 _conexion_actual = ContextVar("conexion_nexum", default=None)
 
 
