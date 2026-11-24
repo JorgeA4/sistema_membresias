@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 import base_de_datos.consultas as bd
@@ -27,7 +27,7 @@ def ajustar_puntos(identidad: dict, num_membresia: int, movimiento: int, concept
         num=None,
         movimiento=movimiento,
         saldo=nuevo_saldo,
-        fecha=date.today(),
+        fecha=datetime.now(),
         concepto=concepto.strip(),
         compra=None,
         version_recompensa=None,
@@ -56,7 +56,7 @@ def ajustar_cashback(identidad: dict, num_membresia: int, movimiento, concepto: 
         num=None,
         monto=movimiento_decimal,
         saldo=nuevo_saldo,
-        fecha=date.today(),
+        fecha=datetime.now(),
         concepto=concepto.strip(),
         compra=None,
         membresia=membresia,

@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import base_de_datos.consultas as bd
 from clases.membresia import Membresia
@@ -232,7 +232,7 @@ def canjear_recompensa(
         num=None,
         movimiento=-version.costo_puntos,
         saldo=saldo - version.costo_puntos,
-        fecha=date.today(),
+        fecha=datetime.now(),
         concepto=f"Canje de {version.recompensa.nombre}",
         compra=compra,
         version_recompensa=version,

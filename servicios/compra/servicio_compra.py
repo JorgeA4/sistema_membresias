@@ -1,5 +1,5 @@
 import calendar
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation, ROUND_DOWN, ROUND_HALF_UP
 
 import base_de_datos.consultas as bd
@@ -41,7 +41,8 @@ def registrar_compra(identidad: dict, datos: dict) -> Compra:
         if monto_base <= 0:
             raise DatosInvalidos("El monto base debe ser mayor que cero.")
 
-        fecha = date.today()
+        fecha_hora = datetime.now()
+        fecha = fecha_hora.date()
         descuento = _calcular_descuento(version.config_descuento, monto_base, fecha)
         monto_con_descuento = monto_base - descuento["nominal"]
         cashback_aplicado = _obtener_cashback_aplicado(
@@ -62,16 +63,16 @@ def registrar_compra(identidad: dict, datos: dict) -> Compra:
             monto_final=monto_final,
             membresia=membresia,
             usuario=usuario,
-            fecha=fecha,
+            fecha=datetime.now(),
         )
         bd.guardar_compra(compra)
 
-        _registrar_puntos(compra, version.config_puntos)
+        _registrar_puntos(compra, version.config_puntos, fecha_hora)
         _registrar_cashback(
             compra,
             version.config_cashback,
             cashback_aplicado,
-            fecha,
+            fecha_hora,
         )
         return compra
 
@@ -139,7 +140,7 @@ def actualizar_vigencia_puntos(membresia: Membresia, fecha: date | None = None) 
             num=None,
             movimiento=-saldo,
             saldo=0,
-            fecha=fecha,
+            fecha=datetime.now(),
             concepto="Puntos vencidos",
             compra=None,
             version_recompensa=None,
@@ -157,7 +158,12 @@ def _calcular_fecha_vencimiento_puntos(membresia: Membresia):
     ultima_compra = _obtener_ultima_compra_con_puntos(transacciones)
     if ultima_compra is None:
         return None
-    return _sumar_meses(ultima_compra.fecha, configuracion.vigencia_meses)
+    return _sumar_meses(
+        ultima_compra.fecha.date()
+        if isinstance(ultima_compra.fecha, datetime)
+        else ultima_compra.fecha,
+        configuracion.vigencia_meses,
+    )
 
 
 def _obtener_ultima_compra_con_puntos(transacciones):
@@ -285,7 +291,11 @@ def _obtener_cashback_aplicado(
     return _cuantificar(cashback)
 
 
-def _registrar_puntos(compra: Compra, configuracion) -> None:
+def _registrar_puntos(
+    compra: Compra,
+    configuracion,
+    fecha_hora: datetime | None = None,
+) -> None:
     if configuracion is None:
         return
 
@@ -302,7 +312,7 @@ def _registrar_puntos(compra: Compra, configuracion) -> None:
         num=None,
         movimiento=movimiento,
         saldo=saldo + movimiento,
-        fecha=date.today(),
+        fecha=fecha_hora or datetime.now(),
         concepto=None,
         compra=compra,
         version_recompensa=None,
@@ -311,7 +321,12 @@ def _registrar_puntos(compra: Compra, configuracion) -> None:
     bd.guardar_transaccion_puntos(transaccion)
 
 
-def _registrar_cashback(compra: Compra, configuracion, aplicado: Decimal, fecha: date) -> None:
+def _registrar_cashback(
+    compra: Compra,
+    configuracion,
+    aplicado: Decimal,
+    fecha_hora: datetime,
+) -> None:
     if configuracion is None:
         return
 
@@ -324,7 +339,7 @@ def _registrar_cashback(compra: Compra, configuracion, aplicado: Decimal, fecha:
                 num=None,
                 monto=-aplicado,
                 saldo=saldo,
-                fecha=fecha,
+                fecha=fecha_hora,
                 concepto="Cashback aplicado en compra",
                 compra=compra,
                 membresia=compra.membresia,
@@ -341,7 +356,7 @@ def _registrar_cashback(compra: Compra, configuracion, aplicado: Decimal, fecha:
                 num=None,
                 monto=generado,
                 saldo=saldo,
-                fecha=fecha,
+        fecha=fecha_hora,
                 concepto="Cashback generado por compra",
                 compra=compra,
                 membresia=compra.membresia,
@@ -426,7 +441,11 @@ def _registrar_expiraciones_cashback(
                     num=None,
                     monto=-generado,
                     saldo=max(saldo, Decimal("0.00")),
-                    fecha=date(año, mes, calendar.monthrange(año, mes)[1]),
+                    fecha=datetime(
+                        año,
+                        mes,
+                        calendar.monthrange(año, mes)[1],
+                    ),
                     concepto=f"Expiración de cashback {año:04d}-{mes:02d}",
                     compra=None,
                     membresia=bd.buscar_membresia_por_num(num_membresia),

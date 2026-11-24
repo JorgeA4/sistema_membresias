@@ -78,6 +78,31 @@ def obtener_historial_membresias_y_planes(
     )
 
 
+def obtener_ultima_renovacion_efectiva(
+    identidad: dict,
+    num_membresia: int,
+) -> Renovacion | None:
+    """Obtiene el último periodo aplicable de una membresía."""
+    membresia = consultar_membresia(identidad, num_membresia)
+    if membresia is None:
+        raise EntidadNoEncontrada("La membresía no existe.")
+    renovaciones = bd.obtener_renovaciones_de_membresia(num_membresia)
+    if not renovaciones:
+        return None
+    efectivas = [
+        renovacion
+        for renovacion in renovaciones
+        if renovacion.fecha_inicio_periodo <= date.today()
+    ]
+    return max(
+        efectivas or renovaciones,
+        key=lambda renovacion: (
+            renovacion.fecha_fin_periodo,
+            renovacion.num,
+        ),
+    )
+
+
 def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion:
     requiere_operador_tienda(identidad)
     with bd.transaccion():

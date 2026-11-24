@@ -203,62 +203,62 @@ num entero	num decimal	num decimal	num decimal	num decimal	num decimal	num enter
 Tabla:	TRANSACCION_PUNTOS									
 num	movimiento	saldo	fecha	concepto	compra	version_recompensa	membresia			
 num entero	num entero	num entero	fecha	texto - 255	num entero	num entero	num entero			
-1	100	100	2026/01/10	Bono inicial de fidelidad por renovación Premium	null	null	15
-2	46	146	2026/01/18	Puntos acumulados por compra #3 (10% monto final)	3	null	15
-3	69	215	2026/02/10	Puntos acumulados por compra #4 (10% monto final)	4	null	15
-4	32	247	2026/03/05	Puntos acumulados por compra #5 (10% monto final)	5	null	15
-5	-100	147	2026/03/10	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	15
-6	106	253	2026/03/22	Puntos acumulados por compra #6 (10% monto final)	6	null	15
-7	58	311	2026/04/14	Puntos acumulados por compra #7 (10% monto final)	7	null	15
-8	-150	161	2026/04/20	Canje de recompensa: Bebida de Especialidad	null	2	15
-9	77	238	2026/05/02	Puntos acumulados por compra #8 (10% monto final)	8	null	15
-10	27	265	2026/06/11	Puntos acumulados por compra #9 (10% monto final)	9	null	15
-11	114	379	2026/07/04	Puntos acumulados por compra #10 (10% monto final)	10	null	15
-12	66	445	2026/08/19	Puntos acumulados por compra #11 (10% monto final)	11	null	15
-13	93	538	2026/09/08	Puntos acumulados por compra #12 (10% monto final)	12	null	15
-14	51	589	2026/10/03	Puntos acumulados por compra #13 (10% monto final)	13	null	15
-15	75	664	2026/10/25	Puntos acumulados por compra #14 (10% monto final)	14	null	15
-16	51	51	2026/04/05	Puntos acumulados por compra #15	15	null	2
-17	99	150	2026/06/15	Puntos acumulados por compra #16	16	null	2
-18	-100	50	2026/07/01	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	2
-19	21	21	2026/02/20	Puntos acumulados por compra #17	17	null	3
-20	216	216	2026/03/10	Puntos acumulados por compra #18 (15% VIP)	18	null	4
-21	257	473	2026/05/18	Puntos acumulados por compra #19 (15% VIP)	19	null	4
-22	-250	223	2026/06/01	Canje de recompensa: Postre Gourmet de la Casa	null	3	4
-23	44	44	2026/04/20	Puntos acumulados por compra #20	20	null	6
-24	198	198	2026/02/10	Puntos acumulados por compra #21	21	null	7
-25	17	17	2026/06/20	Puntos acumulados por compra #22	22	null	9
-26	78	78	2026/09/20	Puntos acumulados por compra #23	23	null	10
-27	-100	564	2026/11/01	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	15
-28	-100	464	2026/11/10	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	15
-29	23	23	2024/02/15	Puntos acumulados por compra #1	1	null	1
-30	61	61	2025/02/15	Puntos acumulados por compra #2	2	null	14
+1	100	100	2026/01/10 10:07:00	Bono inicial de fidelidad por renovación Premium	null	null	15
+2	46	146	2026/01/18 11:14:00	Puntos acumulados por compra #3 (10% monto final)	3	null	15
+3	69	215	2026/02/10 12:21:00	Puntos acumulados por compra #4 (10% monto final)	4	null	15
+4	32	247	2026/03/05 13:28:00	Puntos acumulados por compra #5 (10% monto final)	5	null	15
+5	-100	147	2026/03/10 14:35:00	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	15
+6	106	253	2026/03/22 15:42:00	Puntos acumulados por compra #6 (10% monto final)	6	null	15
+7	58	311	2026/04/14 16:49:00	Puntos acumulados por compra #7 (10% monto final)	7	null	15
+8	-150	161	2026/04/20 17:56:00	Canje de recompensa: Bebida de Especialidad	null	2	15
+9	77	238	2026/05/02 18:03:00	Puntos acumulados por compra #8 (10% monto final)	8	null	15
+10	27	265	2026/06/11 09:10:00	Puntos acumulados por compra #9 (10% monto final)	9	null	15
+11	114	379	2026/07/04 10:17:00	Puntos acumulados por compra #10 (10% monto final)	10	null	15
+12	66	445	2026/08/19 11:24:00	Puntos acumulados por compra #11 (10% monto final)	11	null	15
+13	93	538	2026/09/08 12:31:00	Puntos acumulados por compra #12 (10% monto final)	12	null	15
+14	51	589	2026/10/03 13:38:00	Puntos acumulados por compra #13 (10% monto final)	13	null	15
+15	75	664	2026/10/25 14:45:00	Puntos acumulados por compra #14 (10% monto final)	14	null	15
+16	51	51	2026/04/05 15:52:00	Puntos acumulados por compra #15	15	null	2
+17	99	150	2026/06/15 16:59:00	Puntos acumulados por compra #16	16	null	2
+18	-100	50	2026/07/01 17:06:00	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	2
+19	21	21	2026/02/20 18:13:00	Puntos acumulados por compra #17	17	null	3
+20	216	216	2026/03/10 09:20:00	Puntos acumulados por compra #18 (15% VIP)	18	null	4
+21	257	473	2026/05/18 10:27:00	Puntos acumulados por compra #19 (15% VIP)	19	null	4
+22	-250	223	2026/06/01 11:34:00	Canje de recompensa: Postre Gourmet de la Casa	null	3	4
+23	44	44	2026/04/20 12:41:00	Puntos acumulados por compra #20	20	null	6
+24	198	198	2026/02/10 13:48:00	Puntos acumulados por compra #21	21	null	7
+25	17	17	2026/06/20 14:55:00	Puntos acumulados por compra #22	22	null	9
+26	78	78	2026/09/20 15:02:00	Puntos acumulados por compra #23	23	null	10
+27	-100	564	2026/11/01 16:09:00	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	15
+28	-100	464	2026/11/10 17:16:00	Canje de recompensa: Cupón de Descuento $50 MXN	null	1	15
+29	23	23	2024/02/15 18:23:00	Puntos acumulados por compra #1	1	null	1
+30	61	61	2025/02/15 09:30:00	Puntos acumulados por compra #2	2	null	14
 										
 Tabla:	TRANSACCION_CASHBACK									
 num	monto	saldo	fecha	concepto	compra	membresia				
 num entero	num decimal	num decimal	fecha	texto - 255	num entero	num entero				
-1	50.00	50.00	2026/01/10	Bono inicial de bienvenida cashback	null	15
-2	23.38	73.38	2026/01/18	Cashback 5% generado en compra #3	3	15
-3	34.85	108.23	2026/02/10	Cashback 5% generado en compra #4	4	15
-4	-20.00	88.23	2026/03/05	Cashback aplicado en pago de compra #5	5	15
-5	16.00	104.23	2026/03/05	Cashback 5% generado en compra #5	5	15
-6	53.13	157.36	2026/03/22	Cashback 5% generado en compra #6	6	15
-7	28.90	186.26	2026/04/14	Cashback 5% generado en compra #7	7	15
-8	-35.00	151.26	2026/05/02	Cashback aplicado en pago de compra #8	8	15
-9	38.63	189.89	2026/05/02	Cashback 5% generado en compra #8	8	15
-10	13.60	203.49	2026/06/11	Cashback 5% generado en compra #9	9	15
-11	-50.00	153.49	2026/07/04	Cashback aplicado en pago de compra #10	10	15
-12	57.00	210.49	2026/07/04	Cashback 5% generado en compra #10	10	15
-13	33.15	243.64	2026/08/19	Cashback 5% generado en compra #11	11	15
-14	46.75	290.39	2026/09/08	Cashback 5% generado en compra #12	12	15
-15	-25.00	265.39	2026/10/03	Cashback aplicado en pago de compra #13	13	15
-16	25.53	290.92	2026/10/03	Cashback 5% generado en compra #13	13	15
-17	37.83	328.75	2026/10/25	Cashback 5% generado en compra #14	14	15
-18	25.50	25.50	2026/04/05	Cashback generado en compra #15	15	2
-19	-20.00	5.50	2026/06/15	Cashback aplicado en compra #16	16	2
-20	49.50	55.00	2026/06/15	Cashback generado en compra #16	16	2
-21	115.20	115.20	2026/03/10	Cashback 8% VIP generado en compra #18	18	4
-22	-50.00	65.20	2026/05/18	Cashback aplicado en compra #19	19	4
-23	136.80	202.00	2026/05/18	Cashback 8% VIP generado en compra #19	19	4
-24	9.50	9.50	2024/02/15	Cashback generado por compra #1	1	1
-25	30.80	30.80	2025/02/15	Cashback generado por compra #2	2	14
+1	50.00	50.00	2026/01/10 10:07:00	Bono inicial de bienvenida cashback	null	15
+2	23.38	73.38	2026/01/18 11:14:00	Cashback 5% generado en compra #3	3	15
+3	34.85	108.23	2026/02/10 12:21:00	Cashback 5% generado en compra #4	4	15
+4	-20.00	88.23	2026/03/05 13:28:00	Cashback aplicado en pago de compra #5	5	15
+5	16.00	104.23	2026/03/05 14:35:00	Cashback 5% generado en compra #5	5	15
+6	53.13	157.36	2026/03/22 15:42:00	Cashback 5% generado en compra #6	6	15
+7	28.90	186.26	2026/04/14 16:49:00	Cashback 5% generado en compra #7	7	15
+8	-35.00	151.26	2026/05/02 17:56:00	Cashback aplicado en pago de compra #8	8	15
+9	38.63	189.89	2026/05/02 18:03:00	Cashback 5% generado en compra #8	8	15
+10	13.60	203.49	2026/06/11 09:10:00	Cashback 5% generado en compra #9	9	15
+11	-50.00	153.49	2026/07/04 10:17:00	Cashback aplicado en pago de compra #10	10	15
+12	57.00	210.49	2026/07/04 11:24:00	Cashback 5% generado en compra #10	10	15
+13	33.15	243.64	2026/08/19 12:31:00	Cashback 5% generado en compra #11	11	15
+14	46.75	290.39	2026/09/08 13:38:00	Cashback 5% generado en compra #12	12	15
+15	-25.00	265.39	2026/10/03 14:45:00	Cashback aplicado en pago de compra #13	13	15
+16	25.53	290.92	2026/10/03 15:52:00	Cashback 5% generado en compra #13	13	15
+17	37.83	328.75	2026/10/25 16:59:00	Cashback 5% generado en compra #14	14	15
+18	25.50	25.50	2026/04/05 17:06:00	Cashback generado en compra #15	15	2
+19	-20.00	5.50	2026/06/15 18:13:00	Cashback aplicado en compra #16	16	2
+20	49.50	55.00	2026/06/15 09:20:00	Cashback generado en compra #16	16	2
+21	115.20	115.20	2026/03/10 10:27:00	Cashback 8% VIP generado en compra #18	18	4
+22	-50.00	65.20	2026/05/18 11:34:00	Cashback aplicado en compra #19	19	4
+23	136.80	202.00	2026/05/18 12:41:00	Cashback 8% VIP generado en compra #19	19	4
+24	9.50	9.50	2024/02/15 13:48:00	Cashback generado por compra #1	1	1
+25	30.80	30.80	2025/02/15 14:55:00	Cashback generado por compra #2	2	14

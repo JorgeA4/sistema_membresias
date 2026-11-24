@@ -6,10 +6,20 @@ Usa Rich para construir y mostrar tablas con estilo consistente.
 
 from rich.console import Console
 from rich.table import Table
+from datetime import date, datetime
 
 from interfaz_term.estilos.tema import BORDE_TABLA, ESTILO_TABLA
 
 _consola = Console()
+
+
+def formatear_fecha_hora(fecha) -> str:
+    """Formatea fechas y fechas con hora para mostrarlas en la interfaz."""
+    if isinstance(fecha, datetime):
+        return fecha.strftime("%d/%m/%Y %H:%M:%S")
+    if isinstance(fecha, date):
+        return fecha.strftime("%d/%m/%Y")
+    return "Sin fecha" if fecha is None else str(fecha)
 
 
 def mostrar_tabla(titulo: str, columnas: list[str], filas: list[tuple]) -> None:

@@ -4,7 +4,7 @@ import questionary
 
 from interfaz_term.componentes.banner import mostrar_banner
 from interfaz_term.componentes.mensajes import error, informacion, pausar
-from interfaz_term.componentes.tabla import mostrar_tabla
+from interfaz_term.componentes.tabla import formatear_fecha_hora, mostrar_tabla
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from interfaz_term.navegacion import (
     BENEFICIOS,
@@ -27,6 +27,7 @@ from servicios.recompensa.servicio_recompensa import (
     obtener_versiones_recompensa_vigentes,
 )
 from utilidades.excepciones import EntidadNoEncontrada
+from utilidades.movimientos import obtener_datos_movimiento
 
 def _mostrar_encabezado(sesion: dict) -> None:
     identidad = sesion.get("identidad") or {}
@@ -220,7 +221,16 @@ def _mostrar_compras(identidad: dict) -> None:
     mostrar_tabla(
         "Historial de compras",
         ["Número", "Fecha", "Monto base", "Descuento", "Monto final"],
-        [(c.num, c.fecha or "Sin fecha", c.monto_base, c.descuento_nominal, c.monto_final) for c in compras],
+        [
+            (
+                c.num,
+                formatear_fecha_hora(c.fecha),
+                c.monto_base,
+                c.descuento_nominal,
+                c.monto_final,
+            )
+            for c in compras
+        ],
     )
     _pausa()
 
@@ -232,8 +242,24 @@ def _mostrar_historial_puntos(identidad: dict) -> None:
     transacciones = obtener_transacciones_de_membresia(identidad, membresia.num)
     mostrar_tabla(
         "Historial de puntos",
-        ["Fecha", "Número", "Movimiento", "Saldo", "Concepto"],
-        [(t.fecha, t.num, t.movimiento, t.saldo, t.concepto or "") for t in transacciones],
+        [
+            "Fecha",
+            "Número",
+            "Tipo",
+            "Movimiento",
+            "Saldo anterior",
+            "Saldo posterior",
+            "Concepto",
+        ],
+        [
+            (
+                formatear_fecha_hora(t.fecha),
+                t.num,
+                *obtener_datos_movimiento(t),
+                t.concepto or "",
+            )
+            for t in transacciones
+        ],
     )
     _pausa()
 
@@ -247,7 +273,13 @@ def _mostrar_historial_canjes(identidad: dict) -> None:
         "Historial de canjes",
         ["Fecha", "Número", "Movimiento", "Saldo", "Recompensa"],
         [
-            (t.fecha, t.num, t.movimiento, t.saldo, t.version_recompensa.recompensa.nombre)
+            (
+                formatear_fecha_hora(t.fecha),
+                t.num,
+                t.movimiento,
+                t.saldo,
+                t.version_recompensa.recompensa.nombre,
+            )
             for t in canjes
         ],
     )

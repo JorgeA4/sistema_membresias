@@ -1,12 +1,14 @@
 """Menú operativo de Administrador y Cajero."""
 
+from decimal import Decimal
+
 import questionary
 from rich.console import Console
 
 from interfaz_term.componentes.banner import mostrar_banner, mostrar_banner_operacion
 from interfaz_term.componentes.formulario import pedir_formulario
 from interfaz_term.componentes.mensajes import error, exito, pausar
-from interfaz_term.componentes.tabla import mostrar_tabla
+from interfaz_term.componentes.tabla import formatear_fecha_hora, mostrar_tabla
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from servicios.caja.servicio_caja import registrar_operacion_caja
 from servicios.compra.servicio_compra import (
@@ -21,6 +23,7 @@ from servicios.membresia.servicio_membresia import (
     renovar_membresia,
     suspender_membresia,
     obtener_historial_membresias_y_planes,
+    obtener_ultima_renovacion_efectiva,
 )
 from servicios.miembro.servicio_miembro import (
     modificar_miembro,
@@ -80,6 +83,7 @@ from interfaz_term.navegacion import (
     VOLVER,
 )
 from utilidades.excepciones import EntidadNoEncontrada
+from utilidades.movimientos import obtener_datos_movimiento
 from interfaz_term.validaciones.validadores_compra import (
     crear_validador_membresia_compra,
     crear_validador_recompensa,
@@ -98,6 +102,10 @@ from interfaz_term.validaciones.validadores_miembro import (
 from interfaz_term.validaciones.validadores_plan import (
     crear_validador_codigo_plan,
     crear_validador_codigo_plan_nuevo,
+    validar_decimal_no_negativo,
+    validar_decimal_positivo,
+    validar_dias_aplicables,
+    validar_entero_positivo,
     validar_fecha_final as validar_fecha_final_plan,
 )
 from interfaz_term.validaciones.validadores_recompensa import (
@@ -306,14 +314,31 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
 
     _mostrar_banner_consulta("Membresía", identidad, membresia)
     version = membresia.version_plan_actual
+    ultima_renovacion = obtener_ultima_renovacion_efectiva(
+        identidad,
+        membresia.num,
+    )
     mostrar_tabla(
         "",
-        ["Número", "Estado", "Plan", "Condiciones"],
+        [
+            "Número",
+            "Estado",
+            "Plan",
+            "Inicio",
+            "Fin",
+            "Descripción",
+            "Duración",
+        ],
         [(
             membresia.num,
             membresia.estado.value,
             version.plan.nombre if version else "Sin plan",
-            version.num if version else "-",
+            ultima_renovacion.fecha_inicio_periodo
+            if ultima_renovacion else "-",
+            ultima_renovacion.fecha_fin_periodo
+            if ultima_renovacion else "-",
+            version.plan.descripcion if version else "-",
+            f"{version.plazo_meses} meses" if version else "-",
         )],
     )
 
@@ -1092,7 +1117,7 @@ def _mostrar_actividad_usuario(identidad: dict, usuario) -> None:
         ["Compra", "Fecha", "Membresía", "Miembro", "Monto base", "Descuento", "Cashback", "Monto final"],
         [(
             compra.num,
-            compra.fecha or "Sin fecha",
+            formatear_fecha_hora(compra.fecha),
             compra.membresia.num,
             f"{compra.membresia.miembro.nombre} {compra.membresia.miembro.primer_apellido}",
             compra.monto_base,
@@ -1310,6 +1335,14 @@ def _mostrar_banner_consulta(
             f"Membresía: {membresia.num}",
             *contexto,
         ]
+        version = membresia.version_plan_actual
+        if version is not None:
+            contexto.extend(
+                [
+                    f"Plan actual: {version.plan.nombre}",
+                    f"Descripción: {version.plan.descripcion}",
+                ]
+            )
     mostrar_banner_operacion(titulo, identidad, contexto, limpiar=True)
 
 
@@ -1322,14 +1355,21 @@ def _mostrar_historial_membresias(identidad: dict, membresia) -> None:
     )
     mostrar_tabla(
         "",
-        ["Membresía", "Plan", "Versión", "Inicio", "Fin", "Estado"],
+        [
+            "Membresía",
+            "Plan",
+            "Inicio",
+            "Fin",
+            "Duración",
+            "Estado",
+        ],
         [
             (
                 renovacion.membresia.num,
                 renovacion.version_plan_comprado.plan.nombre,
-                renovacion.version_plan_comprado.num,
                 renovacion.fecha_inicio_periodo,
                 renovacion.fecha_fin_periodo,
+                f"{renovacion.version_plan_comprado.plazo_meses} meses",
                 renovacion.membresia.estado.value,
             )
             for renovacion in historial
@@ -1347,7 +1387,7 @@ def _mostrar_historial_compras(identidad: dict, membresia) -> None:
         [
             (
                 compra.num,
-                compra.fecha or "Sin fecha",
+                formatear_fecha_hora(compra.fecha),
                 compra.monto_base,
                 compra.descuento_nominal,
                 compra.cashback_aplicado,
@@ -1366,10 +1406,22 @@ def _mostrar_movimientos_puntos(identidad: dict, membresia) -> None:
     _mostrar_banner_consulta("Movimientos de puntos", identidad, membresia)
     mostrar_tabla(
         "",
-        ["Fecha", "Número", "Movimiento", "Saldo", "Concepto"],
         [
-            (transaccion.fecha, transaccion.num, transaccion.movimiento,
-             transaccion.saldo, transaccion.concepto or "")
+            "Fecha",
+            "Número",
+            "Tipo",
+            "Movimiento",
+            "Saldo anterior",
+            "Saldo posterior",
+            "Concepto",
+        ],
+        [
+            (
+                formatear_fecha_hora(transaccion.fecha),
+                transaccion.num,
+                *obtener_datos_movimiento(transaccion),
+                transaccion.concepto or "",
+            )
             for transaccion in transacciones
         ],
     )
@@ -1383,13 +1435,20 @@ def _mostrar_movimientos_cashback(identidad: dict, membresia) -> None:
     _mostrar_banner_consulta("Movimientos de cashback", identidad, membresia)
     mostrar_tabla(
         "",
-        ["Fecha", "Número", "Movimiento", "Saldo", "Concepto"],
+        [
+            "Fecha",
+            "Número",
+            "Tipo",
+            "Movimiento",
+            "Saldo anterior",
+            "Saldo posterior",
+            "Concepto",
+        ],
         [
             (
-                transaccion.fecha,
+                formatear_fecha_hora(transaccion.fecha),
                 transaccion.num,
-                transaccion.monto,
-                transaccion.saldo,
+                *obtener_datos_movimiento(transaccion),
                 transaccion.concepto or "",
             )
             for transaccion in transacciones
@@ -1436,6 +1495,7 @@ def _mostrar_detalle_plan(identidad: dict, plan, rol: str) -> None:
         _mostrar_condiciones_plan(plan.codigo)
         opciones = ["Historial de condiciones", "Promociones"]
         if rol == "ADM":
+            opciones.insert(0, "Modificar beneficios")
             opciones.insert(0, "Modificar plan")
         opciones.append("← Volver")
         seleccion = questionary.select(
@@ -1445,6 +1505,11 @@ def _mostrar_detalle_plan(identidad: dict, plan, rol: str) -> None:
             return
         if seleccion == "Modificar plan":
             _modificar_plan_completo(identidad, plan)
+            plan = obtener_planes(identidad)[
+                next(i for i, otro in enumerate(obtener_planes(identidad)) if otro.codigo == plan.codigo)
+            ]
+        elif seleccion == "Modificar beneficios":
+            _modificar_beneficios_plan(identidad, plan)
             plan = obtener_planes(identidad)[
                 next(i for i, otro in enumerate(obtener_planes(identidad)) if otro.codigo == plan.codigo)
             ]
@@ -1600,12 +1665,115 @@ def _modificar_plan_completo(identidad: dict, plan) -> None:
         incluye_aplica=False,
         anterior=actual,
         identidad=identidad,
+        incluye_beneficios=False,
     )
     if datos_condiciones is None:
         return
     try:
         modificar_plan_con_condiciones(identidad, plan.codigo, datos_plan, datos_condiciones)
         exito(f"Plan {plan.codigo} modificado.")
+    except (ValueError, PermissionError) as exc:
+        error(str(exc))
+
+
+def _modificar_beneficios_plan(identidad: dict, plan) -> None:
+    from datetime import date, timedelta
+
+    condiciones = obtener_condiciones_regulares(plan.codigo)
+    vigentes = [condicion for condicion in condiciones if condicion.esta_vigente()]
+    actual = max(
+        vigentes or condiciones,
+        key=lambda condicion: (condicion.fecha_inicio, condicion.num),
+        default=None,
+    )
+    if actual is None:
+        error("El plan no tiene condiciones regulares para modificar.")
+        return
+
+    puntos = actual.config_puntos
+    descuento = actual.config_descuento
+    cashback = actual.config_cashback
+    datos = pedir_formulario(
+        [
+            {
+                "clave": "porcentaje_puntos",
+                "etiqueta": "Porcentaje de puntos",
+                "valor_inicial": puntos.porcentaje,
+                "validador": validar_decimal_positivo,
+            },
+            {
+                "clave": "vigencia_puntos",
+                "etiqueta": "Vigencia de puntos en meses",
+                "valor_inicial": puntos.vigencia_meses,
+                "validador": validar_entero_positivo,
+            },
+            {
+                "clave": "porcentaje_descuento",
+                "etiqueta": "Porcentaje de descuento",
+                "valor_inicial": descuento.porcentaje,
+                "validador": validar_decimal_positivo,
+            },
+            {
+                "clave": "monto_minimo_descuento",
+                "etiqueta": "Monto mínimo del descuento",
+                "valor_inicial": descuento.monto_minimo,
+                "validador": validar_decimal_no_negativo,
+            },
+            {
+                "clave": "dias_descuento",
+                "etiqueta": "Días aplicables separados por coma",
+                "valor_inicial": ",".join(
+                    str(dia.dia_semana if hasattr(dia, "dia_semana") else dia)
+                    for dia in descuento.dias_aplicables
+                ),
+                "validador": validar_dias_aplicables,
+            },
+            {
+                "clave": "porcentaje_cashback",
+                "etiqueta": "Porcentaje de cashback",
+                "valor_inicial": cashback.porcentaje,
+                "validador": validar_decimal_positivo,
+            },
+            {
+                "clave": "limite_cashback",
+                "etiqueta": "Límite mensual de cashback",
+                "valor_inicial": cashback.limite_min_mensual,
+                "validador": validar_decimal_no_negativo,
+            },
+        ],
+        iniciar_en_resumen=True,
+        titulo="Modificar beneficios",
+        mostrar_encabezado=_crear_encabezado_formulario(identidad),
+    )
+    if datos is None:
+        return
+
+    datos_condiciones = {
+        "fecha_inicio": max(date.today(), actual.fecha_inicio + timedelta(days=1)),
+        "fecha_final": actual.fecha_final,
+        "precio": actual.precio,
+        "plazo_meses": actual.plazo_meses,
+        "aplica_en": "AMBAS",
+        "config_puntos": ConfigPuntos(
+            None,
+            Decimal(str(datos["porcentaje_puntos"])),
+            _numero(datos["vigencia_puntos"]),
+        ),
+        "config_descuento": ConfigDescuento(
+            None,
+            Decimal(str(datos["porcentaje_descuento"])),
+            Decimal(str(datos["monto_minimo_descuento"])),
+            [_numero(dia.strip()) for dia in datos["dias_descuento"].split(",")],
+        ),
+        "config_cashback": ConfigCashback(
+            None,
+            Decimal(str(datos["porcentaje_cashback"])),
+            Decimal(str(datos["limite_cashback"])),
+        ),
+    }
+    try:
+        modificar_condiciones_plan(identidad, plan.codigo, datos_condiciones)
+        exito(f"Beneficios del plan {plan.codigo} modificados.")
     except (ValueError, PermissionError) as exc:
         error(str(exc))
 
@@ -1646,6 +1814,7 @@ def _pedir_condiciones(
     incluye_aplica: bool,
     anterior=None,
     identidad=None,
+    incluye_beneficios: bool = True,
 ) -> dict | None:
     from datetime import date, timedelta
 
@@ -1685,7 +1854,12 @@ def _pedir_condiciones(
         datos["fecha_inicio"] = _fecha(datos["fecha_inicio"])
         datos["fecha_final"] = _fecha(datos["fecha_final"])
         datos["plazo_meses"] = _numero(datos["plazo_meses"])
-        _configurar_beneficios_version(datos, anterior, identidad)
+        if incluye_beneficios:
+            _configurar_beneficios_version(datos, anterior, identidad)
+        elif anterior is not None:
+            datos["config_puntos"] = anterior.config_puntos
+            datos["config_descuento"] = anterior.config_descuento
+            datos["config_cashback"] = anterior.config_cashback
         return datos
     except ValueError as exc:
         error(str(exc))
