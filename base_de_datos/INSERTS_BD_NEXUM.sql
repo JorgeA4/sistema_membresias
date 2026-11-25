@@ -9,9 +9,9 @@ INSERT INTO rol (codigo, nombre, descripcion) VALUES
 ('GER', 'Gerente de Sucursal', 'Supervisión de operaciones del programa, validación de canjes especiales y reportes.');
 
 INSERT INTO plan (codigo, nombre, descripcion) VALUES
-('BAS', 'Plan Nexum Basic', 'Plan de entrada con acumulación de puntos estándar y descuentos en días seleccionados.'),
-('PRE', 'Plan Nexum Premium', 'Plan preferencial con mayor porcentaje de acumulación, cashback y descuentos entre semana.'),
-('VIP', 'Plan Nexum Black Elite', 'Plan exclusivo VIP con máxima bonificación de cashback, puntos sin caducidad y descuentos diarios.');
+('BAS', 'Nexum Basic', 'Plan de entrada con acumulación de puntos estándar y descuentos en días seleccionados.'),
+('PRE', 'Nexum Premium', 'Plan preferencial con mayor porcentaje de acumulación, cashback y descuentos entre semana.'),
+('VIP', 'Nexum Black Elite', 'Plan exclusivo VIP con máxima bonificación de cashback, puntos con vigencia de 6 meses y descuentos diarios.');
 
 INSERT INTO config_cashback (num, porcentaje, limite_min_mensual) VALUES
 (1, 0.02, 100.00),
@@ -22,12 +22,12 @@ INSERT INTO config_cashback (num, porcentaje, limite_min_mensual) VALUES
 (6, 0.06, 120.00);
 
 INSERT INTO config_puntos (num, porcentaje, vigencia_meses) VALUES
-(1, 0.05, 12),
-(2, 0.05, 12),
-(3, 0.10, 18),
-(4, 0.10, 24),
-(5, 0.15, NULL),
-(6, 0.12, 12);
+(1, 0.05, 3),
+(2, 0.05, 3),
+(3, 0.10, 3),
+(4, 0.10, 3),
+(5, 0.15, 6),
+(6, 0.12, 3);
 
 INSERT INTO config_descuento (num, porcentaje, monto_minimo) VALUES
 (1, 0.05, 200.00),

@@ -3,6 +3,8 @@
 from decimal import Decimal
 
 import questionary
+
+from interfaz_term.componentes.preguntas import seleccionar
 from rich.console import Console
 
 from interfaz_term.componentes.banner import mostrar_banner, mostrar_banner_operacion
@@ -41,6 +43,7 @@ from servicios.plan.servicio_plan import (
     obtener_planes,
     obtener_condiciones_regulares,
     obtener_promociones,
+    obtener_versiones_plan_para_renovacion,
     obtener_versiones_plan_para_operacion,
     registrar_plan,
     registrar_plan_con_condiciones,
@@ -87,9 +90,10 @@ from utilidades.fechas import convertir_fecha
 from utilidades.movimientos import obtener_datos_movimiento
 from interfaz_term.validaciones.validadores_compra import (
     crear_validador_membresia_compra,
+    crear_mostrador_contexto_compra,
     crear_validador_recompensa,
     crear_mostrador_cashback,
-    mostrar_cliente_compra,
+    mostrar_detalle_recompensa,
     validar_cashback,
 )
 from interfaz_term.validaciones.validadores_fecha import (
@@ -109,8 +113,11 @@ from interfaz_term.validaciones.validadores_plan import (
     validar_decimal_no_negativo,
     validar_decimal_positivo,
     validar_dias_aplicables,
+    convertir_porcentaje,
+    formatear_porcentaje,
     validar_entero_positivo,
     validar_fecha_final as validar_fecha_final_plan,
+    validar_porcentaje,
 )
 from interfaz_term.validaciones.validadores_recompensa import (
     crear_validador_codigo_nuevo,
@@ -120,6 +127,7 @@ from interfaz_term.validaciones.validadores_recompensa import (
 from interfaz_term.validaciones.validadores_usuario import (
     crear_validador_correo,
     crear_validador_usuario,
+    mostrar_contexto_usuario,
 )
 
 _consola = Console()
@@ -137,7 +145,7 @@ def _mostrar_encabezado(sesion: dict) -> None:
 def _crear_encabezado_formulario(identidad: dict):
     """Crea el renderizador del banner unificado de formularios."""
     def mostrar(titulo, valores, contexto):
-        mostrar_banner_operacion(titulo, identidad, contexto, limpiar=False)
+        mostrar_banner_operacion(titulo, contexto, limpiar=False)
 
     return mostrar
 
@@ -172,7 +180,7 @@ def mostrar_menu_usuario(sesion: dict) -> tuple:
         opciones.append(("Usuarios y permisos", USUARIOS_ADMINISTRATIVOS))
     opciones.append(("Cerrar sesión", CERRAR_SESION))
     _mostrar_encabezado(sesion)
-    seleccion = questionary.select(
+    seleccion = seleccionar(
         "¿Qué deseas hacer?",
         choices=[opcion[0] for opcion in opciones],
     ).ask()
@@ -191,7 +199,7 @@ def mostrar_operaciones_tienda(sesion: dict) -> tuple:
         "Cambiar plan",
         "← Volver",
     ]
-    accion = questionary.select("Operaciones de tienda", choices=opciones).ask()
+    accion = seleccionar("Operaciones de tienda", choices=opciones).ask()
     identidad = sesion["identidad"]
     if accion == "Registrar venta":
         _registrar_venta(identidad)
@@ -209,7 +217,7 @@ def mostrar_operaciones_tienda(sesion: dict) -> tuple:
 def mostrar_miembros_membresias(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
     opciones = ["Buscar una membresía", "Mostrar todos los miembros", "← Volver"]
-    accion = questionary.select("Miembros y membresías", choices=opciones).ask()
+    accion = seleccionar("Miembros y membresías", choices=opciones).ask()
     if accion == "Buscar una membresía":
         return _buscar_membresia(sesion)
     if accion == "Mostrar todos los miembros":
@@ -230,6 +238,7 @@ def _buscar_membresia(sesion: dict) -> tuple:
         }],
         titulo="Buscar membresía",
         mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=crear_contexto_membresia(identidad),
     )
     if datos is None:
         return "usuario", None
@@ -278,7 +287,7 @@ def mostrar_resultados_miembros(sesion: dict) -> tuple:
     opciones.append("← Volver")
 
     _mostrar_encabezado(sesion)
-    seleccion = questionary.select("Selecciona un miembro", choices=opciones).ask()
+    seleccion = seleccionar("Selecciona un miembro", choices=opciones).ask()
     if seleccion == "← Volver" or seleccion is None:
         return "usuario", VOLVER
     sesion["membresia_seleccionada"] = referencias[seleccion]
@@ -333,7 +342,7 @@ def mostrar_detalle_miembro(sesion: dict) -> tuple:
             opciones.append("Reactivar membresía")
             opciones.append("Cancelar membresía")
         opciones.append("← Volver")
-    accion = questionary.select("¿Qué deseas hacer?", choices=opciones).ask()
+    accion = seleccionar("¿Qué deseas hacer?", choices=opciones).ask()
     if accion == "Consultar datos personales":
         _mostrar_datos_personales(identidad, miembro)
         return "usuario", None
@@ -401,7 +410,7 @@ def mostrar_planes(sesion: dict) -> tuple:
     if _rol(sesion) == "ADM":
         opciones.append("Crear plan")
     opciones.append("← Volver")
-    accion = questionary.select("Planes", choices=opciones).ask()
+    accion = seleccionar("Planes", choices=opciones).ask()
     identidad = sesion["identidad"]
     if accion == "Planes":
         _navegar_planes(identidad, _rol(sesion))
@@ -418,7 +427,7 @@ def mostrar_recompensas(sesion: dict) -> tuple:
     if _rol(sesion) == "ADM":
         opciones.append("Crear recompensa")
     opciones.append("← Volver")
-    accion = questionary.select("Recompensas", choices=opciones).ask()
+    accion = seleccionar("Recompensas", choices=opciones).ask()
     identidad = sesion["identidad"]
     if accion == "Recompensas":
         _navegar_recompensas(identidad, _rol(sesion))
@@ -432,7 +441,7 @@ def mostrar_recompensas(sesion: dict) -> tuple:
 def mostrar_usuarios_permisos(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
     opciones = ["Usuarios", "Registrar usuario", "← Volver"]
-    accion = questionary.select("Usuarios y permisos", choices=opciones).ask()
+    accion = seleccionar("Usuarios y permisos", choices=opciones).ask()
     identidad = sesion["identidad"]
     if accion == "Usuarios":
         _navegar_usuarios(identidad)
@@ -451,7 +460,7 @@ def mostrar_usuarios_administrativos(sesion: dict) -> tuple:
 def mostrar_actividad_ajustes(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
     opciones = ["Ajustar puntos", "Ajustar cashback", "← Volver"]
-    accion = questionary.select("Ajustes", choices=opciones).ask()
+    accion = seleccionar("Ajustes", choices=opciones).ask()
     identidad = sesion["identidad"]
     if accion == "Ajustar puntos":
         _ajustar_puntos(identidad)
@@ -492,7 +501,8 @@ def _registrar_venta(identidad: dict) -> None:
         ],
         titulo="Nueva compra",
         mostrar_encabezado=_crear_encabezado_formulario(identidad),
-        mostrar_contexto=mostrar_cliente_compra,
+        mostrar_contexto=crear_mostrador_contexto_compra(identidad),
+        mostrar_detalle=mostrar_detalle_recompensa,
     )
     if datos is None:
         return
@@ -500,10 +510,38 @@ def _registrar_venta(identidad: dict) -> None:
         datos["num_membresia"] = _numero(datos["num_membresia"])
         datos["cashback_aplicado"] = datos.get("cashback_aplicado") or 0
         resultado = registrar_operacion_caja(identidad, datos)
-        mensaje = f"Compra registrada con número {resultado['compra'].num}."
-        if resultado["canje"] is not None:
-            mensaje += " El canje también fue registrado."
-        exito(mensaje)
+        compra = resultado["compra"]
+        canje = resultado["canje"]
+        puntos_gastados = abs(canje.movimiento) if canje is not None else 0
+        recompensa = (
+            f"{canje.version_recompensa.recompensa.codigo} - "
+            f"{canje.version_recompensa.recompensa.descripcion or 'Sin descripción'}"
+            if canje is not None
+            else "No aplica"
+        )
+        mostrar_banner_operacion("Resumen de compra", limpiar=True)
+        mostrar_tabla(
+            "",
+            ["Concepto", "Valor"],
+            [
+                ("Monto bruto", f"${compra.monto_base:.2f}"),
+                (
+                    "Descuento",
+                    f"{formatear_porcentaje(compra.porcentaje_descuento)} "
+                    f"(-${compra.descuento_nominal:.2f})",
+                ),
+                ("Cashback utilizado", f"${compra.cashback_aplicado:.2f}"),
+                ("Monto neto", f"${compra.monto_final:.2f}"),
+                ("Recompensa canjeada", recompensa),
+                ("Puntos gastados", puntos_gastados),
+                (
+                    "Cashback generado",
+                    f"${resultado['cashback_generado']:.2f}",
+                ),
+                ("Puntos generados", resultado["puntos_generados"]),
+            ],
+        )
+        exito(f"Compra registrada con número {compra.num}.")
     except (ValueError, PermissionError) as exc:
         error(str(exc))
 
@@ -541,8 +579,7 @@ def _contratar_nuevo_miembro(identidad: dict) -> None:
     if resultado is not None:
         miembro, renovacion = resultado
         exito(
-            f"Membresía contratada con número {renovacion.membresia.num}. "
-            f"Renovación inicial {renovacion.num}."
+            f"Membresía contratada con número {renovacion.membresia.num}."
         )
 
 
@@ -593,22 +630,35 @@ def _renovar(identidad: dict, titulo: str = "Renovar membresía") -> None:
     if datos is None:
         return
     try:
-        version = _seleccionar_version_plan(identidad, "RENOVACION")
+        version = _seleccionar_version_plan(
+            identidad,
+            "RENOVACION",
+            None if titulo == "Cambiar plan" else datos.get("_membresia"),
+        )
         if version is None:
             return
         renovacion = renovar_membresia(
             identidad,
             _numero(datos["num_membresia"]),
             version.num,
+            restringir_plan_actual=titulo != "Cambiar plan",
         )
         exito(f"{titulo} registrada con renovación {renovacion.num}.")
     except (ValueError, PermissionError) as exc:
         error(str(exc))
 
 
-def _seleccionar_version_plan(identidad: dict, aplica_en: str | None):
+def _seleccionar_version_plan(
+    identidad: dict,
+    aplica_en: str | None,
+    membresia=None,
+):
     """Muestra planes y sus condiciones disponibles para la operación."""
-    versiones = obtener_versiones_plan_para_operacion(identidad, aplica_en)
+    versiones = (
+        obtener_versiones_plan_para_renovacion(identidad, membresia)
+        if aplica_en == "RENOVACION" and membresia is not None
+        else obtener_versiones_plan_para_operacion(identidad, aplica_en)
+    )
     if not versiones:
         error("No hay planes disponibles para esta operación.")
         return None
@@ -624,7 +674,7 @@ def _seleccionar_version_plan(identidad: dict, aplica_en: str | None):
     opciones.append("← Cancelar")
 
     while True:
-        seleccion = questionary.select(
+        seleccion = seleccionar(
             "Selecciona las condiciones del plan:",
             choices=opciones,
         ).ask()
@@ -651,19 +701,19 @@ def _seleccionar_version_plan(identidad: dict, aplica_en: str | None):
                     "Puntos",
                     "No configurados"
                     if configuracion_puntos is None
-                    else configuracion_puntos.porcentaje,
+                    else formatear_porcentaje(configuracion_puntos.porcentaje),
                 ),
                 (
                     "Descuento",
                     "No configurado"
                     if configuracion_descuento is None
-                    else configuracion_descuento.porcentaje,
+                    else formatear_porcentaje(configuracion_descuento.porcentaje),
                 ),
                 (
                     "Cashback",
                     "No configurado"
                     if configuracion_cashback is None
-                    else configuracion_cashback.porcentaje,
+                    else formatear_porcentaje(configuracion_cashback.porcentaje),
                 ),
             ],
         )
@@ -683,6 +733,7 @@ def _consultar_miembro(identidad: dict) -> None:
     }],
         titulo="Consultar membresía",
         mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=crear_contexto_membresia(identidad),
     )
     if datos is None:
         return
@@ -698,6 +749,7 @@ def _consultar_miembro(identidad: dict) -> None:
 
 def _consultar_planes(identidad: dict) -> None:
     planes = obtener_planes(identidad)
+    _mostrar_banner_consulta("Planes", identidad)
     mostrar_tabla(
         "Planes",
         ["Código", "Nombre", "Descripción"],
@@ -708,6 +760,7 @@ def _consultar_planes(identidad: dict) -> None:
 
 def _consultar_recompensas(identidad: dict) -> None:
     recompensas = obtener_recompensas(identidad)
+    _mostrar_banner_consulta("Recompensas", identidad)
     mostrar_tabla(
         "Recompensas",
         ["Código", "Nombre", "Descripción"],
@@ -820,7 +873,7 @@ def _configurar_beneficios_version(datos: dict, anterior=None, identidad=None) -
     while True:
         disponibles = [opcion for opcion, clave in opciones.items() if clave not in configuradas]
         disponibles.append("Terminar configuración")
-        seleccion = questionary.select(
+        seleccion = seleccionar(
             "¿Qué beneficio deseas configurar?",
             choices=disponibles,
         ).ask()
@@ -831,8 +884,10 @@ def _configurar_beneficios_version(datos: dict, anterior=None, identidad=None) -
         if clave == "puntos":
             configuracion = pedir_formulario(
                 [
-                    {"clave": "porcentaje", "etiqueta": "Porcentaje de puntos (ej. 0.025)",
-                     "valor_inicial": getattr(getattr(anterior, "config_puntos", None), "porcentaje", "")},
+                    {"clave": "porcentaje", "etiqueta": "Porcentaje de puntos (ej. 2.5%)",
+                     "valor_inicial": formatear_porcentaje(
+                         getattr(getattr(anterior, "config_puntos", None), "porcentaje", "")
+                     ) if getattr(anterior, "config_puntos", None) is not None else ""},
                     {"clave": "vigencia_meses", "etiqueta": "Vigencia en meses (vacío sin caducidad)",
                      "requerido": False, "valor_inicial": getattr(getattr(anterior, "config_puntos", None), "vigencia_meses", "") or ""},
                 ],
@@ -847,17 +902,19 @@ def _configurar_beneficios_version(datos: dict, anterior=None, identidad=None) -
                 vigencia = configuracion["vigencia_meses"]
                 datos["config_puntos"] = ConfigPuntos(
                     num=None,
-                    porcentaje=configuracion["porcentaje"],
+                    porcentaje=convertir_porcentaje(configuracion["porcentaje"]),
                     vigencia_meses=None if not vigencia else _numero(vigencia),
                 )
         elif clave == "descuento":
             configuracion = pedir_formulario(
                 [
-                    {"clave": "porcentaje", "etiqueta": "Porcentaje de descuento (ej. 0.10)",
-                     "valor_inicial": getattr(getattr(anterior, "config_descuento", None), "porcentaje", "")},
+                    {"clave": "porcentaje", "etiqueta": "Porcentaje de descuento (ej. 10%)",
+                     "valor_inicial": formatear_porcentaje(
+                         getattr(getattr(anterior, "config_descuento", None), "porcentaje", "")
+                     ) if getattr(anterior, "config_descuento", None) is not None else ""},
                     {"clave": "monto_minimo", "etiqueta": "Monto mínimo (vacío sin mínimo)", "requerido": False,
                      "valor_inicial": getattr(getattr(anterior, "config_descuento", None), "monto_minimo", "") or ""},
-                    {"clave": "dias_aplicables", "etiqueta": "Días ISO separados por coma (vacío todos)", "requerido": False,
+                    {"clave": "dias_aplicables", "etiqueta": "Días aplicables", "requerido": False,
                      "valor_inicial": ",".join(str(dia.dia_semana if hasattr(dia, "dia_semana") else dia) for dia in getattr(getattr(anterior, "config_descuento", None), "dias_aplicables", []))},
                 ],
                 iniciar_en_resumen=anterior is not None,
@@ -872,15 +929,17 @@ def _configurar_beneficios_version(datos: dict, anterior=None, identidad=None) -
                 dias = configuracion["dias_aplicables"]
                 datos["config_descuento"] = ConfigDescuento(
                     num=None,
-                    porcentaje=configuracion["porcentaje"],
+                    porcentaje=convertir_porcentaje(configuracion["porcentaje"]),
                     monto_minimo=None if not minimo else minimo,
                     dias_aplicables=[] if not dias else [_numero(dia.strip()) for dia in dias.split(",")],
                 )
         else:
             configuracion = pedir_formulario(
                 [
-                    {"clave": "porcentaje", "etiqueta": "Porcentaje de cashback (ej. 0.05)",
-                     "valor_inicial": getattr(getattr(anterior, "config_cashback", None), "porcentaje", "")},
+                    {"clave": "porcentaje", "etiqueta": "Porcentaje de cashback (ej. 5%)",
+                     "valor_inicial": formatear_porcentaje(
+                         getattr(getattr(anterior, "config_cashback", None), "porcentaje", "")
+                     ) if getattr(anterior, "config_cashback", None) is not None else ""},
                     {"clave": "limite_min_mensual", "etiqueta": "Umbral mensual (vacío sin umbral)", "requerido": False,
                      "valor_inicial": getattr(getattr(anterior, "config_cashback", None), "limite_min_mensual", "") or ""},
                 ],
@@ -895,7 +954,7 @@ def _configurar_beneficios_version(datos: dict, anterior=None, identidad=None) -
                 limite = configuracion["limite_min_mensual"]
                 datos["config_cashback"] = ConfigCashback(
                     num=None,
-                    porcentaje=configuracion["porcentaje"],
+                    porcentaje=convertir_porcentaje(configuracion["porcentaje"]),
                     limite_min_mensual=None if not limite else limite,
                 )
         if f"config_{clave}" in datos:
@@ -1047,7 +1106,7 @@ def _navegar_usuarios(identidad: dict) -> None:
         f"{usuario.num} | {usuario.nombre} {usuario.primer_apellido} | {usuario.rol.nombre}"
         for usuario in usuarios
     ] + ["← Volver"]
-    seleccion = questionary.select("Usuarios", choices=opciones).ask()
+    seleccion = seleccionar("Usuarios", choices=opciones).ask()
     if seleccion in (None, "← Volver"):
         return
     usuario = usuarios[opciones.index(seleccion)]
@@ -1056,12 +1115,16 @@ def _navegar_usuarios(identidad: dict) -> None:
 
 def _mostrar_detalle_usuario(identidad: dict, usuario) -> None:
     while True:
-        _mostrar_encabezado({"identidad": {
-            "nombre": usuario.nombre,
-            "rol_nombre": usuario.rol.nombre,
-        }})
+        _mostrar_banner_consulta(
+            "Usuario",
+            identidad,
+            contexto=[
+                f"Usuario: {usuario.num}",
+                f"Nombre: {usuario.nombre} {usuario.primer_apellido}",
+            ],
+        )
         _mostrar_informacion_usuario(usuario)
-        accion = questionary.select(
+        accion = seleccionar(
             f"Usuario {usuario.num} - {usuario.nombre} {usuario.primer_apellido}",
             choices=["Modificar", "Consultar actividad", "← Volver"],
         ).ask()
@@ -1093,6 +1156,14 @@ def _mostrar_informacion_usuario(usuario) -> None:
 
 def _mostrar_actividad_usuario(identidad: dict, usuario) -> None:
     compras = obtener_actividad_usuario(identidad, usuario.num)
+    _mostrar_banner_consulta(
+        "Actividad del usuario",
+        identidad,
+        contexto=[
+            f"Usuario: {usuario.num}",
+            f"Nombre: {usuario.nombre} {usuario.primer_apellido}",
+        ],
+    )
     mostrar_tabla(
         "Actividad del usuario",
         ["Compra", "Fecha y hora", "Membresía", "Miembro", "Monto base", "Descuento", "Cashback", "Monto final"],
@@ -1121,6 +1192,7 @@ def _modificar_usuario(identidad: dict, usuario=None) -> None:
         }],
             titulo="Buscar usuario",
             mostrar_encabezado=_crear_encabezado_formulario(identidad),
+            mostrar_contexto=mostrar_contexto_usuario,
         )
         if datos_usuario is None:
             return
@@ -1232,6 +1304,7 @@ def _ajustar_cashback(identidad: dict) -> None:
 
 def _consultar_usuarios(identidad: dict) -> None:
     usuarios = obtener_usuarios(identidad)
+    _mostrar_banner_consulta("Usuarios", identidad)
     mostrar_tabla(
         "Usuarios",
         ["Número", "Nombre", "Correo", "Rol"],
@@ -1251,6 +1324,7 @@ def _consultar_actividad(identidad: dict) -> None:
     }],
         titulo="Consultar actividad",
         mostrar_encabezado=_crear_encabezado_formulario(identidad),
+        mostrar_contexto=crear_contexto_membresia(identidad),
     )
     if datos is None:
         return
@@ -1270,7 +1344,7 @@ def _mostrar_actividad_membresia(identidad: dict, num_membresia: int) -> None:
             "Movimientos de cashback",
             "← Volver",
         ]
-        seleccion = questionary.select("¿Qué deseas consultar?", choices=opciones).ask()
+        seleccion = seleccionar("¿Qué deseas consultar?", choices=opciones).ask()
         if seleccion in (None, "← Volver"):
             return
         if seleccion == "Historial de membresías y planes":
@@ -1316,15 +1390,7 @@ def _mostrar_banner_consulta(
             f"Membresía: {membresia.num}",
             *contexto,
         ]
-        version = membresia.version_plan_actual
-        if version is not None:
-            contexto.extend(
-                [
-                    f"Plan actual: {version.plan.nombre}",
-                    f"Descripción: {version.plan.descripcion}",
-                ]
-            )
-    mostrar_banner_operacion(titulo, identidad, contexto, limpiar=True)
+    mostrar_banner_operacion(titulo, contexto, limpiar=True)
 
 
 def _mostrar_historial_membresias(identidad: dict, membresia) -> None:
@@ -1334,28 +1400,29 @@ def _mostrar_historial_membresias(identidad: dict, membresia) -> None:
         identidad,
         membresia,
     )
-    mostrar_tabla(
-        "",
-        [
-            "Membresía",
-            "Plan",
-            "Inicio",
-            "Fin",
-            "Duración",
-            "Estado",
-        ],
-        [
-            (
-                renovacion.membresia.num,
-                renovacion.version_plan_comprado.plan.nombre,
-                renovacion.fecha_inicio_periodo,
-                renovacion.fecha_fin_periodo,
-                f"{renovacion.version_plan_comprado.plazo_meses} meses",
-                renovacion.membresia.estado.value,
-            )
-            for renovacion in historial
-        ],
-    )
+    historiales_por_membresia = {}
+    for renovacion in historial:
+        historiales_por_membresia.setdefault(
+            renovacion.membresia.num,
+            [],
+        ).append(renovacion)
+
+    for num_membresia, renovaciones in historiales_por_membresia.items():
+        estado = renovaciones[0].membresia.estado.value
+        mostrar_tabla(
+            f"Número de membresía: {num_membresia} | Estado: {estado}",
+            ["Plan", "Inicio", "Fin", "Duración", "Descripción"],
+            [
+                (
+                    renovacion.version_plan_comprado.plan.nombre,
+                    renovacion.fecha_inicio_periodo,
+                    renovacion.fecha_fin_periodo,
+                    f"{renovacion.version_plan_comprado.plazo_meses} meses",
+                    renovacion.version_plan_comprado.plan.descripcion or "",
+                )
+                for renovacion in renovaciones
+            ],
+        )
     pausar()
 
 
@@ -1555,7 +1622,7 @@ def _navegar_planes(identidad: dict, rol: str) -> None:
         return
     opciones = [f"{plan.codigo} | {plan.nombre}" for plan in planes]
     opciones.append("← Volver")
-    seleccion = questionary.select("Planes", choices=opciones).ask()
+    seleccion = seleccionar("Planes", choices=opciones).ask()
     if seleccion in (None, "← Volver"):
         return
     plan = planes[opciones.index(seleccion)]
@@ -1564,14 +1631,21 @@ def _navegar_planes(identidad: dict, rol: str) -> None:
 
 def _mostrar_detalle_plan(identidad: dict, plan, rol: str) -> None:
     while True:
-        _mostrar_encabezado({"identidad": identidad})
+        _mostrar_banner_consulta(
+            "Plan",
+            identidad,
+            contexto=[
+                f"Plan: {plan.codigo} - {plan.nombre}",
+                f"Descripción: {plan.descripcion or 'Sin descripción'}",
+            ],
+        )
         _mostrar_condiciones_plan(plan.codigo)
         opciones = ["Historial de condiciones", "Promociones"]
         if rol == "ADM":
             opciones.insert(0, "Modificar beneficios")
             opciones.insert(0, "Modificar plan")
         opciones.append("← Volver")
-        seleccion = questionary.select(
+        seleccion = seleccionar(
             f"Plan {plan.codigo} - {plan.nombre}", choices=opciones
         ).ask()
         if seleccion in (None, "← Volver"):
@@ -1624,6 +1698,14 @@ def _mostrar_historial_condiciones(identidad: dict, codigo_plan: str, rol: str) 
 
     condiciones = obtener_condiciones_regulares(codigo_plan) + obtener_promociones(codigo_plan)
     condiciones.sort(key=lambda condicion: (condicion.fecha_inicio, condicion.num), reverse=True)
+    plan = next(
+        (condicion.plan for condicion in condiciones),
+        None,
+    )
+    contexto = [] if plan is None else [
+        f"Plan: {plan.codigo} - {plan.nombre}",
+    ]
+    _mostrar_banner_consulta("Historial de condiciones", identidad, contexto=contexto)
     mostrar_tabla(
         "Historial de condiciones",
         ["Tipo", "Inicio", "Final", "Precio", "Plazo", "Disponible para"],
@@ -1648,7 +1730,7 @@ def _mostrar_historial_condiciones(identidad: dict, codigo_plan: str, rol: str) 
         f"{'Promoción' if condicion.version_base_de_promo else 'Regular'}"
         for condicion in futuras
     ] + ["← Volver"]
-    seleccion = questionary.select("Condiciones futuras", choices=opciones).ask()
+    seleccion = seleccionar("Condiciones futuras", choices=opciones).ask()
     if seleccion in (None, "← Volver"):
         return
     condicion = futuras[opciones.index(seleccion)]
@@ -1669,6 +1751,11 @@ def _mostrar_promociones(identidad: dict, plan, rol: str) -> None:
             promocion for promocion in obtener_promociones(plan.codigo)
             if promocion.fecha_final >= date.today()
         ]
+        _mostrar_banner_consulta(
+            "Promociones",
+            identidad,
+            contexto=[f"Plan: {plan.codigo} - {plan.nombre}"],
+        )
         opciones = [
             f"{promocion.fecha_inicio} a {promocion.fecha_final} | {_texto_aplica(promocion)}"
             for promocion in promociones
@@ -1676,7 +1763,7 @@ def _mostrar_promociones(identidad: dict, plan, rol: str) -> None:
         if rol == "ADM":
             opciones.append("Crear nueva promoción")
         opciones.append("← Volver")
-        seleccion = questionary.select("Promociones", choices=opciones).ask()
+        seleccion = seleccionar("Promociones", choices=opciones).ask()
         if seleccion in (None, "← Volver"):
             return
         if seleccion == "Crear nueva promoción":
@@ -1777,8 +1864,8 @@ def _modificar_beneficios_plan(identidad: dict, plan) -> None:
             {
                 "clave": "porcentaje_puntos",
                 "etiqueta": "Porcentaje de puntos",
-                "valor_inicial": puntos.porcentaje,
-                "validador": validar_decimal_positivo,
+                "valor_inicial": formatear_porcentaje(puntos.porcentaje),
+                "validador": validar_porcentaje,
             },
             {
                 "clave": "vigencia_puntos",
@@ -1789,8 +1876,8 @@ def _modificar_beneficios_plan(identidad: dict, plan) -> None:
             {
                 "clave": "porcentaje_descuento",
                 "etiqueta": "Porcentaje de descuento",
-                "valor_inicial": descuento.porcentaje,
-                "validador": validar_decimal_positivo,
+                "valor_inicial": formatear_porcentaje(descuento.porcentaje),
+                "validador": validar_porcentaje,
             },
             {
                 "clave": "monto_minimo_descuento",
@@ -1800,7 +1887,7 @@ def _modificar_beneficios_plan(identidad: dict, plan) -> None:
             },
             {
                 "clave": "dias_descuento",
-                "etiqueta": "Días aplicables separados por coma",
+                "etiqueta": "Días aplicables",
                 "valor_inicial": ",".join(
                     str(dia.dia_semana if hasattr(dia, "dia_semana") else dia)
                     for dia in descuento.dias_aplicables
@@ -1810,8 +1897,8 @@ def _modificar_beneficios_plan(identidad: dict, plan) -> None:
             {
                 "clave": "porcentaje_cashback",
                 "etiqueta": "Porcentaje de cashback",
-                "valor_inicial": cashback.porcentaje,
-                "validador": validar_decimal_positivo,
+                "valor_inicial": formatear_porcentaje(cashback.porcentaje),
+                "validador": validar_porcentaje,
             },
             {
                 "clave": "limite_cashback",
@@ -1836,18 +1923,18 @@ def _modificar_beneficios_plan(identidad: dict, plan) -> None:
         "aplica_en": "AMBAS",
         "config_puntos": ConfigPuntos(
             None,
-            Decimal(str(datos["porcentaje_puntos"])),
+            convertir_porcentaje(datos["porcentaje_puntos"]),
             _numero(datos["vigencia_puntos"]),
         ),
         "config_descuento": ConfigDescuento(
             None,
-            Decimal(str(datos["porcentaje_descuento"])),
+            convertir_porcentaje(datos["porcentaje_descuento"]),
             Decimal(str(datos["monto_minimo_descuento"])),
             [_numero(dia.strip()) for dia in datos["dias_descuento"].split(",")],
         ),
         "config_cashback": ConfigCashback(
             None,
-            Decimal(str(datos["porcentaje_cashback"])),
+            convertir_porcentaje(datos["porcentaje_cashback"]),
             Decimal(str(datos["limite_cashback"])),
         ),
     }
@@ -1957,7 +2044,8 @@ def _texto_aplica(condicion) -> str:
 def _valor_configuracion(configuracion, atributo: str):
     if configuracion is None:
         return "No configurado"
-    return getattr(configuracion, atributo)
+    valor = getattr(configuracion, atributo)
+    return formatear_porcentaje(valor) if atributo == "porcentaje" else valor
 
 
 def _navegar_recompensas(identidad: dict, rol: str) -> None:
@@ -1967,7 +2055,7 @@ def _navegar_recompensas(identidad: dict, rol: str) -> None:
         return
     opciones = [f"{recompensa.codigo} | {recompensa.nombre}" for recompensa in recompensas]
     opciones.append("← Volver")
-    seleccion = questionary.select("Recompensas", choices=opciones).ask()
+    seleccion = seleccionar("Recompensas", choices=opciones).ask()
     if seleccion in (None, "← Volver"):
         return
     recompensa = recompensas[opciones.index(seleccion)]
@@ -1976,7 +2064,14 @@ def _navegar_recompensas(identidad: dict, rol: str) -> None:
 
 def _mostrar_detalle_recompensa(identidad: dict, recompensa, rol: str) -> None:
     while True:
-        _mostrar_encabezado({"identidad": identidad})
+        _mostrar_banner_consulta(
+            "Recompensa",
+            identidad,
+            contexto=[
+                f"Recompensa: {recompensa.codigo}",
+                f"Nombre: {recompensa.nombre}",
+            ],
+        )
         condiciones = obtener_versiones_de_recompensa(recompensa.codigo)
         vigentes = [condicion for condicion in condiciones if condicion.esta_vigente()]
         actual = max(vigentes, key=lambda condicion: (condicion.fecha_inicio, condicion.num), default=None)
@@ -2000,7 +2095,7 @@ def _mostrar_detalle_recompensa(identidad: dict, recompensa, rol: str) -> None:
             if actual is None:
                 opciones.insert(1, "Reactivar recompensa")
         opciones.append("← Volver")
-        seleccion = questionary.select(
+        seleccion = seleccionar(
             f"Recompensa {recompensa.codigo} - {recompensa.nombre}", choices=opciones
         ).ask()
         if seleccion in (None, "← Volver"):
@@ -2020,6 +2115,14 @@ def _mostrar_historial_recompensa(identidad: dict, recompensa, rol: str) -> None
         obtener_versiones_de_recompensa(recompensa.codigo),
         key=lambda condicion: (condicion.fecha_inicio, condicion.num),
         reverse=True,
+    )
+    _mostrar_banner_consulta(
+        "Historial de condiciones",
+        identidad,
+        contexto=[
+            f"Recompensa: {recompensa.codigo}",
+            f"Nombre: {recompensa.nombre}",
+        ],
     )
     mostrar_tabla(
         "Historial de condiciones",
@@ -2044,7 +2147,7 @@ def _mostrar_historial_recompensa(identidad: dict, recompensa, rol: str) -> None
         f"Borrar {condicion.fecha_inicio} a {condicion.fecha_final}"
         for condicion in futuras
     ] + ["← Volver"]
-    seleccion = questionary.select("Condiciones futuras", choices=opciones).ask()
+    seleccion = seleccionar("Condiciones futuras", choices=opciones).ask()
     if seleccion in (None, "← Volver"):
         return
     condicion = futuras[opciones.index(seleccion)]

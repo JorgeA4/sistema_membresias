@@ -36,9 +36,12 @@ sistema_membresias/
 │       ├── recompensas/
 │       │   ├── consultas_recompensas.py
 │       │   └── operaciones_recompensas.py
-│       └── compras/
+│       ├── compras/
 │           ├── consultas_compras.py
 │           └── operaciones_compras.py
+│       └── puntos_y_cashback/
+│           ├── consultas_puntos_y_cashback.py
+│           └── operaciones_puntos_y_cashback.py
 ├── interfaz_term/
 ├── interfaz_qt/
 ├── utilidades/
@@ -89,6 +92,8 @@ organizadas por dominio dentro de `consultas/`:
 
 - `consultas_*.py`: lecturas y obtención de datos.
 - `operaciones_*.py`: inserciones, modificaciones y eliminaciones.
+- `puntos_y_cashback/`: movimientos y saldos de puntos y cashback,
+  independientes de las compras.
 
 La infraestructura común de conexión, transacciones y errores se mantiene en
 `ejecutor.py`. Cada módulo de dominio contiene directamente sus consultas SQL,

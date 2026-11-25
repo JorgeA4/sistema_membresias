@@ -2,9 +2,11 @@ from datetime import date, datetime, timedelta
 
 from base_de_datos.consultas import transaccion
 import base_de_datos.consultas.compras.consultas_compras as consultas_compras
+import base_de_datos.consultas.puntos_y_cashback.consultas_puntos_y_cashback as consultas_puntos_y_cashback
 import base_de_datos.consultas.membresias.consultas_membresias as consultas_membresias
 import base_de_datos.consultas.recompensas.consultas_recompensas as consultas_recompensas
 import base_de_datos.consultas.compras.operaciones_compras as operaciones_compras
+import base_de_datos.consultas.puntos_y_cashback.operaciones_puntos_y_cashback as operaciones_puntos_y_cashback
 import base_de_datos.consultas.recompensas.operaciones_recompensas as operaciones_recompensas
 from clases.membresia import Membresia
 from clases.recompensa import Recompensa
@@ -243,7 +245,7 @@ def canjear_recompensa(
         version_recompensa=version,
         membresia=membresia,
     )
-    operaciones_compras.guardar_transaccion_puntos(transaccion)
+    operaciones_puntos_y_cashback.guardar_transaccion_puntos(transaccion)
     return transaccion
 
 
@@ -269,7 +271,7 @@ def validar_canje(
 
     transacciones = [
         transaccion
-        for transaccion in consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
+        for transaccion in consultas_puntos_y_cashback.obtener_transacciones_de_miembro(membresia.miembro.num)
         if transaccion.membresia is not None
         and transaccion.membresia.num == num_membresia
     ]
@@ -297,7 +299,7 @@ def obtener_historial_canjes(identidad: dict, num_membresia: int) -> list[Transa
 
     transacciones = [
         transaccion
-        for transaccion in consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
+        for transaccion in consultas_puntos_y_cashback.obtener_transacciones_de_miembro(membresia.miembro.num)
         if transaccion.membresia is not None
         and transaccion.membresia.num == num_membresia
     ]

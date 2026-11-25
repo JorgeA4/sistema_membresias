@@ -15,6 +15,7 @@ from servicios.autorizacion.servicio_autorizacion import (
     requiere_operador_tienda,
     requiere_administrador_o_propietario,
 )
+from servicios.plan.servicio_plan import obtener_versiones_plan_para_renovacion
 from utilidades.excepciones import (
     DatosInvalidos,
     EntidadNoEncontrada,
@@ -107,7 +108,12 @@ def obtener_ultima_renovacion_efectiva(
     )
 
 
-def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int) -> Renovacion:
+def renovar_membresia(
+    identidad: dict,
+    num_membresia: int,
+    num_version_plan: int,
+    restringir_plan_actual: bool = True,
+) -> Renovacion:
     requiere_operador_tienda(identidad)
     with transaccion():
         membresia = consultar_membresia(identidad, num_membresia)
@@ -126,6 +132,17 @@ def renovar_membresia(identidad: dict, num_membresia: int, num_version_plan: int
             TipoAplicacionPlan.AMBAS,
         ):
             raise OperacionNoPermitida("La versión de plan no permite renovaciones.")
+        if restringir_plan_actual:
+            versiones_disponibles = obtener_versiones_plan_para_renovacion(
+                identidad,
+                membresia,
+            )
+            if version.num not in {
+                version_disponible.num for version_disponible in versiones_disponibles
+            }:
+                raise OperacionNoPermitida(
+                    "La versión de plan no corresponde al plan y plazo de la membresía."
+                )
 
         fecha_pago = date.today()
         fecha_inicio = _obtener_inicio_renovacion(membresia, fecha_pago)

@@ -2,8 +2,10 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 import base_de_datos.consultas.compras.consultas_compras as consultas_compras
+import base_de_datos.consultas.puntos_y_cashback.consultas_puntos_y_cashback as consultas_puntos_y_cashback
 import base_de_datos.consultas.membresias.consultas_membresias as consultas_membresias
 import base_de_datos.consultas.compras.operaciones_compras as operaciones_compras
+import base_de_datos.consultas.puntos_y_cashback.operaciones_puntos_y_cashback as operaciones_puntos_y_cashback
 from clases.transaccion_cashback import TransaccionCashback
 from clases.transaccion_puntos import TransaccionPuntos
 from servicios.autorizacion.servicio_autorizacion import requiere_administrador_o_gerente
@@ -35,7 +37,7 @@ def ajustar_puntos(identidad: dict, num_membresia: int, movimiento: int, concept
         version_recompensa=None,
         membresia=membresia,
     )
-    operaciones_compras.guardar_transaccion_puntos(transaccion)
+    operaciones_puntos_y_cashback.guardar_transaccion_puntos(transaccion)
     return transaccion
 
 
@@ -63,7 +65,7 @@ def ajustar_cashback(identidad: dict, num_membresia: int, movimiento, concepto: 
         compra=None,
         membresia=membresia,
     )
-    operaciones_compras.guardar_transaccion_cashback(transaccion)
+    operaciones_puntos_y_cashback.guardar_transaccion_cashback(transaccion)
     return transaccion
 
 
@@ -78,7 +80,7 @@ def _saldo_puntos(num_membresia: int) -> int:
     membresia = _obtener_membresia(num_membresia)
     transacciones = [
         transaccion
-        for transaccion in consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
+        for transaccion in consultas_puntos_y_cashback.obtener_transacciones_de_miembro(membresia.miembro.num)
         if transaccion.membresia is not None
         and transaccion.membresia.num == num_membresia
     ]
@@ -88,7 +90,7 @@ def _saldo_puntos(num_membresia: int) -> int:
 
 
 def _saldo_cashback(num_membresia: int) -> Decimal:
-    transacciones = consultas_compras.obtener_transacciones_cashback_de_membresia(num_membresia)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_cashback_de_membresia(num_membresia)
     if not transacciones:
         return Decimal("0.00")
     return max(transacciones, key=lambda t: (t.fecha, t.num)).saldo

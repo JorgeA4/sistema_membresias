@@ -3,6 +3,36 @@
 from decimal import Decimal, InvalidOperation
 
 
+def convertir_porcentaje(valor) -> Decimal:
+    """Convierte un porcentaje visible, como 2%, a su fracción interna."""
+    texto = str(valor).strip()
+    if texto.endswith("%"):
+        texto = texto[:-1].strip()
+    try:
+        porcentaje = Decimal(texto) / Decimal("100")
+    except (InvalidOperation, TypeError, ValueError):
+        raise ValueError("El porcentaje no es válido.") from None
+    if not porcentaje.is_finite() or porcentaje < 0 or porcentaje > 1:
+        raise ValueError("El porcentaje debe estar entre 0% y 100%.")
+    return porcentaje
+
+
+def formatear_porcentaje(valor) -> str:
+    """Formatea una fracción interna como porcentaje visible."""
+    porcentaje = Decimal(str(valor)) * Decimal("100")
+    texto = f"{porcentaje:.2f}".rstrip("0").rstrip(".")
+    return f"{texto}%"
+
+
+def validar_porcentaje(valor, valores):
+    try:
+        porcentaje = convertir_porcentaje(valor)
+    except ValueError as exc:
+        return str(exc)
+    if porcentaje <= 0:
+        return "El porcentaje debe ser mayor que 0%."
+
+
 def crear_validador_codigo_plan_nuevo(obtener_planes, identidad: dict):
     def validar(valor, valores):
         if any(

@@ -16,6 +16,8 @@ from rich.console import Console
 
 import questionary
 
+from interfaz_term.componentes.preguntas import seleccionar
+
 from interfaz_term.componentes.banner import mostrar_banner
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from interfaz_term.componentes.mensajes import advertencia, error
@@ -68,7 +70,7 @@ def mostrar_login_con_volver(sesion: dict) -> tuple:
 
     mostrar_banner("[dim]Sistema de membresías y fidelización[/dim]")
 
-    accion = questionary.select(
+    accion = seleccionar(
         "¿Qué deseas hacer?",
         choices=["Iniciar sesión", "← Volver"],
     ).ask()

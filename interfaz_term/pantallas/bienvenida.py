@@ -11,6 +11,8 @@ Firma: mostrar_bienvenida(sesion) -> (interfaz, pantalla)
 
 import questionary
 
+from interfaz_term.componentes.preguntas import seleccionar
+
 from interfaz_term.componentes.banner import mostrar_banner
 
 
@@ -25,7 +27,7 @@ def mostrar_bienvenida(sesion: dict) -> tuple:
     """
     mostrar_banner("[dim]Sistema de membresías y fidelización[/dim]")
 
-    eleccion = questionary.select(
+    eleccion = seleccionar(
         "¿Cómo deseas ingresar?",
         choices=["Soy miembro", "Soy usuario", "Salir"],
     ).ask()

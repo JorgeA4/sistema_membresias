@@ -8,27 +8,24 @@ from servicios.compra.servicio_compra import (
 
 
 def mostrar_contexto_membresia(valores):
-    """Devuelve el cliente y estado de la membresía capturada."""
+    """Devuelve el contexto de la membresía para el banner."""
     membresia = valores.get("_membresia")
     if membresia is None:
-        return None
+        return ["Cliente:", "Membresía:"]
     miembro = membresia.miembro
-    contexto = [
+    return [
         f"Cliente: {miembro.nombre} {miembro.primer_apellido}",
-        f"Estado: {membresia.estado.value}",
+        f"Membresía: {membresia.num}",
     ]
-    if membresia.version_plan_actual is not None:
-        contexto.append(f"Plan actual: {membresia.version_plan_actual.plan.nombre}")
-    return contexto
 
 
 def crear_contexto_membresia(identidad: dict, puntos: bool = False, cashback: bool = False):
     """Crea contexto adicional para operaciones sobre una membresía."""
     def mostrar(valores):
         contexto = mostrar_contexto_membresia(valores)
-        if contexto is None:
-            return None
-        membresia = valores["_membresia"]
+        membresia = valores.get("_membresia")
+        if membresia is None:
+            return contexto
         if puntos:
             contexto.append(
                 f"Saldo de puntos: {obtener_saldo_de_membresia(identidad, membresia.num)}"

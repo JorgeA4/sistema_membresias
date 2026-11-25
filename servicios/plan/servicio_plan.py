@@ -209,6 +209,40 @@ def obtener_versiones_plan_para_operacion(
     ))
 
 
+def obtener_versiones_plan_para_renovacion(
+    identidad: dict,
+    membresia,
+) -> list[VersionPlan]:
+    """Obtiene la regular vigente y sus promociones compatibles."""
+    versiones = obtener_versiones_plan_para_operacion(identidad, "RENOVACION")
+    version_actual = membresia.version_plan_actual
+    if version_actual is None:
+        return []
+
+    regulares = [
+        version for version in versiones
+        if version.version_base_de_promo is None
+        and version.plan.codigo == version_actual.plan.codigo
+        and version.plazo_meses == version_actual.plazo_meses
+    ]
+    if not regulares:
+        return []
+
+    regular = max(regulares, key=lambda version: (version.fecha_inicio, version.num))
+    return [
+        version for version in versiones
+        if (
+            version.num == regular.num
+            or (
+                version.version_base_de_promo is not None
+                and version.version_base_de_promo.num == regular.num
+                and version.plan.codigo == regular.plan.codigo
+                and version.plazo_meses == regular.plazo_meses
+            )
+        )
+    ]
+
+
 def finalizar_version_plan(identidad: dict, num: int, fecha_final: date) -> VersionPlan:
     requiere_administrador(identidad)
     version = consultar_version_plan(num)

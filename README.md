@@ -14,8 +14,8 @@ python3 main.py
 ```
 
 El archivo de credenciales debe definir las variables de entorno de MariaDB,
-incluido `NEXUM_DB_SOCKET` con la ruta del socket activo. Las credenciales no
-deben almacenarse en este repositorio.
+incluidos `NEXUM_DB_HOST` y `NEXUM_DB_PUERTO`. Las credenciales no deben
+almacenarse en este repositorio.
 
 Para detener MariaDB cuando termines:
 
@@ -36,6 +36,12 @@ py main.py
 ```
 
 También puedes iniciar Apache y MySQL desde el panel de control de XAMPP.
+
+## phpMyAdmin
+
+Con Apache y MySQL iniciados, abre en el navegador:
+
+<http://localhost/phpmyadmin>
 
 Para detener XAMPP desde la terminal:
 

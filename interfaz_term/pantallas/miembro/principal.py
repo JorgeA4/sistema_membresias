@@ -4,9 +4,12 @@ from decimal import Decimal
 
 import questionary
 
+from interfaz_term.componentes.preguntas import seleccionar
+
 from interfaz_term.componentes.banner import mostrar_banner, mostrar_banner_operacion
 from interfaz_term.componentes.formulario import pedir_formulario
 from interfaz_term.componentes.mensajes import error, informacion, pausar
+from interfaz_term.validaciones.validadores_plan import formatear_porcentaje
 from interfaz_term.componentes.tabla import formatear_fecha_hora, mostrar_tabla
 from interfaz_term.estilos.tema import COLOR_ENCABEZADO
 from interfaz_term.navegacion import (
@@ -52,7 +55,7 @@ def mostrar_miembro(sesion: dict) -> tuple:
         ("Cerrar sesión", CERRAR_SESION),
     ]
     _mostrar_encabezado(sesion)
-    seleccion = questionary.select(
+    seleccion = seleccionar(
         "¿Qué deseas hacer?",
         choices=[opcion[0] for opcion in opciones],
     ).ask()
@@ -64,7 +67,7 @@ def mostrar_miembro(sesion: dict) -> tuple:
 
 def mostrar_mi_cuenta(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
-    accion = questionary.select(
+    accion = seleccionar(
         "Mi cuenta",
         choices=["Mi información", "Mi membresía", "← Volver"],
     ).ask()
@@ -83,7 +86,7 @@ def mostrar_mi_cuenta(sesion: dict) -> tuple:
 
 def mostrar_beneficios(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
-    accion = questionary.select(
+    accion = seleccionar(
         "Beneficios",
         choices=["Mis puntos", "Recompensas disponibles", "← Volver"],
     ).ask()
@@ -92,7 +95,7 @@ def mostrar_beneficios(sesion: dict) -> tuple:
         if accion == "Mis puntos":
             _mostrar_puntos(identidad)
         elif accion == "Recompensas disponibles":
-            _mostrar_recompensas()
+            _mostrar_recompensas(identidad)
         elif accion == "← Volver":
             return "miembro", VOLVER
     except (ValueError, PermissionError) as exc:
@@ -102,7 +105,7 @@ def mostrar_beneficios(sesion: dict) -> tuple:
 
 def mostrar_historial(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
-    accion = questionary.select(
+    accion = seleccionar(
         "Historial",
         choices=[
             "Historial de compras",
@@ -128,7 +131,7 @@ def mostrar_historial(sesion: dict) -> tuple:
 
 def mostrar_solicitudes_tienda(sesion: dict) -> tuple:
     _mostrar_encabezado(sesion)
-    accion = questionary.select(
+    accion = seleccionar(
         "Solicitudes en tienda",
         choices=[
             "Solicitar renovación",
@@ -154,6 +157,11 @@ def _mostrar_informacion(identidad: dict) -> None:
     miembro = consultar_miembro(identidad, identidad["num"])
     if miembro is None:
         raise EntidadNoEncontrada("El miembro no existe.")
+    mostrar_banner_operacion(
+        "Información personal",
+        [f"Cliente: {miembro.nombre} {miembro.primer_apellido}"],
+        limpiar=True,
+    )
     mostrar_tabla(
         "Información personal",
         ["Nombre", "Correo", "Teléfono"],
@@ -166,6 +174,14 @@ def _mostrar_membresia(identidad: dict) -> None:
     membresia = consultar_membresia_de_miembro(identidad, identidad["num"])
     if membresia is None:
         raise EntidadNoEncontrada("No tienes una membresía registrada.")
+    mostrar_banner_operacion(
+        "Membresía",
+        [
+            f"Cliente: {membresia.miembro.nombre} {membresia.miembro.primer_apellido}",
+            f"Membresía: {membresia.num}",
+        ],
+        limpiar=True,
+    )
     version = membresia.version_plan_actual
     if version is None:
         fila = (membresia.num, membresia.estado.value, "Sin plan", "-", "-", "-", "-", "-", "-")
@@ -180,9 +196,9 @@ def _mostrar_membresia(identidad: dict) -> None:
             version.num,
             version.precio,
             version.plazo_meses,
-            "No configurados" if puntos is None else f"{puntos.porcentaje} (vigencia: {puntos.vigencia_meses or 'sin caducidad'} meses)",
-            "No configurado" if descuento is None else descuento.porcentaje,
-            "No configurado" if cashback is None else f"{cashback.porcentaje} (umbral: {cashback.limite_min_mensual or 'sin umbral'})",
+            "No configurados" if puntos is None else f"{formatear_porcentaje(puntos.porcentaje)} (vigencia: {puntos.vigencia_meses or 'sin caducidad'} meses)",
+            "No configurado" if descuento is None else formatear_porcentaje(descuento.porcentaje),
+            "No configurado" if cashback is None else f"{formatear_porcentaje(cashback.porcentaje)} (umbral: {cashback.limite_min_mensual or 'sin umbral'})",
         )
     mostrar_tabla(
         "Membresía y beneficios",
@@ -198,6 +214,14 @@ def _mostrar_puntos(identidad: dict) -> None:
         raise EntidadNoEncontrada("No tienes una membresía registrada.")
     saldo = obtener_saldo_de_membresia(identidad, membresia.num)
     fecha_vencimiento = obtener_fecha_vencimiento_puntos(identidad, membresia.num)
+    mostrar_banner_operacion(
+        "Puntos",
+        [
+            f"Cliente: {membresia.miembro.nombre} {membresia.miembro.primer_apellido}",
+            f"Membresía: {membresia.num}",
+        ],
+        limpiar=True,
+    )
     mostrar_tabla(
         "Saldo de puntos",
         ["Membresía", "Saldo", "Válidos hasta"],
@@ -206,8 +230,9 @@ def _mostrar_puntos(identidad: dict) -> None:
     _pausa()
 
 
-def _mostrar_recompensas() -> None:
+def _mostrar_recompensas(identidad: dict) -> None:
     versiones = obtener_versiones_recompensa_vigentes()
+    mostrar_banner_operacion("Recompensas disponibles", limpiar=True)
     mostrar_tabla(
         "Recompensas disponibles",
         ["Versión", "Código", "Nombre", "Costo", "Límite"],
@@ -345,7 +370,6 @@ def _pedir_rango_fechas(identidad: dict, membresia, titulo: str):
         titulo=titulo,
         mostrar_encabezado=lambda nombre, _valores, contexto: mostrar_banner_operacion(
             nombre,
-            {"nombre": identidad.get("nombre", ""), "rol_nombre": "Miembro"},
             contexto,
             limpiar=False,
         ),

@@ -26,18 +26,13 @@ def mostrar_banner(texto_secundario: str) -> None:
 
 def mostrar_banner_operacion(
     titulo: str,
-    identidad: dict,
     contexto: list[str] | None = None,
     limpiar: bool = False,
 ) -> None:
     """Muestra el encabezado unificado de una operación o formulario."""
     if limpiar:
         _consola.clear()
-    nombre = identidad.get("nombre", "")
-    rol = identidad.get("rol_nombre", "Usuario")
-    lineas = [f"Usuario: {nombre} | Rol: {rol}"]
-    if contexto:
-        lineas.extend(contexto)
+    lineas = list(contexto or [])
     _consola.print(
         Panel(
             "\n".join(lineas),

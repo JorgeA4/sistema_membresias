@@ -1,5 +1,6 @@
 from base_de_datos.consultas import transaccion
 import base_de_datos.consultas.recompensas.consultas_recompensas as consultas_recompensas
+import base_de_datos.consultas.puntos_y_cashback.consultas_puntos_y_cashback as consultas_puntos_y_cashback
 from servicios.autorizacion.servicio_autorizacion import requiere_operador_tienda
 from servicios.compra.servicio_compra import registrar_compra
 from servicios.recompensa.servicio_recompensa import canjear_recompensa, validar_canje
@@ -37,7 +38,44 @@ def registrar_operacion_caja(identidad: dict, datos: dict) -> dict:
                 version_recompensa.num,
                 compra=compra,
             )
-        return {"compra": compra, "canje": canje}
+        transacciones_puntos = (
+            consultas_puntos_y_cashback
+            .obtener_transacciones_de_miembro(compra.membresia.miembro.num)
+        )
+        transacciones_puntos = [
+            transaccion for transaccion in transacciones_puntos
+            if transaccion.membresia is not None
+            and transaccion.membresia.num == compra.membresia.num
+            and transaccion.compra is not None
+            and transaccion.compra.num == compra.num
+        ]
+        puntos_generados = sum(
+            transaccion.movimiento
+            for transaccion in transacciones_puntos
+            if transaccion.movimiento > 0
+            and transaccion.version_recompensa is None
+        )
+
+        transacciones_cashback = (
+            consultas_puntos_y_cashback
+            .obtener_transacciones_cashback_de_membresia(compra.membresia.num)
+        )
+        cashback_generado = sum(
+            (
+                transaccion.monto
+                for transaccion in transacciones_cashback
+                if transaccion.compra is not None
+                and transaccion.compra.num == compra.num
+                and transaccion.monto > 0
+            ),
+            0,
+        )
+        return {
+            "compra": compra,
+            "canje": canje,
+            "puntos_generados": puntos_generados,
+            "cashback_generado": cashback_generado,
+        }
 
 
 def _obtener_version_recompensa_vigente(codigo: str):

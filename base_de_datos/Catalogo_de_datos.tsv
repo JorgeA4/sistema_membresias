@@ -20,9 +20,9 @@ num entero	texto - 50	texto - 50	texto - 50	texto - 10	texto - 150	texto - 255	f
 Tabla:	PLAN									
 codigo	nombre	descripcion								
 texto - 10	texto - 100	texto - 500								
-BAS	Plan Nexum Basic	Plan de entrada con acumulación de puntos estándar y descuentos en días seleccionados.
-PRE	Plan Nexum Premium	Plan preferencial con mayor porcentaje de acumulación, cashback y descuentos entre semana.
-VIP	Plan Nexum Black Elite	Plan exclusivo VIP con máxima bonificación de cashback, puntos sin caducidad y descuentos diarios.
+BAS	Nexum Basic	Plan de entrada con acumulación de puntos estándar y descuentos en días seleccionados.
+PRE	Nexum Premium	Plan preferencial con mayor porcentaje de acumulación, cashback y descuentos entre semana.
+VIP	Nexum Black Elite	Plan exclusivo VIP con máxima bonificación de cashback, puntos con vigencia de 6 meses y descuentos diarios.
 										
 Tabla:	CONFIG_CASHBACK									
 num	porcentaje	limite_min_mensual								
@@ -37,12 +37,12 @@ num entero	num decimal	num decimal
 Tabla:	CONFIG_PUNTOS									
 num	porcentaje	vigencia_meses								
 num entero	num decimal	num entero								
-1	0.05	12								
-2	0.05	12								
-3	0.10	18								
-4	0.10	24								
-5	0.15	null								
-6	0.12	12								
+1	0.05	3								
+2	0.05	3								
+3	0.10	3								
+4	0.10	3								
+5	0.15	6								
+6	0.12	3								
 										
 Tabla:	CONFIG_DESCUENTO									
 num	porcentaje	monto_minimo								

@@ -4,8 +4,10 @@ from decimal import Decimal, InvalidOperation, ROUND_DOWN, ROUND_HALF_UP
 
 from base_de_datos.consultas import transaccion
 import base_de_datos.consultas.compras.consultas_compras as consultas_compras
+import base_de_datos.consultas.puntos_y_cashback.consultas_puntos_y_cashback as consultas_puntos_y_cashback
 import base_de_datos.consultas.membresias.consultas_membresias as consultas_membresias
 import base_de_datos.consultas.compras.operaciones_compras as operaciones_compras
+import base_de_datos.consultas.puntos_y_cashback.operaciones_puntos_y_cashback as operaciones_puntos_y_cashback
 from clases.compra import Compra
 from clases.membresia import Membresia
 from clases.transaccion_cashback import TransaccionCashback
@@ -106,7 +108,7 @@ def obtener_transacciones_de_membresia(
     actualizar_vigencia_puntos(membresia)
     transacciones = sorted(
         (
-            transaccion for transaccion in consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
+            transaccion for transaccion in consultas_puntos_y_cashback.obtener_transacciones_de_miembro(membresia.miembro.num)
             if transaccion.membresia is not None
             and transaccion.membresia.num == num_membresia
         ),
@@ -139,7 +141,7 @@ def actualizar_vigencia_puntos(membresia: Membresia, fecha: date | None = None) 
     if fecha_vencimiento is None or fecha <= fecha_vencimiento:
         return
 
-    transacciones = consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_de_miembro(membresia.miembro.num)
     ultima_compra = _obtener_ultima_compra_con_puntos(transacciones)
     if ultima_compra is None:
         return
@@ -154,7 +156,7 @@ def actualizar_vigencia_puntos(membresia: Membresia, fecha: date | None = None) 
     saldo = _obtener_saldo_puntos(transacciones)
     if saldo <= 0:
         return
-    operaciones_compras.guardar_transaccion_puntos(
+    operaciones_puntos_y_cashback.guardar_transaccion_puntos(
         TransaccionPuntos(
             num=None,
             movimiento=-saldo,
@@ -173,7 +175,7 @@ def _calcular_fecha_vencimiento_puntos(membresia: Membresia):
     configuracion = None if version is None else version.config_puntos
     if configuracion is None or configuracion.vigencia_meses is None:
         return None
-    transacciones = consultas_compras.obtener_transacciones_de_miembro(membresia.miembro.num)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_de_miembro(membresia.miembro.num)
     ultima_compra = _obtener_ultima_compra_con_puntos(transacciones)
     if ultima_compra is None:
         return None
@@ -213,7 +215,7 @@ def obtener_transacciones_cashback_de_membresia(
     membresia = _verificar_membresia(num_membresia)
     requiere_administrador_o_propietario(identidad, membresia)
     transacciones = sorted(
-        consultas_compras.obtener_transacciones_cashback_de_membresia(num_membresia),
+        consultas_puntos_y_cashback.obtener_transacciones_cashback_de_membresia(num_membresia),
         key=lambda transaccion: (transaccion.fecha, transaccion.num),
     )
     return [
@@ -254,9 +256,9 @@ def obtener_cashback_disponible(identidad: dict, num_membresia: int) -> Decimal:
     if configuracion is None:
         return Decimal("0.00")
     fecha = date.today()
-    transacciones = consultas_compras.obtener_transacciones_cashback_de_membresia(num_membresia)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_cashback_de_membresia(num_membresia)
     _registrar_expiraciones_cashback(transacciones, configuracion, num_membresia, fecha)
-    transacciones = consultas_compras.obtener_transacciones_cashback_de_membresia(num_membresia)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_cashback_de_membresia(num_membresia)
     return _obtener_cashback_disponible(transacciones, configuracion, fecha)
 
 
@@ -319,9 +321,9 @@ def _obtener_cashback_aplicado(
     if cashback > monto_disponible:
         raise LimiteExcedido("El cashback aplicado supera el monto de la compra.")
 
-    transacciones = consultas_compras.obtener_transacciones_cashback_de_membresia(num_membresia)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_cashback_de_membresia(num_membresia)
     _registrar_expiraciones_cashback(transacciones, configuracion, num_membresia, fecha)
-    transacciones = consultas_compras.obtener_transacciones_cashback_de_membresia(num_membresia)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_cashback_de_membresia(num_membresia)
     saldo = _obtener_cashback_disponible(transacciones, configuracion, fecha)
     if cashback > saldo:
         raise SaldoInsuficiente("El saldo de cashback es insuficiente.")
@@ -344,7 +346,7 @@ def _registrar_puntos(
     if movimiento <= 0:
         return
 
-    transacciones = consultas_compras.obtener_transacciones_de_miembro(compra.membresia.miembro.num)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_de_miembro(compra.membresia.miembro.num)
     saldo = _obtener_saldo_puntos(transacciones)
     transaccion = TransaccionPuntos(
         num=None,
@@ -356,7 +358,7 @@ def _registrar_puntos(
         version_recompensa=None,
         membresia=compra.membresia,
     )
-    operaciones_compras.guardar_transaccion_puntos(transaccion)
+    operaciones_puntos_y_cashback.guardar_transaccion_puntos(transaccion)
 
 
 def _registrar_cashback(
@@ -368,11 +370,11 @@ def _registrar_cashback(
     if configuracion is None:
         return
 
-    transacciones = consultas_compras.obtener_transacciones_cashback_de_membresia(compra.membresia.num)
+    transacciones = consultas_puntos_y_cashback.obtener_transacciones_cashback_de_membresia(compra.membresia.num)
     saldo = _obtener_saldo_cashback(transacciones)
     if aplicado > 0:
         saldo -= aplicado
-        operaciones_compras.guardar_transaccion_cashback(
+        operaciones_puntos_y_cashback.guardar_transaccion_cashback(
             TransaccionCashback(
                 num=None,
                 monto=-aplicado,
@@ -389,7 +391,7 @@ def _registrar_cashback(
     )
     if generado > 0:
         saldo += generado
-        operaciones_compras.guardar_transaccion_cashback(
+        operaciones_puntos_y_cashback.guardar_transaccion_cashback(
             TransaccionCashback(
                 num=None,
                 monto=generado,
@@ -474,7 +476,7 @@ def _registrar_expiraciones_cashback(
         )
         if generado <= limite:
             saldo = _obtener_saldo_cashback(transacciones) - generado
-            operaciones_compras.guardar_transaccion_cashback(
+            operaciones_puntos_y_cashback.guardar_transaccion_cashback(
                 TransaccionCashback(
                     num=None,
                     monto=-generado,

@@ -5,8 +5,10 @@ from decimal import Decimal
 from servicios.caja.servicio_caja import validar_canje
 from servicios.compra.servicio_compra import (
     obtener_cashback_disponible,
+    obtener_saldo_de_membresia,
 )
 from servicios.membresia.servicio_membresia import consultar_membresia
+from interfaz_term.componentes.tabla import mostrar_tabla
 from servicios.recompensa.servicio_recompensa import (
     consultar_recompensa,
     obtener_versiones_de_recompensa,
@@ -47,16 +49,43 @@ def crear_mostrador_cashback(identidad: dict):
     return mostrar
 
 
-def mostrar_cliente_compra(valores: dict) -> list[str] | None:
+def mostrar_cliente_compra(valores: dict) -> list[str]:
     """Devuelve el contexto del cliente para el banner de la compra."""
     membresia = valores.get("_membresia")
     if membresia is None:
-        return None
+        return [
+            "Cliente:",
+            "Cashback disponible:",
+            "Puntos disponibles:",
+        ]
     miembro = membresia.miembro
     contexto = [f"Cliente: {miembro.nombre} {miembro.primer_apellido}"]
     if "_cashback_disponible" in valores:
         contexto.append(f"Cashback disponible: ${valores['_cashback_disponible']:.2f}")
+    else:
+        contexto.append("Cashback disponible:")
+    contexto.append("Puntos disponibles:")
     return contexto
+
+
+def crear_mostrador_contexto_compra(identidad: dict):
+    """Crea el contexto de compra con los saldos de la membresía."""
+    def mostrar(valores: dict) -> list[str]:
+        contexto = mostrar_cliente_compra(valores)
+        membresia = valores.get("_membresia")
+        if membresia is not None:
+            contexto[-1] = (
+                f"Puntos disponibles: "
+                f"{obtener_saldo_de_membresia(identidad, membresia.num):.0f}"
+            )
+            if "_cashback_disponible" not in valores:
+                contexto[-2] = (
+                    f"Cashback disponible: "
+                    f"${obtener_cashback_disponible(identidad, membresia.num):.2f}"
+                )
+        return contexto
+
+    return mostrar
 
 
 def validar_cashback(valor, valores):
@@ -74,6 +103,7 @@ def validar_cashback(valor, valores):
 def crear_validador_recompensa(identidad: dict):
     """Valida una recompensa y conserva su versión vigente en el contexto."""
     def validar(valor, valores):
+        valores.pop("_version_recompensa", None)
         if not valor:
             return None
         membresia = valores.get("_membresia")
@@ -91,3 +121,21 @@ def crear_validador_recompensa(identidad: dict):
         valores["_version_recompensa"] = versiones[0]
 
     return validar
+
+
+def mostrar_detalle_recompensa(valores: dict) -> None:
+    """Muestra el detalle de la recompensa seleccionada en el formulario."""
+    version = valores.get("_version_recompensa")
+    if version is None:
+        return
+    mostrar_tabla(
+        "Detalle de recompensa",
+        ["Código", "Nombre", "Descripción", "Costo", "Límite"],
+        [(
+            version.recompensa.codigo,
+            version.recompensa.nombre,
+            version.recompensa.descripcion or "Sin descripción",
+            version.costo_puntos,
+            version.limite_canjes or "Sin límite",
+        )],
+    )

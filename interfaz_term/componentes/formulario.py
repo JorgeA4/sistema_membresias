@@ -19,6 +19,8 @@ from interfaz_term.estilos.tema import COLOR_ENCABEZADO, ESTILO_TABLA
 from utilidades.fechas import convertir_fecha
 import questionary
 
+from interfaz_term.componentes.preguntas import seleccionar
+
 _consola = Console()
 _COMANDO_CANCELAR = "/cancel"
 
@@ -61,6 +63,7 @@ def pedir_formulario(
     mostrar_contexto=None,
     titulo: str = "Formulario",
     mostrar_encabezado=None,
+    mostrar_detalle=None,
 ) -> dict | None:
     """
     Solicita una lista de campos, muestra un resumen y pide confirmación.
@@ -77,6 +80,7 @@ def pedir_formulario(
           devuelve líneas contextuales para el encabezado.
         - titulo (str, opcional) — título de la operación.
         - mostrar_encabezado (callable, opcional) — recibe (titulo, valores, contexto).
+        - mostrar_detalle (callable, opcional) — muestra detalles dinámicos del formulario.
 
     Flujo:
         1. Dibuja todos los campos y pide sus valores en orden; `/cancel` o Ctrl+C cancela en cualquier campo.
@@ -112,6 +116,7 @@ def pedir_formulario(
                     mostrar_contexto,
                     titulo,
                     mostrar_encabezado,
+                    mostrar_detalle,
                 )
             else:
                 valor = _pedir_valor_campo(
@@ -121,6 +126,7 @@ def pedir_formulario(
                     mostrar_contexto,
                     titulo=titulo,
                     mostrar_encabezado=mostrar_encabezado,
+                    mostrar_detalle=mostrar_detalle,
                 )
             if valor is None:
                 return None
@@ -129,11 +135,11 @@ def pedir_formulario(
     while True:
         # Paso 2: mostrar resumen
         _mostrar_resumen(
-            campos, valores, mostrar_contexto, titulo, mostrar_encabezado
+            campos, valores, mostrar_contexto, titulo, mostrar_encabezado, mostrar_detalle
         )
 
         # Paso 3: confirmar, corregir o cancelar
-        accion = questionary.select(
+        accion = seleccionar(
             "¿Qué deseas hacer?",
             choices=["Confirmar", "Corregir un campo", "Cancelar"],
         ).ask()
@@ -142,7 +148,7 @@ def pedir_formulario(
             return valores
 
         if accion == "Cancelar":
-            confirmar = questionary.select(
+            confirmar = seleccionar(
                 "¿Estás seguro de cancelar el formulario?",
                 choices=[
                     "No, volver al formulario",
@@ -156,7 +162,7 @@ def pedir_formulario(
 
         # Corregir: elegir qué campo editar
         etiquetas = [c["etiqueta"] for c in campos]
-        etiqueta_elegida = questionary.select(
+        etiqueta_elegida = seleccionar(
             "Selecciona el campo a corregir:",
             choices=etiquetas,
         ).ask()
@@ -171,6 +177,7 @@ def pedir_formulario(
                 mostrar_contexto,
                 titulo,
                 mostrar_encabezado,
+                mostrar_detalle,
             )
         else:
             valor = _pedir_valor_campo(
@@ -180,6 +187,7 @@ def pedir_formulario(
                 mostrar_contexto,
                 titulo=titulo,
                 mostrar_encabezado=mostrar_encabezado,
+                mostrar_detalle=mostrar_detalle,
             )
         if valor is None:
             return None
@@ -194,6 +202,7 @@ def _pedir_valor_campo(
     mensaje_inicial: str | None = None,
     titulo: str = "Formulario",
     mostrar_encabezado=None,
+    mostrar_detalle=None,
 ) -> str | None:
     """Solicita un campo hasta que su formato sea válido o se cancele."""
     clave = campo["clave"]
@@ -213,6 +222,7 @@ def _pedir_valor_campo(
             mostrar_contexto,
             titulo,
             mostrar_encabezado,
+            mostrar_detalle,
         )
         valor = pedir_campo(etiqueta, requerido=requerido, contrasena=contrasena)
         if valor is None:
@@ -243,6 +253,7 @@ def _pedir_valor_con_confirmacion(
     mostrar_contexto=None,
     titulo: str = "Formulario",
     mostrar_encabezado=None,
+    mostrar_detalle=None,
 ) -> str | None:
     """Solicita dos veces un valor sensible y reinicia el bloque si difiere."""
     mensaje = None
@@ -255,6 +266,7 @@ def _pedir_valor_con_confirmacion(
             mensaje_inicial=mensaje,
             titulo=titulo,
             mostrar_encabezado=mostrar_encabezado,
+            mostrar_detalle=mostrar_detalle,
         )
         if valor is None:
             return None
@@ -271,6 +283,7 @@ def _pedir_valor_con_confirmacion(
             mostrar_contexto,
             titulo=titulo,
             mostrar_encabezado=mostrar_encabezado,
+            mostrar_detalle=mostrar_detalle,
         )
         if confirmacion is None:
             return None
@@ -312,14 +325,17 @@ def _validar_valor(clave: str, valor: str, etiqueta: str) -> str | None:
         "monto_minimo",
         "limite_min_mensual",
     } or (clave == "movimiento" and "cashback" in etiqueta):
+        texto = valor.strip()
+        if clave.startswith("porcentaje") and texto.endswith("%"):
+            texto = texto[:-1].strip()
         try:
-            numero = Decimal(valor)
+            numero = Decimal(texto)
             if not numero.is_finite():
                 raise InvalidOperation
         except InvalidOperation:
             return "Este campo debe ser un número decimal válido."
-        if clave == "porcentaje" and not 0 <= numero <= 1:
-            return "El porcentaje debe estar entre cero y uno."
+        if clave.startswith("porcentaje") and not 0 <= numero <= 100:
+            return "El porcentaje debe estar entre 0% y 100%."
         if clave in {"monto_base", "precio"} and numero <= 0:
             return "Este importe debe ser mayor que cero."
         if clave in {"cashback_aplicado", "monto_minimo", "limite_min_mensual"} and numero < 0:
@@ -364,6 +380,7 @@ def _mostrar_resumen(
     mostrar_contexto=None,
     titulo: str = "Formulario",
     mostrar_encabezado=None,
+    mostrar_detalle=None,
 ) -> None:
     """Muestra un resumen de los valores del formulario con Rich."""
     _consola.clear()
@@ -371,6 +388,8 @@ def _mostrar_resumen(
     if mostrar_encabezado is not None:
         mostrar_encabezado(titulo, valores, contexto)
     _mostrar_tabla_campos(campos, valores, "")
+    if mostrar_detalle is not None:
+        mostrar_detalle(valores)
 
 
 def _dibujar_formulario(
@@ -380,6 +399,7 @@ def _dibujar_formulario(
     mostrar_contexto=None,
     titulo: str = "Formulario",
     mostrar_encabezado=None,
+    mostrar_detalle=None,
 ) -> None:
     """Redibuja el formulario completo antes de solicitar un valor."""
     _consola.clear()
@@ -387,6 +407,8 @@ def _dibujar_formulario(
     if mostrar_encabezado is not None:
         mostrar_encabezado(titulo, valores, contexto)
     _mostrar_tabla_campos(campos, valores, "")
+    if mostrar_detalle is not None:
+        mostrar_detalle(valores)
     if mensaje_error:
         _consola.print(f"[yellow]Error: {mensaje_error}[/yellow]")
     _mostrar_pie_formulario(campos)
